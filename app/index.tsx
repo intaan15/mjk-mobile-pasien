@@ -1,15 +1,18 @@
-import { Text, View } from "react-native";
+import { useState, useEffect } from "react";
+import SplashScreen from "./splashscreen";
+import { useRouter } from "expo-router";
 
 export default function Index() {
-  return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
-    </View>
-  );
+  const [isShowSplash, setIsShowSplash] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    setTimeout(() => {
+      setIsShowSplash(false);
+      // router.replace("/components/imagepicker");
+      router.replace("/home");
+    }, 10);
+  }, []);
+
+  return <>{isShowSplash ? <SplashScreen /> : null}</>;
 }
