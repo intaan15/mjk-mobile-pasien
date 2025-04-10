@@ -20,7 +20,7 @@ import HatiIcon from "../../../assets/icons/hati.svg";
 
 
 export default function index() {
-  // const Router = useRouter();
+  const router = useRouter();
   return (
     <Background>
       <View className='flex-1'>
@@ -45,59 +45,59 @@ export default function index() {
             </View>
             <View className='w-11/12 h-auto'>
               <View className='flex-row flex-wrap justify-center gap-x-3 gap-y-3'>
-                <TouchableOpacity className='flex-col justify-center items-center w-24 h-24'>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20 bg-red-500' onPress={() => router.push('/(tabs)/home/keluhan')}>
                   <UmumIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Umum</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-24 h-24'>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20 bg-blue-500' onPress={() => router.push('/(tabs)/home/keluhan')}>
                   <MataIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Mata</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-24 h-24'>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
                   <AnakIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Anak</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-24 h-24'>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
                   <GigiIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Gigi</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-24 h-24'>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20 bg-purple-500' onPress={() => router.push('/(tabs)/home/keluhan')}>
                   <THTIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>THT</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-24 h-24'>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
                   <JantungIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Jantung</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-24 h-24'>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
                   <KandunganIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Kandungan</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-24 h-24'>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
                   <BedahIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Bedah</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-24 h-24'>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
                   <SyarafIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Syaraf</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-24 h-24'>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
                   <DarahIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Darah</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-24 h-24'>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
                   <ParuIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Paru</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-24 h-24'>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
                   <FisioIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Fisioterapi</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-24 h-24'>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
                   <GinjalIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Ginjal</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-24 h-24'>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
                   <HatiIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Hati</Text>
                 </TouchableOpacity>

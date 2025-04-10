@@ -38,7 +38,7 @@ const TabsNavigasi = () => {
       }}
     >
       <Tabs.Screen
-        name="home/index"
+        name="home"
         options={{
           title: "Beranda",
           headerShown: false,
