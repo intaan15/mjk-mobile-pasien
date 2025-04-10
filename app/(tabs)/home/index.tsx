@@ -45,11 +45,11 @@ export default function index() {
             </View>
             <View className='w-11/12 h-auto'>
               <View className='flex-row flex-wrap justify-center gap-x-3 gap-y-3'>
-                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20 bg-red-500' onPress={() => router.push('/(tabs)/home/keluhan')}>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
                   <UmumIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Umum</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20 bg-blue-500' onPress={() => router.push('/(tabs)/home/keluhan')}>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
                   <MataIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Mata</Text>
                 </TouchableOpacity>
@@ -61,7 +61,7 @@ export default function index() {
                   <GigiIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Gigi</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20 bg-purple-500' onPress={() => router.push('/(tabs)/home/keluhan')}>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
                   <THTIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>THT</Text>
                 </TouchableOpacity>
