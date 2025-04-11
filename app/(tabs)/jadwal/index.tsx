@@ -1,6 +1,6 @@
 import { View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
 import React from 'react';
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Background from "../../components/background";
 import { images } from "../../constants/images";
@@ -105,7 +105,6 @@ const getDayName = (dateString) => {
 
 export default function index() {
   const router = useRouter();
-  const { spesialis } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   return (
     <Background>
