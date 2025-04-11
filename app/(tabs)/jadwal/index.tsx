@@ -18,6 +18,8 @@ const dummyDoctors = [
     rating: 4.3,
     photo: images.foto,
     status: "waiting",
+    date: "2025-12-23",
+    time: "07.15",
   },
   {
     id: 2,
@@ -25,6 +27,8 @@ const dummyDoctors = [
     rating: 4.6,
     photo: images.foto,
     status: "accepted",
+    date: "2025-12-25",
+    time: "10.00",
   },
   {
     id: 3,
@@ -32,50 +36,17 @@ const dummyDoctors = [
     rating: 4.1,
     photo: images.foto,
     status: "cancelled",
-  },
-  {
-    id: 1,
-    name: "Dr. Ikrom Nur Dzawin",
-    rating: 4.3,
-    photo: images.foto,
-    status: "waiting",
-  },
-  {
-    id: 2,
-    name: "Dr. Siti Hidayah",
-    rating: 4.6,
-    photo: images.foto,
-    status: "accepted",
-  },
-  {
-    id: 3,
-    name: "Dr. Ahmad Basri",
-    rating: 4.1,
-    photo: images.foto,
-    status: "cancelled",
-  },
-  {
-    id: 1,
-    name: "Dr. Ikrom Nur Dzawin",
-    rating: 4.3,
-    photo: images.foto,
-    status: "waiting",
-  },
-  {
-    id: 2,
-    name: "Dr. Siti Hidayah",
-    rating: 4.6,
-    photo: images.foto,
-    status: "accepted",
-  },
-  {
-    id: 3,
-    name: "Dr. Ahmad Basri",
-    rating: 4.1,
-    photo: images.foto,
-    status: "cancelled",
+    date: "2025-12-28",
+    time: "13.45",
   },
 ];
+
+
+const getDayName = (dateString) => {
+  const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+  const date = new Date(dateString);
+  return days[date.getDay()];
+};
 
 
 export default function index() {
@@ -137,13 +108,21 @@ export default function index() {
                 </View>
                 <View className="flex-row justify-between px-4">
                   <View className="flex-col pt-1">
-                    <Text className="font-bold text-sm text-skyDark">Selasa,</Text>
-                    <Text className="font-bold text-sm text-skyDark">25 Desember 2025</Text>
-                    <Text className="font-bold text-sm text-skyDark">Pukul 07.15</Text>
+                    <Text className="font-bold text-sm text-skyDark">
+                      {getDayName(doctor.date)},
+                    </Text>
+                    <Text className="font-bold text-sm text-skyDark">
+                      {new Date(doctor.date).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </Text>
+                    <Text className="font-bold text-sm text-skyDark">Pukul {doctor.time}</Text>
                   </View>
                   <View className="justify-center w-1/3 flex-col">
                     <View
-                      className={`p-2 flex-row gap-2 rounded-xl items-center justify-center ${
+                      className={`p-2 flex-row gap-2 rounded-xl items-center justify-between ${
                         doctor.status === "accepted"
                           ? "bg-green-600"
                           : doctor.status === "cancelled"
@@ -154,11 +133,13 @@ export default function index() {
                       {doctor.status === "waiting" && <WaitIcon width={18} height={18} />}
                       {doctor.status === "accepted" && <AccIcon width={18} height={18} />}
                       {doctor.status === "cancelled" && <CancelIcon width={18} height={18} />}
-                      <Text className="text-white font-bold text-sm">
-                        {doctor.status === "waiting" && "Menunggu"}
-                        {doctor.status === "accepted" && "Diterima"}
-                        {doctor.status === "cancelled" && "Ditolak"}
-                      </Text>
+                      <View className="w-3/4 justify-center items-center">
+                        <Text className="text-white font-bold text-sm">
+                          {doctor.status === "waiting" && "Menunggu"}
+                          {doctor.status === "accepted" && "Diterima"}
+                          {doctor.status === "cancelled" && "Ditolak"}
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 </View>
