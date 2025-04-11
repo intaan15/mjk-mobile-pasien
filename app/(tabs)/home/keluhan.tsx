@@ -1,12 +1,13 @@
 import { View, Text, TextInput, Image, TouchableOpacity } from "react-native";
 import React from "react";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Background from "../../components/background";
 import { images } from "../../constants/images";
 
 export default function index() {
   const router = useRouter();
+  const { spesialis } = useLocalSearchParams();
   return (
     <Background>
       <View className="flex-1">
@@ -16,7 +17,7 @@ export default function index() {
               <MaterialIcons name="arrow-back-ios" size={24} color="#025F96" />
             </TouchableOpacity>
             <Text className="text-skyDark font-bold text-xl ml-2">
-              Kuisoner
+                {spesialis ? `Kuisioner untuk Poli ${spesialis}` : "Kuisioner"}
             </Text>
           </View>
           <Image

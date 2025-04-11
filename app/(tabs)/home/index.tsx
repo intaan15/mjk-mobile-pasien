@@ -45,59 +45,59 @@ export default function index() {
             </View>
             <View className='w-11/12 h-auto'>
               <View className='flex-row flex-wrap justify-center gap-x-3 gap-y-3'>
-                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push({ pathname: "/(tabs)/home/keluhan", params: { spesialis: "Umum" } })}>
                   <UmumIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Umum</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push({ pathname: "/(tabs)/home/keluhan", params: { spesialis: "Mata" } })}>
                   <MataIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Mata</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push({ pathname: "/(tabs)/home/keluhan", params: { spesialis: "Anak" } })}>
                   <AnakIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Anak</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push({ pathname: "/(tabs)/home/keluhan", params: { spesialis: "Gigi" } })}>
                   <GigiIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Gigi</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push({ pathname: "/(tabs)/home/keluhan", params: { spesialis: "THT" } })}>
                   <THTIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>THT</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push({ pathname: "/(tabs)/home/keluhan", params: { spesialis: "Jantung" } })}>
                   <JantungIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Jantung</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push({ pathname: "/(tabs)/home/keluhan", params: { spesialis: "Kandungan" } })}>
                   <KandunganIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Kandungan</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push({ pathname: "/(tabs)/home/keluhan", params: { spesialis: "Bedah" } })}>
                   <BedahIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Bedah</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push({ pathname: "/(tabs)/home/keluhan", params: { spesialis: "Syaraf" } })}>
                   <SyarafIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Syaraf</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push({ pathname: "/(tabs)/home/keluhan", params: { spesialis: "Darah" } })}>
                   <DarahIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Darah</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push({ pathname: "/(tabs)/home/keluhan", params: { spesialis: "Paru" } })}>
                   <ParuIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Paru</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push({ pathname: "/(tabs)/home/keluhan", params: { spesialis: "Fisioterapi" } })}>
                   <FisioIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Fisioterapi</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push({ pathname: "/(tabs)/home/keluhan", params: { spesialis: "Ginjal" } })}>
                   <GinjalIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Ginjal</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push('/(tabs)/home/keluhan')}>
+                <TouchableOpacity className='flex-col justify-center items-center w-20 h-20' onPress={() => router.push({ pathname: "/(tabs)/home/keluhan", params: { spesialis: "Hati" } })}>
                   <HatiIcon width={50} height={50} />
                   <Text className='text-skyDark font-bold'>Hati</Text>
                 </TouchableOpacity>
