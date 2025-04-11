@@ -143,7 +143,7 @@ export default function index() {
                   </View>
                   <View className="justify-center w-1/3 flex-col">
                     <View
-                      className={`p-2 flex-row gap-2 rounded-lg items-center justify-center ${
+                      className={`p-2 flex-row gap-2 rounded-xl items-center justify-center ${
                         doctor.status === "accepted"
                           ? "bg-green-600"
                           : doctor.status === "cancelled"
