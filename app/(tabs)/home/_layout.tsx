@@ -5,6 +5,7 @@ export default function ProfilLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" options={{ title: "Beranda" }} />
       <Stack.Screen name="keluhan" options={{ title: "Keluhan" }} />
+      <Stack.Screen name="listdokter" options={{ title: "List Dokter" }} />
     </Stack>
   );
 }
