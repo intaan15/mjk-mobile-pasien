@@ -65,11 +65,7 @@ const TabsNavigasi = () => {
           title: "Konsultasi",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon
-              focused={focused}
-              icon="comment-dots"
-              title="Konsultasi"
-            />
+            <TabIcon focused={focused} icon="comment" title="Konsultasi" />
           ),
         }}
       />
