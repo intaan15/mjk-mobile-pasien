@@ -1,8 +1,8 @@
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import React from "react";
 import { useRouter } from "expo-router";
-import Background from "../../components/background";
-import { images } from "../../constants/images";
+import Background from "../../../components/background";
+import { images } from "../../../constants/images";
 import UmumIcon from "../../../assets/icons/umum.svg";
 import JantungIcon from "../../../assets/icons/jantung.svg";
 import ParuIcon from "../../../assets/icons/paru.svg";

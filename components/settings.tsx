@@ -13,21 +13,12 @@ import {
   FontAwesome5,
   AntDesign,
 } from "@expo/vector-icons";
-import Modal2 from "@/components/modal2";
-import { images } from "@/constants/images";
+import Modal2 from "./modal2";
+import { images } from "../constants/images";
 import { useRouter } from "expo-router";
-import ImagePickerComponent from "@/components/imagepicker";
-import ImageModal from "@/components/modal4";
-import { ImageProvider, useImage } from "@/components/imagecontext";
-
-const DataDummy = {
-  id: 1,
-  nama: "Dr Izzu Adit Intan Nita",
-  username: "Zuditanit",
-  email: "zuditanit@gmail.com",
-  no_tlp: "08123712953234",
-  spesialis: "Jantung",
-};
+import ImagePickerComponent from "./imagepicker";
+import ImageModal from "./modal4";
+import { ImageProvider, useImage } from "./imagecontext";
 
 export default function Settings() {
   const router = useRouter();
@@ -35,7 +26,7 @@ export default function Settings() {
   const [modalConfig, setModalConfig] = useState({
     message: "",
     confirmText: "",
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   const toggleModal = () => {
@@ -73,67 +64,57 @@ export default function Settings() {
     <View
       className="bg-white rounded-xl mx-10 mt-10 p-6 mb-24"
       style={{
-        shadowOffset: { width: 0, height: -20 },
+        shadowOffset: { width: 0, height: 5 },
         shadowOpacity: 0.2,
         shadowRadius: 11,
         elevation: 15,
       }}
     >
       <TouchableOpacity
-        className="flex flex-row items-center gap-2"
+        className="flex flex-row items-center gap-2 pb-1"
         onPress={() => setModalImageVisible(true)}
       >
         <MaterialCommunityIcons
           name="image-edit-outline"
-          size={24}
-          color="black"
+          size={22}
+          color="#025F96"
         />
         <Text className="font-bold text-lg text-skyDark">
           Ganti Foto Profil
         </Text>
       </TouchableOpacity>
 
-      <View className="w-full h-[2px] bg-skyDark my-2"/>
+      <View className="w-full h-[2px] bg-skyDark" />
 
       <TouchableOpacity
-        className="flex flex-row items-center gap-2"
+        className="flex flex-row items-center gap-2 py-1"
         onPress={() => setImage?.(null)}
         disabled={!profileImage}
       >
-        <MaterialCommunityIcons name="image-remove" size={24} color="black" />
+        <MaterialCommunityIcons name="image-remove" size={22} color="#025F96" />
         <Text className="font-bold text-lg text-skyDark">
           Hapus Foto Profil
         </Text>
       </TouchableOpacity>
 
-      <View className="w-full h-[2px] bg-skyDark my-2"/>
-
-      <TouchableOpacity
-        className="flex flex-row items-center gap-2"
-        // onPress={() => router.push("/profil/ubahjadwal")}
-      >
-        <FontAwesome5 name="clipboard-list" size={24} color="black" />
-        <Text className="font-bold text-lg text-skyDark">Ubah Jadwal</Text>
-      </TouchableOpacity>
-
-      <View className="w-full h-[2px] bg-skyDark my-2"/>
+      <View className="w-full h-[2px] bg-skyDark" />
 
       <View className="flex-1 justify-center">
         <TouchableOpacity
-          className="flex flex-row items-center gap-2"
+          className="flex flex-row items-center gap-2 py-1"
           onPress={showDeleteModal}
         >
-          <AntDesign name="delete" size={24} color="red" />
+          <AntDesign name="delete" size={22} color="red" />
           <Text className="font-bold text-lg text-red-500">Hapus Akun</Text>
         </TouchableOpacity>
 
-        <View className="w-full h-[2px] bg-skyDark my-2"/>
+        <View className="w-full h-[2px] bg-skyDark" />
 
         <TouchableOpacity
-          className="flex flex-row items-center gap-2"
+          className="flex flex-row items-center gap-2 pt-1"
           onPress={showLogoutModal}
         >
-          <AntDesign name="logout" size={24} color="red" />
+          <AntDesign name="logout" size={22} color="red" />
           <Text className="font-bold text-lg text-red-500">Log Out</Text>
         </TouchableOpacity>
         <Modal2

@@ -1,7 +1,7 @@
 import React from "react";
 import { View, StatusBar, Text, TouchableOpacity, Image } from "react-native";
 import RNModal from "react-native-modal";
-import { images } from "@/constants/images";
+import { images } from "../constants/images";
 
 type ModalProps = {
   isOpen: boolean;

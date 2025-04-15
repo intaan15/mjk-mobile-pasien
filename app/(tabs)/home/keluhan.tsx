@@ -2,8 +2,8 @@ import { View, Text, TextInput, Image, TouchableOpacity } from "react-native";
 import React from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import Background from "../../components/background";
-import { images } from "../../constants/images";
+import Background from "../../../components/background";
+import { images } from "../../../constants/images";
 
 export default function index() {
   const router = useRouter();
