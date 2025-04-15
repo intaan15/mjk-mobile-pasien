@@ -104,8 +104,8 @@ export default function Settings() {
           className="flex flex-row items-center gap-2 py-1"
           onPress={showDeleteModal}
         >
-          <AntDesign name="delete" size={22} color="red" />
-          <Text className="font-bold text-lg text-red-500">Hapus Akun</Text>
+          <AntDesign name="delete" size={22} color="#dc2626" />
+          <Text className="font-bold text-lg text-red-600">Hapus Akun</Text>
         </TouchableOpacity>
 
         <View className="w-full h-[2px] bg-skyDark" />
@@ -114,8 +114,8 @@ export default function Settings() {
           className="flex flex-row items-center gap-2 pt-1"
           onPress={showLogoutModal}
         >
-          <AntDesign name="logout" size={22} color="red" />
-          <Text className="font-bold text-lg text-red-500">Log Out</Text>
+          <AntDesign name="logout" size={22} color="#dc2626" />
+          <Text className="font-bold text-lg text-red-600">Log Out</Text>
         </TouchableOpacity>
         <Modal2
           isOpen={isModalVisible}
