@@ -21,6 +21,8 @@ const artikelList = [
     tgl_terbit_artikel: "12 Juni 2025",
     gambar_artikel: images.artikel,
     kategori_artikel: "Kesehatan",
+    isi_artikel:
+      "Serangan jantung disebabkan oleh tersumbatnya aliran darah ke jantung, biasanya akibat plak kolesterol.",
   },
   {
     id: 2,
@@ -28,6 +30,8 @@ const artikelList = [
     tgl_terbit_artikel: "30 Januari 1988",
     gambar_artikel: images.artikelobat,
     kategori_artikel: "Obat",
+    isi_artikel:
+      "Efek samping paracetamol bisa meliputi mual, ruam kulit, dan dalam kasus jarang, gangguan hati.",
   },
 ];
 export default function index() {
@@ -38,15 +42,13 @@ export default function index() {
   return (
     <Background>
       <View className="flex">
-        {/* <Navbar /> */}
-
         {/* Header */}
         <View className="flex flex-row justify-between items-center mb-4 w-full px-5 pt-8">
           <View className="flex flex-row items-center">
             <TouchableOpacity onPress={() => router.replace("./homescreen")}>
               <MaterialIcons name="arrow-back-ios" size={24} color="#025F96" />
             </TouchableOpacity>
-            <Text className="text-skyDark font-bold text-xl ml-2">Anomali</Text>
+            <Text className="text-skyDark font-bold text-xl ml-2">Artikel</Text>
           </View>
           <Image
             className="h-10 w-12"
@@ -67,7 +69,7 @@ export default function index() {
           ))}
         </View>
 
-        {/* Jadwal List */}
+        {/* Artikel List */}
         <View className="flex items-center">
           <ScrollView
             contentContainerStyle={{
@@ -100,11 +102,25 @@ export default function index() {
                         </Text>
                       </View>
                       <View className="w-1/3 items-center justify-center">
-                        <TouchableOpacity className="bg-skyDark items-center justify-center py-2 px-4 rounded-md">
+                        <TouchableOpacity 
+                          className="bg-skyDark items-center justify-center py-2 px-4 rounded-md"
+                          onPress={() =>
+                            router.push({
+                              pathname: "/(tabs)/artikel/selengkapnya",
+                              params: { 
+                                id: item.id,
+                                nama_artikel: item.nama_artikel,
+                                gambar_artikel: item.gambar_artikel,
+                                tgl_terbit_artikel: item.tgl_terbit_artikel,
+                                isi_artikel: item.isi_artikel,
+                              },
+                            })
+                          }>
                           <Text className="font-medium text-sm text-white">
                             Selengkapnya
                           </Text>
                         </TouchableOpacity>
+
                       </View>
                     </View>
                   </View>

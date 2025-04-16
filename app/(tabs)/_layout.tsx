@@ -71,7 +71,7 @@ const TabsNavigasi = () => {
       />
 
       <Tabs.Screen
-        name="artikel/index"
+        name="artikel"
         options={{
           title: "Artikel",
           headerShown: false,
