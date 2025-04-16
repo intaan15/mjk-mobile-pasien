@@ -6,6 +6,8 @@ import line from '../assets/images/Line.png';
 import logomjk from '../assets/images/logomjk.png';
 import foto from '../assets/images/foto.jpeg';
 import vline from '../assets/images/VertikalLine.png';
+import artikel from '../assets/images/artikeljantung.png';
+import artikelobat from '../assets/images/artikelpamol.jpg';
 
 export const images = {
     bg,
@@ -14,5 +16,7 @@ export const images = {
     line,
     logomjk,
     foto,
-    vline
+    vline,
+    artikel,
+    artikelobat
 };
