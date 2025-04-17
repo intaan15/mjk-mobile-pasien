@@ -8,9 +8,9 @@ export default function Index() {
 
   useEffect(() => {
     setTimeout(() => {
-      setIsShowSplash(false);
+      setIsShowSplash(true);
       // router.replace("/components/imagepicker");
-      router.replace("/(tabs)/artikel");
+      router.replace("/(tabs)/home");
     }, 10);
   }, []);
 

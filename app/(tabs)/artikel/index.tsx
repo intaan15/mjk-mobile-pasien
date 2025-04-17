@@ -45,7 +45,7 @@ export default function index() {
         {/* Header */}
         <View className="flex flex-row justify-between items-center mb-4 w-full px-5 pt-8">
           <View className="flex flex-row items-center">
-            <TouchableOpacity onPress={() => router.replace("./homescreen")}>
+            <TouchableOpacity onPress={() => router.back()}>
               <MaterialIcons name="arrow-back-ios" size={24} color="#025F96" />
             </TouchableOpacity>
             <Text className="text-skyDark font-bold text-xl ml-2">Artikel</Text>

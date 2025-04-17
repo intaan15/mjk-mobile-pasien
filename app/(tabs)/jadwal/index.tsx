@@ -109,7 +109,7 @@ export default function index() {
   return (
     <Background>
       <View className="">
-        <View className="flex flex-row justify-between items-center w-full px-5 py-5 pt-10">
+        <View className="flex flex-row justify-between items-center w-full px-5 py-5 pt-8">
           <View className="flex flex-row items-center">
             <TouchableOpacity onPress={() => router.back()}>
               <MaterialIcons name="arrow-back-ios" size={24} color="#025F96" />
