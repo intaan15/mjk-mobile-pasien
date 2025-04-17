@@ -12,90 +12,128 @@ const dummyDoctors = [
     id: 1,
     name: "Dr. Ikrom Nur Dzawin",
     rating: 4.3,
+    spesialis: "Umum",
     photo: images.foto,
   },
   {
     id: 2,
     name: "Dr. Siti Hidayah",
     rating: 4.6,
+    spesialis: "Anak",
     photo: images.foto,
   },
   {
     id: 3,
     name: "Dr. Ahmad Basri",
     rating: 4.1,
-    photo: images.foto,
-  },
-  {
-    id: 1,
-    name: "Dr. Ikrom Nur Dzawin",
-    rating: 4.3,
-    photo: images.foto,
-  },
-  {
-    id: 2,
-    name: "Dr. Siti Hidayah",
-    rating: 4.6,
-    photo: images.foto,
-  },
-  {
-    id: 3,
-    name: "Dr. Ahmad Basri",
-    rating: 4.1,
+    spesialis: "Jantung",
     photo: images.foto,
   },
   {
     id: 4,
-    name: "Dr. Ikrom Nur Dzawin",
-    rating: 4.3,
+    name: "Dr. Rina Wulandari",
+    rating: 4.5,
+    spesialis: "Mata",
     photo: images.foto,
   },
   {
     id: 5,
-    name: "Dr. Siti Hidayah",
-    rating: 4.6,
+    name: "Dr. Andi Santoso",
+    rating: 4.4,
+    spesialis: "Gigi",
     photo: images.foto,
   },
   {
     id: 6,
-    name: "Dr. Ahmad Basri",
-    rating: 4.1,
+    name: "Dr. Dzawin",
+    rating: 4.3,
+    spesialis: "THT",
     photo: images.foto,
   },
   {
     id: 7,
-    name: "Dr. Ikrom Nur Dzawin",
-    rating: 4.3,
+    name: "Dr. Adit",
+    rating: 4.6,
+    spesialis: "Kandungan",
     photo: images.foto,
   },
   {
     id: 8,
-    name: "Dr. Siti Hidayah",
-    rating: 4.6,
+    name: "Dr. Basreng",
+    rating: 4.1,
+    spesialis: "Bedah",
     photo: images.foto,
   },
   {
     id: 9,
-    name: "Dr. Ahmad Basri",
+    name: "Dr. Sari",
+    rating: 4.5,
+    spesialis: "Syaraf",
+    photo: images.foto,
+  },
+  {
+    id: 10,
+    name: "Dr. Santoso",
+    rating: 4.4,
+    spesialis: "Darah",
+    photo: images.foto,
+  },
+  {
+    id: 11,
+    name: "Dr. Jesika",
+    rating: 4.6,
+    spesialis: "Paru",
+    photo: images.foto,
+  },
+  {
+    id: 12,
+    name: "Dr. Ehsan",
     rating: 4.1,
+    spesialis: "Fisioterapi",
+    photo: images.foto,
+  },
+  {
+    id: 13,
+    name: "Dr. Mail",
+    rating: 4.5,
+    spesialis: "Ginjal",
+    photo: images.foto,
+  },
+  {
+    id: 14,
+    name: "Dr. Jarjit",
+    rating: 4.4,
+    spesialis: "Hati",
+    photo: images.foto,
+  },
+  {
+    id: 15,
+    name: "Dr. Tok Dalang",
+    rating: 4.4,
+    spesialis: "Umum",
     photo: images.foto,
   },
 ];
 
 export default function index() {
   const router = useRouter();
-  const { spesialis } = useLocalSearchParams();
+  const { spesialis, keluhan } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
+
+  const filteredDoctors = spesialis
+    ? dummyDoctors.filter((doctor) => doctor.spesialis === spesialis)
+    : dummyDoctors;
+
   return (
     <Background>
-      <View className="">
+      <View>
         <View className="flex flex-row justify-between items-center w-full px-5 py-5 pt-10">
           <View className="flex flex-row items-center">
             <TouchableOpacity onPress={() => router.back()}>
               <MaterialIcons name="arrow-back-ios" size={24} color="#025F96" />
             </TouchableOpacity>
             <Text className="text-skyDark font-bold text-xl pl-2">
-              {spesialis ? `Dokter Poli ${spesialis}` : " "}
+              {spesialis ? `Dokter Poli ${spesialis}` : "Daftar Dokter"}
             </Text>
           </View>
           <Image
@@ -104,6 +142,7 @@ export default function index() {
             resizeMode="contain"
           />
         </View>
+
         <ScrollView
           contentContainerStyle={{
             alignItems: "center",
@@ -113,10 +152,21 @@ export default function index() {
           showsVerticalScrollIndicator={false}
         >
           <View className="gap-5 pb-6 w-4/5">
-            {dummyDoctors.map((doctor, index) => (
+            {filteredDoctors.map((doctor, index) => (
               <TouchableOpacity
                 key={index}
                 className="bg-white w-full h-24 rounded-3xl flex-row items-center justify-center shadow-md"
+                onPress={() =>
+                    router.push({
+                      pathname: "/(tabs)/home/pilihjadwal",
+                      params: {
+                        doctorId: doctor.id,
+                        doctorName: doctor.name,
+                        keluhan: keluhan, 
+                      },
+                    })
+                  }
+                  
               >
                 <View className="px-4">
                   <Image

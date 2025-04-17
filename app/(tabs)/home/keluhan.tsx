@@ -1,13 +1,15 @@
 import { View, Text, TextInput, Image, TouchableOpacity } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Background from "../../../components/background";
 import { images } from "../../../constants/images";
 
-export default function index() {
+export default function Keluhan() {
   const router = useRouter();
   const { spesialis } = useLocalSearchParams();
+  const [keluhanText, setKeluhanText] = useState("");
+
   return (
     <Background>
       <View className="flex-1">
@@ -26,6 +28,7 @@ export default function index() {
             resizeMode="contain"
           />
         </View>
+
         <View className="items-center">
           <Text className="text-skyDark font-extrabold text-2xl pb-8">
             Silahkan cerita keluhan anda hari ini
@@ -35,14 +38,16 @@ export default function index() {
               placeholder="Tulis keluhan anda disini"
               className="bg-transparent border-gray-400 border-2 text-skyDark px-4 py-3 rounded-xl"
               placeholderTextColor="#025F96"
-            ></TextInput>
+              value={keluhanText}
+              onChangeText={setKeluhanText}
+            />
             <View className="items-end pt-10">
               <TouchableOpacity
                 className="px-8 bg-skyDark rounded-lg text-center"
                 onPress={() =>
                   router.push({
                     pathname: "/(tabs)/home/listdokter",
-                    params: { spesialis },
+                    params: { spesialis, keluhan: keluhanText },
                   })
                 }
               >
