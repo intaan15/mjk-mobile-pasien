@@ -1,33 +1,19 @@
 import { useState, useEffect } from "react";
 import SplashScreen from "./splashscreen";
-import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";
-import axios from "axios";
 
 export default function Index() {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isShowSplash, setIsShowSplash] = useState(true);
   const router = useRouter();
 
-  const checkToken = async () => {
-    const token = await SecureStore.getItemAsync("userToken");
-    if (token) {
-      try {
-        await axios.get("https://10.0.2.2:3333/api/auth/login_masyarakat", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        router.replace("/(tabs)/home");
-      } catch (error) {
-        await SecureStore.deleteItemAsync("userToken");
-        router.replace("/screens/signin");
-      }
-    } else {
-      router.replace("/screens/signin");
-    }
-  };
-
   useEffect(() => {
-    checkToken();
+    const timer = setTimeout(() => {
+      setIsShowSplash(false);
+      router.replace("/screens/signin");
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  return <>{isLoading ? <SplashScreen /> : null}</>;
+  return <>{isShowSplash ? <SplashScreen /> : null}</>;
 }
