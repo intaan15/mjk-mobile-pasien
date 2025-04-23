@@ -1,6 +1,16 @@
 import React, { useState } from "react";
 import {
-  View, Text, TextInput, Image, KeyboardAvoidingView, ScrollView, Platform, TouchableWithoutFeedback, Keyboard, StatusBar
+  View,
+  Text,
+  TextInput,
+  Image,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+  StatusBar,
+  TouchableOpacity,
 } from "react-native";
 import { useRouter } from "expo-router";
 import Background from "../../components/background";
@@ -15,11 +25,14 @@ export default function SignIn() {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post("https://mjk-backend-five.vercel.app/api/auth/login_masyarakat", {
-        identifier_masyarakat: identifier,
-        password_masyarakat: password,
-      });
-  
+      const response = await axios.post(
+        "https://mjk-backend-five.vercel.app/api/auth/login_masyarakat",
+        {
+          identifier_masyarakat: identifier,
+          password_masyarakat: password,
+        }
+      );
+
       const { token } = response.data;
       await SecureStore.setItemAsync("userToken", token);
       router.replace("/(tabs)/home");
@@ -37,7 +50,6 @@ export default function SignIn() {
       }
     }
   };
-  
 
   return (
     <Background>
@@ -47,11 +59,21 @@ export default function SignIn() {
         className="flex-1 w-full h-full"
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView contentContainerStyle={{
-            flexGrow: 1, justifyContent: "center", alignItems: "center", paddingVertical: 20
-          }} keyboardShouldPersistTaps="handled">
-            <View className="items-center mb-24">
-              <Image className="w-44 h-48" source={require("../../assets/images/logo.png")} resizeMode="contain" />
+          <ScrollView
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              paddingVertical: 20,
+            }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View className="items-center pb-24">
+              <Image
+                className="w-44 h-48"
+                source={require("../../assets/images/logo.png")}
+                resizeMode="contain"
+              />
               <Text className="text-4xl font-bold text-skyDark">Masuk</Text>
             </View>
             <View className="w-full max-w-sm flex items-center">
@@ -74,7 +96,24 @@ export default function SignIn() {
                   placeholderTextColor="#ccc"
                 />
               </View>
-              <Button text="Masuk" variant="success" className="w-5/6 mt-6" onPress={handleLogin} />
+              <Button
+                text="Masuk"
+                variant="success"
+                className="w-5/6 mt-6"
+                onPress={handleLogin}
+              />
+              <View className="flex-row pt-4">
+                <Text>Belum punya akun? </Text>
+                <TouchableOpacity onPress={() => router.replace("./signup")}>
+                  <Text
+                    style={{
+                      color: "#025F96",
+                      textDecorationLine: "underline",
+                    }}
+                  >Registrasi
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>
