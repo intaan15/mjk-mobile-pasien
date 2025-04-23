@@ -30,7 +30,7 @@ export default function ProfileScreen() {
     try {
       const userId = await AsyncStorage.getItem("userId");
       if (userId) {
-        const response = await axios.get(`http://10.0.2.2:3333/masyarakat/getbyid/${userId}`);
+        const response = await axios.get(`https://mjk-backend-five.vercel.app/api/masyarakat/getbyid/${userId}`);
         setUserData(response.data);
       }
     } catch (error) {
