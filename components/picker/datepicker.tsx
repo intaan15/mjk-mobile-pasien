@@ -4,7 +4,7 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 const DatePickerComponent = ({ label, onDateChange }) => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
   // Format tanggal ke "Senin, 24 Maret 2025"
@@ -17,11 +17,11 @@ const DatePickerComponent = ({ label, onDateChange }) => {
     });
   };
 
-  const handleConfirm = (date) => {
-    setSelectedDate(date);
-    onDateChange && onDateChange(date); // Mengirim data ke parent jika ada callback
-    setDatePickerVisibility(false);
-  };
+   const handleConfirm = (date: Date) => {
+     setSelectedDate(date);
+     onDateChange && onDateChange(date);
+     setDatePickerVisibility(false);
+   };
 
   return (
     <View className="flex flex-col items-start justify-center">
@@ -31,7 +31,9 @@ const DatePickerComponent = ({ label, onDateChange }) => {
       >
         <MaterialIcons name="date-range" size={24} color="#025F96" />
         <Text className=" ml-4 text-lg text-skyDark">
-          {formatDate(selectedDate)}
+          {selectedDate
+            ? formatDate(selectedDate)
+            : "Silakan pilih tanggal"}
         </Text>
       </TouchableOpacity>
 

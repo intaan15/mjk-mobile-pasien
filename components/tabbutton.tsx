@@ -6,7 +6,7 @@ export default function TabButton({ label, isActive, onPress }) {
         <TouchableOpacity
         onPress={onPress}
         className={`flex-1 items-center py-3 ${
-            isActive ? 'bg-skyDark' : 'bg-white border-l border-skyDark'
+            isActive ? 'bg-skyDark' : 'bg-white'
         }`}
         >
         <Text className={`font-semibold ${isActive ? 'text-white' : 'text-skyDark'}`}>{label}</Text>

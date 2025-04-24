@@ -17,8 +17,14 @@ import Background from "../../components/background";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import * as ImagePicker from "expo-image-picker";
+import DatePickerComponent from "../../components/picker/datepicker";
+import TabButton from "../../components/tabbutton";
+
+
 
 export default function Register() {
+  const [selectedTab, setSelectedTab] = useState("");
+  const [selectedDate, setSelectedDate] = useState(null);
   const router = useRouter();
   const [form, setForm] = useState({
     nama: "",
@@ -136,22 +142,34 @@ export default function Register() {
                   placeholderTextColor="#ccc"
                 />
                 <Text>Jenis Kelamin</Text>
-                <TextInput
-                  placeholder="Masukkan Jenis Kelamin"
+                <View
                   // value={identifier}
                   // onChangeText={setIdentifier}
-                  className="bg-transparent border-gray-400 border-2 text-black px-4 py-3 rounded-xl"
-                  placeholderTextColor="#ccc"
-                />
+                  className="bg-transparent border-gray-400 border-2 text-black  rounded-xl"
+                >
+                  <View className="flex flex-row rounded-xl border-2 border-[#ccc] overflow-hidden">
+                    {["Laki Laki", "Perempuan"].map((tab) => (
+                      <TabButton
+                        key={tab}
+                        label={tab}
+                        isActive={selectedTab === tab}
+                        onPress={() => setSelectedTab(tab)}
+                      />
+                    ))}
+                  </View>
+                </View>
+
                 <Text>Tanggal Lahir</Text>
-                <TextInput
-                  placeholder="Masukkan Tanggal Lahir"
-                  secureTextEntry
-                  // value={password}
+                <View className="bg-transparent border-2 border-gray-400 text-black px-4 py-3 rounded-xl">
+                  {/* secureTextEntry // value={password}
                   // onChangeText={setPassword}
-                  className="bg-transparent border-2 border-gray-400 text-black px-4 py-3 rounded-xl"
-                  placeholderTextColor="#ccc"
-                />
+                  
+                  px-4 py-3 rounded-xl" placeholderTextColor="#ccc" */}
+                  <DatePickerComponent
+                    label="Tanggal Terpilih"
+                    onDateChange={(date) => setSelectedDate(date)}
+                  />
+                </View>
                 <Text>Foto KTP</Text>
                 <TextInput
                   placeholder="Masukkan Foto KTP"
