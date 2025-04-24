@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, TextInput, ScrollView, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import { images } from "../../../constants/images";
@@ -23,6 +31,9 @@ interface User {
 
 export default function ProfileScreen() {
   const [userData, setUserData] = useState<User | null>(null);
+  const [passwordLama, setPasswordLama] = useState("");
+  const [passwordBaru, setPasswordBaru] = useState("");
+  const [konfirmasiPassword, setKonfirmasiPassword] = useState("");
 
   useEffect(() => {
     fetchUserData();
@@ -60,6 +71,43 @@ export default function ProfileScreen() {
       month: "long",
       year: "numeric",
     });
+  };
+
+  const handleGantiPassword = async () => {
+    try {
+      const token = await SecureStore.getItemAsync("userToken");
+
+      if (!token) {
+        return Alert.alert(
+          "Gagal",
+          "Token tidak ditemukan, silakan login ulang"
+        );
+      }
+
+      const res = await axios.patch(
+        "https://mjk-backend-five.vercel.app/api/masyarakat/ubah-password",
+        {
+          password_lama: passwordLama,
+          password_baru: passwordBaru,
+          konfirmasi_password_baru: konfirmasiPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      Alert.alert("Berhasil", res.data.message);
+      setPasswordLama("");
+      setPasswordBaru("");
+      setKonfirmasiPassword("");
+    } catch (error: any) {
+      const msg =
+        error.response?.data?.message ||
+        "Terjadi kesalahan saat mengubah password";
+      Alert.alert("Gagal", msg);
+    }
   };
 
   return (
@@ -149,19 +197,28 @@ export default function ProfileScreen() {
               <TextInput
                 placeholder="Password Lama"
                 secureTextEntry
+                value={passwordLama}
+                onChangeText={setPasswordLama}
                 className="border-2 rounded-xl border-gray-400 p-2 mt-2 w-full"
               />
               <TextInput
                 placeholder="Password Baru"
                 secureTextEntry
+                value={passwordBaru}
+                onChangeText={setPasswordBaru}
                 className="border-2 rounded-xl border-gray-400 p-2 mt-2 w-full"
               />
               <TextInput
                 placeholder="Konfirmasi Password Baru"
                 secureTextEntry
+                value={konfirmasiPassword}
+                onChangeText={setKonfirmasiPassword}
                 className="border-2 rounded-xl border-gray-400 p-2 mt-2 w-full"
               />
-              <TouchableOpacity className="bg-white p-2 rounded-xl w-2/4  mt-4 border-2 border-skyDark">
+              <TouchableOpacity
+                className="bg-white p-2 rounded-xl w-2/4  mt-4 border-2 border-skyDark"
+                onPress={handleGantiPassword}
+              >
                 <Text className="text-skyDark text-center font-bold">
                   Simpan
                 </Text>
