@@ -58,7 +58,9 @@ export default function ProfileScreen() {
     return (
       <Background>
         <View className="flex-1 justify-center items-center">
-          <Text className="text-skyDark text-xl font-bold">Memuat profil...</Text>
+          <Text className="text-skyDark text-xl font-bold">
+            Memuat profil...
+          </Text>
         </View>
       </Background>
     );
@@ -194,37 +196,44 @@ export default function ProfileScreen() {
             </Text>
             <View className="w-full h-[2px] bg-skyDark" />
             <View className="flex flex-col items-center">
-              <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">Kata Sandi Lama</Text>
+              <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">
+                Kata Sandi Lama
+              </Text>
               <TextInput
                 placeholder="Masukkan Kata Sandi Lama"
                 secureTextEntry
                 value={passwordLama}
                 onChangeText={setPasswordLama}
                 className="border-2 rounded-xl border-gray-400 p-2 w-full"
+                placeholderTextColor="#888"
               />
-              <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">Kata Sandi Baru</Text>
+              <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">
+                Kata Sandi Baru
+              </Text>
               <TextInput
                 placeholder="Masukkan Kata Sandi Baru"
                 secureTextEntry
                 value={passwordBaru}
                 onChangeText={setPasswordBaru}
                 className="border-2 rounded-xl border-gray-400 p-2 w-full"
+                placeholderTextColor="#888"
               />
-              <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">Konfirmasi Kata Sandi Baru</Text>
+              <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">
+                Konfirmasi Kata Sandi Baru
+              </Text>
               <TextInput
                 placeholder="Masukkan Konfirmasi Kata Sandi Baru"
                 secureTextEntry
                 value={konfirmasiPassword}
                 onChangeText={setKonfirmasiPassword}
                 className="border-2 rounded-xl border-gray-400 p-2 w-full"
+                placeholderTextColor="#888"
               />
               <TouchableOpacity
                 className="p-2 rounded-xl w-2/4 mt-6 bg-skyDark"
                 onPress={handleGantiPassword}
               >
-                <Text className="text-white text-center font-bold">
-                  Simpan
-                </Text>
+                <Text className="text-white text-center font-bold">Simpan</Text>
               </TouchableOpacity>
             </View>
           </View>
