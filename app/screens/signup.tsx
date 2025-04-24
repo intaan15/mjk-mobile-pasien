@@ -171,22 +171,23 @@ export default function Register() {
                   />
                 </View>
                 <Text>Foto KTP</Text>
-                <TextInput
-                  placeholder="Masukkan Foto KTP"
+                <TouchableOpacity
+                  onPress={() => router.replace("./panduanktp")}
                   // value={identifier}
                   // onChangeText={setIdentifier}
-                  className="bg-transparent border-gray-400 border-2 text-black px-4 py-3 rounded-xl"
-                  placeholderTextColor="#ccc"
-                />
+                  className="bg-transparent border-[#06B400]  border-2 text-black px-4 py-3 rounded-xl"
+                >
+                  <Text className="text-[#06B400] ">Masukkan Foto KTP</Text>
+                </TouchableOpacity>
                 <Text>Selfie dengan KTP</Text>
-                <TextInput
-                  placeholder="Masukkan Selfie dengan KTP"
-                  secureTextEntry
-                  // value={password}
-                  // onChangeText={setPassword}
-                  className="bg-transparent border-2 border-gray-400 text-black px-4 py-3 rounded-xl"
-                  placeholderTextColor="#ccc"
-                />
+                <TouchableOpacity
+                  onPress={() => router.replace("./panduanktp")}
+                  // value={identifier}
+                  // onChangeText={setIdentifier}
+                  className="bg-transparent border-[#06B400] border-2 text-black px-4 py-3 rounded-xl"
+                >
+                  <Text className="text-[#06B400] ">Selfie dengan KTP</Text>
+                </TouchableOpacity>
               </View>
               <TouchableOpacity
                 className="bg-skyDark py-3 px-6 rounded-3xl mt-6 w-4/6 "
