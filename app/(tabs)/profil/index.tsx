@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Image, ScrollView } from 'react-native';
-import axios from 'axios'; 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { images } from '../../../constants/images';
+import React, { useState, useEffect } from "react";
+import { View, Text, Image, TextInput, ScrollView, TouchableOpacity } from "react-native";
+import axios from "axios";
+import * as SecureStore from "expo-secure-store";
+import { images } from "../../../constants/images";
 import Background from "../../../components/background";
+import Settings from "../../../components/settings";
+import { Ionicons } from "@expo/vector-icons";
 
-// Definisikan interface User
 interface User {
   nama_masyarakat: string;
   username_masyarakat: string;
@@ -22,15 +23,19 @@ interface User {
 
 export default function ProfileScreen() {
   const [userData, setUserData] = useState<User | null>(null);
+
   useEffect(() => {
     fetchUserData();
   }, []);
 
   const fetchUserData = async () => {
     try {
-      const userId = await AsyncStorage.getItem("userId");
-      if (userId) {
-        const response = await axios.get(`https://mjk-backend-five.vercel.app/api/masyarakat/getbyid/${userId}`);
+      const userId = await SecureStore.getItemAsync("userId");
+      const cleanedUserId = userId?.replace(/"/g, "");
+      if (cleanedUserId) {
+        const response = await axios.get(
+          `https://mjk-backend-five.vercel.app/api/masyarakat/getbyid/${cleanedUserId}`
+        );
         setUserData(response.data);
       }
     } catch (error) {
@@ -48,6 +53,15 @@ export default function ProfileScreen() {
     );
   }
 
+  const formatTanggal = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
   return (
     <Background>
       <View className="flex-1">
@@ -55,10 +69,7 @@ export default function ProfileScreen() {
           {/* Header Profil */}
           <View className="relative pt-12 bg-skyLight rounded-b-[50px] py-28">
             <View className="absolute inset-0 flex items-center justify-between flex-row px-12">
-              <Text className="text-skyDark text-2xl font-bold">
-                Selamat datang, {"\n"}
-                {userData.nama_masyarakat}
-              </Text>
+              <Text className="text-skyDark text-2xl font-bold">Profile</Text>
               <Image
                 className="h-10 w-12"
                 source={images.logo}
@@ -75,8 +86,8 @@ export default function ProfileScreen() {
                 className="w-32 h-32 rounded-full border-4 border-skyDark"
               />
             ) : (
-              <View className="rounded-full border-4 border-skyDark items-center justify-center">
-                <Text className="text-gray-500">No Image</Text>
+              <View className="w-32 h-32 rounded-full border-4 border-skyDark items-center justify-center bg-gray-200">
+                <Ionicons name="person" size={64} color="#0C4A6E" />
               </View>
             )}
           </View>
@@ -94,8 +105,12 @@ export default function ProfileScreen() {
             <Text className="font-bold text-lg text-skyDark">Nama</Text>
             <Text className="text-gray-700">{userData.nama_masyarakat}</Text>
 
-            <Text className="font-bold text-lg text-skyDark mt-2">Username</Text>
-            <Text className="text-gray-700">{userData.username_masyarakat}</Text>
+            <Text className="font-bold text-lg text-skyDark mt-2">
+              Username
+            </Text>
+            <Text className="text-gray-700">
+              {userData.username_masyarakat}
+            </Text>
 
             <Text className="font-bold text-lg text-skyDark mt-2">Email</Text>
             <Text className="text-gray-700">{userData.email_masyarakat}</Text>
@@ -106,15 +121,54 @@ export default function ProfileScreen() {
             <Text className="font-bold text-lg text-skyDark mt-2">Alamat</Text>
             <Text className="text-gray-700">{userData.alamat_masyarakat}</Text>
 
-            <Text className="font-bold text-lg text-skyDark mt-2">Nomor Telepon</Text>
+            <Text className="font-bold text-lg text-skyDark mt-2">
+              Nomor Telepon
+            </Text>
             <Text className="text-gray-700">{userData.notlp_masyarakat}</Text>
 
-            <Text className="font-bold text-lg text-skyDark mt-2">Jenis Kelamin</Text>
-            <Text className="text-gray-700">{userData.jeniskelamin_masyarakat}</Text>
+            <Text className="font-bold text-lg text-skyDark mt-2">
+              Jenis Kelamin
+            </Text>
+            <Text className="text-gray-700">
+              {userData.jeniskelamin_masyarakat}
+            </Text>
 
-            <Text className="font-bold text-lg text-skyDark mt-2">Tanggal Lahir</Text>
-            <Text className="text-gray-700">{userData.tgl_lahir_masyarakat}</Text>
+            <Text className="font-bold text-lg text-skyDark mt-2">
+              Tanggal Lahir
+            </Text>
+            <Text className="text-gray-700">
+              {formatTanggal(userData.tgl_lahir_masyarakat)}
+            </Text>
+
+            {/* Ganti Password */}
+            <Text className="font-bold text-lg text-skyDark mt-4">
+              Ganti Password
+            </Text>
+            <View className="w-full h-[2px] bg-skyDark" />
+            <View className="flex flex-col items-center gap-2 ">
+              <TextInput
+                placeholder="Password Lama"
+                secureTextEntry
+                className="border-2 rounded-xl border-gray-400 p-2 mt-2 w-full"
+              />
+              <TextInput
+                placeholder="Password Baru"
+                secureTextEntry
+                className="border-2 rounded-xl border-gray-400 p-2 mt-2 w-full"
+              />
+              <TextInput
+                placeholder="Konfirmasi Password Baru"
+                secureTextEntry
+                className="border-2 rounded-xl border-gray-400 p-2 mt-2 w-full"
+              />
+              <TouchableOpacity className="bg-white p-2 rounded-xl w-2/4  mt-4 border-2 border-skyDark">
+                <Text className="text-skyDark text-center font-bold">
+                  Simpan
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
+          <Settings />
         </ScrollView>
       </View>
     </Background>

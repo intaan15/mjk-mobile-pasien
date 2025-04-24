@@ -22,7 +22,7 @@ export default function SignIn() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
-
+  
   const handleLogin = async () => {
     try {
       const response = await axios.post(
@@ -33,8 +33,9 @@ export default function SignIn() {
         }
       );
 
-      const { token } = response.data;
+      const { token, userId } = response.data;
       await SecureStore.setItemAsync("userToken", token);
+      await SecureStore.setItemAsync("userId", userId);
       router.replace("/(tabs)/home");
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {

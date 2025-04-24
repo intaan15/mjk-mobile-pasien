@@ -1,5 +1,5 @@
 import { View, Text, Image, TouchableOpacity } from "react-native";
-import React from "react";
+import React, {useState, useEffect} from "react";
 import { useRouter } from "expo-router";
 import Background from "../../../components/background";
 import { images } from "../../../constants/images";
@@ -17,6 +17,8 @@ import DarahIcon from "../../../assets/icons/darah.svg";
 import FisioIcon from "../../../assets/icons/fisio.svg";
 import GinjalIcon from "../../../assets/icons/ginjal.svg";
 import HatiIcon from "../../../assets/icons/hati.svg";
+import * as SecureStore from "expo-secure-store";
+import axios from "axios";
 
 const spesialisList = [
   { name: "Umum", Icon: UmumIcon },
@@ -35,15 +37,41 @@ const spesialisList = [
   { name: "Hati", Icon: HatiIcon },
 ];
 
+interface User {
+  nama_masyarakat: string;
+}
+
 export default function index() {
   const router = useRouter();
+  const [userData, setUserData] = useState<User | null>(null);
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const userId = await SecureStore.getItemAsync("userId");
+      const cleanedUserId = userId?.replace(/"/g, "");
+      if (cleanedUserId) {
+        const response = await axios.get(
+          `https://mjk-backend-five.vercel.app/api/masyarakat/getbyid/${cleanedUserId}`
+        );
+        setUserData(response.data);
+      }
+    } catch (error) {
+      console.error("Gagal mengambil data profil:", error);
+    }
+  };
+
   return (
     <Background>
       <View className="flex-1">
         <View className="relative pt-12 bg-skyLight rounded-b-[50px] py-28">
           <View className="absolute inset-0 flex items-center justify-between flex-row px-12">
             <Text className="text-skyDark text-2xl font-bold">
-              Selamat datang, {"\n"}king!
+              Selamat datang, {"\n"}
+              {userData ? userData.nama_masyarakat : "Loading..."}
             </Text>
             <Image
               className="h-10 w-12"

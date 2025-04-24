@@ -8,25 +8,39 @@ export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  const checkToken = async () => {
-    const token = await SecureStore.getItemAsync("userToken");
-    if (token) {
-      try {
-        await axios.get("https://mjk-backend-five.vercel.app/api/auth/login_masyarakat", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        router.replace("/(tabs)/home");
-      } catch (error) {
-        await SecureStore.deleteItemAsync("userToken");
-        router.replace("/screens/signin");
-      }
-    } else {
-      router.replace("/screens/signin");
-    }
-  };
-
   useEffect(() => {
-    checkToken();
+    const handleStartup = async () => {
+      const token = await SecureStore.getItemAsync("userToken");
+
+      if (token) {
+        try {
+          await axios.get(
+            "https://mjk-backend-five.vercel.app/api/auth/login_masyarakat",
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          // delay 2 detik, lalu masuk home
+          setTimeout(() => {
+            setIsLoading(false);
+            router.replace("/(tabs)/home");
+          }, 2000);
+        } catch (error) {
+          await SecureStore.deleteItemAsync("userToken");
+          setTimeout(() => {
+            setIsLoading(false);
+            router.replace("/screens/signin");
+          }, 2000);
+        }
+      } else {
+        setTimeout(() => {
+          setIsLoading(false);
+          router.replace("/screens/signin");
+        }, 2000);
+      }
+    };
+
+    handleStartup();
   }, []);
 
   return <>{isLoading ? <SplashScreen /> : null}</>;
