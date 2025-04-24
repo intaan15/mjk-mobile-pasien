@@ -58,7 +58,7 @@ export default function ProfileScreen() {
     return (
       <Background>
         <View className="flex-1 justify-center items-center">
-          <Text>Memuat profil...</Text>
+          <Text className="text-skyDark text-xl font-bold">Memuat profil...</Text>
         </View>
       </Background>
     );
@@ -193,33 +193,36 @@ export default function ProfileScreen() {
               Ganti Password
             </Text>
             <View className="w-full h-[2px] bg-skyDark" />
-            <View className="flex flex-col items-center gap-2 ">
+            <View className="flex flex-col items-center">
+              <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">Kata Sandi Lama</Text>
               <TextInput
-                placeholder="Password Lama"
+                placeholder="Masukkan Kata Sandi Lama"
                 secureTextEntry
                 value={passwordLama}
                 onChangeText={setPasswordLama}
-                className="border-2 rounded-xl border-gray-400 p-2 mt-2 w-full"
+                className="border-2 rounded-xl border-gray-400 p-2 w-full"
               />
+              <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">Kata Sandi Baru</Text>
               <TextInput
-                placeholder="Password Baru"
+                placeholder="Masukkan Kata Sandi Baru"
                 secureTextEntry
                 value={passwordBaru}
                 onChangeText={setPasswordBaru}
-                className="border-2 rounded-xl border-gray-400 p-2 mt-2 w-full"
+                className="border-2 rounded-xl border-gray-400 p-2 w-full"
               />
+              <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">Konfirmasi Kata Sandi Baru</Text>
               <TextInput
-                placeholder="Konfirmasi Password Baru"
+                placeholder="Masukkan Konfirmasi Kata Sandi Baru"
                 secureTextEntry
                 value={konfirmasiPassword}
                 onChangeText={setKonfirmasiPassword}
-                className="border-2 rounded-xl border-gray-400 p-2 mt-2 w-full"
+                className="border-2 rounded-xl border-gray-400 p-2 w-full"
               />
               <TouchableOpacity
-                className="bg-white p-2 rounded-xl w-2/4  mt-4 border-2 border-skyDark"
+                className="p-2 rounded-xl w-2/4 mt-6 bg-skyDark"
                 onPress={handleGantiPassword}
               >
-                <Text className="text-skyDark text-center font-bold">
+                <Text className="text-white text-center font-bold">
                   Simpan
                 </Text>
               </TouchableOpacity>
