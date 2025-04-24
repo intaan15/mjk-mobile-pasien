@@ -14,7 +14,6 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import Background from "../../components/background";
-import Button from "../../components/button";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import * as ImagePicker from "expo-image-picker";
@@ -171,12 +170,14 @@ export default function Register() {
                   placeholderTextColor="#ccc"
                 />
               </View>
-              <Button
-                text="Daftar"
-                variant="success"
-                className="w-5/6 mt-6"
-                onPress={""}
-              />
+              <TouchableOpacity
+                className="bg-skyDark py-3 px-6 rounded-3xl mt-6 w-4/6 "
+                // onPress={"handleLogin"}
+              >
+                <Text className="text-xl font-normal text-white text-center">
+                  Daftar
+                </Text>
+              </TouchableOpacity>
               <View className="flex-row pt-4 pb-24">
                 <Text>Sudah punya akun? </Text>
                 <TouchableOpacity onPress={() => router.replace("./signin")}>
@@ -185,7 +186,8 @@ export default function Register() {
                       color: "#025F96",
                       textDecorationLine: "underline",
                     }}
-                  >Login
+                  >
+                    Login
                   </Text>
                 </TouchableOpacity>
               </View>

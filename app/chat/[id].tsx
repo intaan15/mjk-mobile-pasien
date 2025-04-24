@@ -13,10 +13,13 @@ import Background from "../../components/background";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Feather from "@expo/vector-icons/Feather";
+import ImagePickerComponent, {
+  useImage,
+  ImageProvider,
+} from "../../components/picker/imagepicker";
+import ModalTemplate from "../../components/modals/ModalTemplate";
+import ModalContent from "../../components/modals/ModalContent";
 
-import { useImage } from "../../components/imagecontext";
-import ImagePickerComponent from "../../components/imagepicker";
-import ImageModal from "../../components/modal4";
 
 const dummyMessages = [
   { id: "1", text: "Halo, ada yang bisa dibantu?", sender: "other" },
@@ -59,14 +62,36 @@ const dummyMessages = [
 export default function ChatScreen() {
   const router = useRouter();
   const [message, setMessage] = useState("");
-  const [modalVisible, setModalImageVisible] = useState(false);
-
-  const imageContext = useImage();
-  const setImage = imageContext?.setImage;
-
-  const { openGallery, openCamera } = ImagePickerComponent({
-    onImageSelected: setImage,
-  });
+   const [isModalVisible, setModalVisible] = useState(false);
+   const [modalType, setModalType] = useState("info");
+ 
+   const openModal = (type: string) => {
+     setModalType(type);
+     setModalVisible(true);
+   };
+ 
+   const toggleModal = () => {
+     setModalVisible(!isModalVisible);
+   };
+   const imageContext = useImage();
+   const profileImage = imageContext?.profileImage;
+   const setImage = imageContext?.setImage;
+ 
+   const { openGallery, openCamera } = ImagePickerComponent({
+     onImageSelected: setImage,
+   });
+ 
+   // Handler baru yang gabung pick image + tutup modal
+   const handlePickImage = async () => {
+     await openGallery();
+     setModalVisible(false);
+   };
+ 
+   const handleOpenCamera = async () => {
+     await openCamera();
+     setModalVisible(false);
+   };
+ 
 
   const handleSend = () => {
     if (message.trim()) {
@@ -122,7 +147,7 @@ export default function ChatScreen() {
 
         {/* Chat Input */}
         <View className="absolute bottom-0 left-0 right-0 bg-skyDark p-4 flex-row items-center gap-2">
-          <TouchableOpacity onPress={() => setModalImageVisible(true)}>
+          <TouchableOpacity onPress={() => openModal("pilihgambar")}>
             <Feather name="image" size={28} color="#C3E9FF" />
           </TouchableOpacity>
 
@@ -145,18 +170,17 @@ export default function ChatScreen() {
         </View>
 
         {/* Modal untuk pilih gambar */}
-        <ImageModal
-          visible={modalVisible}
-          onClose={() => setModalImageVisible(false)}
-          onPickImage={() => {
-            openGallery();
-            setModalImageVisible(false);
-          }}
-          onOpenCamera={() => {
-            openCamera();
-            setModalImageVisible(false);
-          }}
-        />
+        <ModalTemplate
+          isVisible={isModalVisible}
+          onClose={() => setModalVisible(false)}
+        >
+          <ModalContent
+            modalType={modalType}
+            onPickImage={handlePickImage}
+            onOpenCamera={handleOpenCamera}
+            onClose={() => setModalVisible(false)}
+          />
+        </ModalTemplate>
       </View>
     </Background>
   );

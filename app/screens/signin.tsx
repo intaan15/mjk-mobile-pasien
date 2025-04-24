@@ -14,7 +14,6 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import Background from "../../components/background";
-import Button from "../../components/button";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
@@ -97,12 +96,14 @@ export default function SignIn() {
                   placeholderTextColor="#ccc"
                 />
               </View>
-              <Button
-                text="Masuk"
-                variant="success"
-                className="w-5/6 mt-6"
+              <TouchableOpacity
+                className="bg-skyDark py-3 px-6 rounded-3xl mt-6 w-4/6 "
                 onPress={handleLogin}
-              />
+              >
+                <Text className="text-xl font-normal text-white text-center">
+                  Masuk
+                </Text>
+              </TouchableOpacity>
               <View className="flex-row pt-4">
                 <Text>Belum punya akun? </Text>
                 <TouchableOpacity onPress={() => router.replace("./signup")}>
@@ -111,7 +112,8 @@ export default function SignIn() {
                       color: "#025F96",
                       textDecorationLine: "underline",
                     }}
-                  >Registrasi
+                  >
+                    Registrasi
                   </Text>
                 </TouchableOpacity>
               </View>
