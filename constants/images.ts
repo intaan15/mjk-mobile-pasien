@@ -8,6 +8,8 @@ import foto from '../assets/images/foto.jpeg';
 import vline from '../assets/images/VertikalLine.png';
 import artikel from '../assets/images/artikeljantung.png';
 import artikelobat from '../assets/images/artikelpamol.jpg';
+import salahktp from '../assets/images/ktpsalah.png';
+import benarktp from '../assets/images/ktpbenar.png'
 
 export const images = {
     bg,
@@ -18,5 +20,7 @@ export const images = {
     foto,
     vline,
     artikel,
-    artikelobat
+    artikelobat,
+    salahktp,
+    benarktp
 };
