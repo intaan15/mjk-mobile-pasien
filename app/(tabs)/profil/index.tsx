@@ -45,7 +45,7 @@ export default function ProfileScreen() {
       const cleanedUserId = userId?.replace(/"/g, "");
       if (cleanedUserId) {
         const response = await axios.get(
-          `https://mjk-backend-five.vercel.app/api/masyarakat/getbyid/${cleanedUserId}`
+          `https://mjk-backend-production.up.railway.app/api/masyarakat/getbyid/${cleanedUserId}`
         );
         setUserData(response.data);
       }
@@ -87,7 +87,7 @@ export default function ProfileScreen() {
       }
 
       const res = await axios.patch(
-        "https://mjk-backend-five.vercel.app/api/masyarakat/ubah-password",
+        "https://mjk-backend-production.up.railway.app/api/masyarakat/ubah-password",
         {
           password_lama: passwordLama,
           password_baru: passwordBaru,

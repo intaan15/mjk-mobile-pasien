@@ -55,7 +55,7 @@ export default function index() {
       const cleanedUserId = userId?.replace(/"/g, "");
       if (cleanedUserId) {
         const response = await axios.get(
-          `https://mjk-backend-five.vercel.app/api/masyarakat/getbyid/${cleanedUserId}`
+          `https://mjk-backend-production.up.railway.app/api/masyarakat/getbyid/${cleanedUserId}`
         );
         setUserData(response.data);
       }

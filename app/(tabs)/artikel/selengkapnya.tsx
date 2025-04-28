@@ -113,7 +113,7 @@ export default function Selengkapnya() {
   useEffect(() => {
     const fetchArtikelDetail = async () => {
       try {
-        const response = await fetch(`https://mjk-backend-five.vercel.app/api/artikel/${id}`);
+        const response = await fetch(`https://mjk-backend-production.up.railway.app/api/artikel/${id}`);
         const data = await response.json();
         setArtikel(data);
       } catch (error) {
