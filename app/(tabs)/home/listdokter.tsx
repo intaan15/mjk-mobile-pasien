@@ -1,128 +1,57 @@
-import { View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
-import React from "react";
+import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator } from "react-native";
+import React, { useState, useEffect } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import Background from "../../../components/background";
-import { images } from "../../../constants/images";
 import { FontAwesome } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Background from "../../../components/background";
+import { images } from "../../../constants/images";
 
-const dummyDoctors = [
-  {
-    id: 1,
-    name: "Dr. Ikrom Nur Dzawin",
-    rating: 4.3,
-    spesialis: "Umum",
-    photo: images.foto,
-  },
-  {
-    id: 2,
-    name: "Dr. Siti Hidayah",
-    rating: 4.6,
-    spesialis: "Anak",
-    photo: images.foto,
-  },
-  {
-    id: 3,
-    name: "Dr. Ahmad Basri",
-    rating: 4.1,
-    spesialis: "Jantung",
-    photo: images.foto,
-  },
-  {
-    id: 4,
-    name: "Dr. Rina Wulandari",
-    rating: 4.5,
-    spesialis: "Mata",
-    photo: images.foto,
-  },
-  {
-    id: 5,
-    name: "Dr. Andi Santoso",
-    rating: 4.4,
-    spesialis: "Gigi",
-    photo: images.foto,
-  },
-  {
-    id: 6,
-    name: "Dr. Dzawin",
-    rating: 4.3,
-    spesialis: "THT",
-    photo: images.foto,
-  },
-  {
-    id: 7,
-    name: "Dr. Adit",
-    rating: 4.6,
-    spesialis: "Kandungan",
-    photo: images.foto,
-  },
-  {
-    id: 8,
-    name: "Dr. Basreng",
-    rating: 4.1,
-    spesialis: "Bedah",
-    photo: images.foto,
-  },
-  {
-    id: 9,
-    name: "Dr. Sari",
-    rating: 4.5,
-    spesialis: "Syaraf",
-    photo: images.foto,
-  },
-  {
-    id: 10,
-    name: "Dr. Santoso",
-    rating: 4.4,
-    spesialis: "Darah",
-    photo: images.foto,
-  },
-  {
-    id: 11,
-    name: "Dr. Jesika",
-    rating: 4.6,
-    spesialis: "Paru",
-    photo: images.foto,
-  },
-  {
-    id: 12,
-    name: "Dr. Ehsan",
-    rating: 4.1,
-    spesialis: "Fisioterapi",
-    photo: images.foto,
-  },
-  {
-    id: 13,
-    name: "Dr. Mail",
-    rating: 4.5,
-    spesialis: "Ginjal",
-    photo: images.foto,
-  },
-  {
-    id: 14,
-    name: "Dr. Jarjit",
-    rating: 4.4,
-    spesialis: "Hati",
-    photo: images.foto,
-  },
-  {
-    id: 15,
-    name: "Dr. Tok Dalang",
-    rating: 4.4,
-    spesialis: "Umum",
-    photo: images.foto,
-  },
-];
+type Doctor = {
+  _id: string;
+  nama_dokter: string;
+  spesialis_dokter: string;
+  rating_dokter: number;
+  foto_profil_dokter?: string;
+};
 
-export default function index() {
+export default function Index() {
   const router = useRouter();
   const { spesialis, keluhan } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
 
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const response = await fetch("https://mjk-backend-production.up.railway.app/api/dokter/getall");
+        const data = await response.json();
+        setDoctors(data);
+      } catch (error) {
+        console.error("Gagal fetch data dokter:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDoctors();
+  }, []);
+
   const filteredDoctors = spesialis
-    ? dummyDoctors.filter((doctor) => doctor.spesialis === spesialis)
-    : dummyDoctors;
+    ? doctors.filter((doctor) => doctor.spesialis_dokter === spesialis)
+    : doctors;
+
+  if (loading) {
+    return (
+      <Background>
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#025F96" />
+        </View>
+      </Background>
+    );
+  }
 
   return (
     <Background>
@@ -154,36 +83,39 @@ export default function index() {
           <View className="gap-5 pb-6 w-4/5">
             {filteredDoctors.map((doctor, index) => (
               <TouchableOpacity
-                key={index}
+                key={doctor._id || index}
                 className="bg-white w-full h-24 rounded-3xl flex-row items-center justify-center shadow-md"
                 onPress={() =>
-                    router.push({
-                      pathname: "/(tabs)/home/pilihjadwal",
-                      params: {
-                        doctorId: doctor.id,
-                        doctorName: doctor.name,
-                        keluhan: keluhan, 
-                      },
-                    })
-                  }
-                  
+                  router.push({
+                    pathname: "/(tabs)/home/pilihjadwal",
+                    params: {
+                      doctorId: doctor._id,
+                      doctorName: doctor.nama_dokter,
+                      keluhan: keluhan,
+                    },
+                  })
+                }
               >
                 <View className="px-4">
                   <Image
-                    source={doctor.photo}
+                    source={
+                      doctor.foto_profil_dokter
+                        ? { uri: doctor.foto_profil_dokter }
+                        : images.foto
+                    }
                     className="h-16 w-16 rounded-full border border-gray-300"
                     resizeMode="cover"
                   />
                 </View>
                 <View className="w-3/4">
                   <Text className="font-bold text-base text-skyDark pb-1">
-                    {doctor.name}
+                    {doctor.nama_dokter}
                   </Text>
                   <View className="h-[2px] bg-skyDark w-11/12" />
                   <View className="flex-row pt-1 items-center">
                     <FontAwesome name="star" size={20} color="#025F96" />
                     <Text className="font-bold text-base text-skyDark pl-1">
-                      {doctor.rating}
+                      {doctor.rating_dokter}
                     </Text>
                   </View>
                 </View>
