@@ -193,7 +193,7 @@ const ScheduleScreen = () => {
               className="justify-center bg-transparent border-2 border-skyDark py-1 rounded-lg w-1/3 h-10"
               onPress={() => {
                 if (selectedTime) {
-                  // router.push("/(tabs)/home/konfirmasi");
+                  router.push("/(tabs)/home/keluhan");
                   console.log("Selected Time:", selectedTime);
                 }
               }}

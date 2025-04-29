@@ -99,7 +99,7 @@ export default function index() {
                     className="flex-col justify-center items-center w-20 h-20"
                     onPress={() =>
                       router.push({
-                        pathname: "/(tabs)/home/keluhan",
+                        pathname: "/(tabs)/home/listdokter",
                         params: { spesialis: name },
                       })
                     }

@@ -40,16 +40,19 @@ export default function Keluhan() {
               placeholderTextColor="#025F96"
               value={keluhanText}
               onChangeText={setKeluhanText}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
             />
             <View className="items-end pt-10">
               <TouchableOpacity
                 className="px-8 bg-skyDark rounded-lg text-center"
-                onPress={() =>
-                  router.push({
-                    pathname: "/(tabs)/home/listdokter",
-                    params: { spesialis, keluhan: keluhanText },
-                  })
-                }
+                // onPress={() =>
+                //   router.push({
+                //     pathname: "/(tabs)/home/listdokter",
+                //     params: { spesialis, keluhan: keluhanText },
+                //   })
+                // }
               >
                 <Text className="p-3 text-slate-100 font-bold text-sm">
                   Kirim
