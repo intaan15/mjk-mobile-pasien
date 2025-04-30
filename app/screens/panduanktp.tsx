@@ -4,12 +4,17 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import React from 'react'
+// import React from 'react'
 import { useRouter } from "expo-router";
 import Background from "../../components/background";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { images } from "../../constants/images";
 import { FontAwesome } from '@expo/vector-icons';
+import ImagePickerComponent, {
+  useImage,
+  ImageProvider,
+} from "../../components/picker/imagepicker";
+import React, { useState } from 'react';
 
 
 const panduan = [
@@ -21,6 +26,35 @@ const panduan = [
 
 export default function Panduanktp() {
   const router = useRouter();
+  const [isModalVisible, setModalVisible] = useState(false);
+    const [modalType, setModalType] = useState("info");
+  
+    const openModal = (type: string) => {
+      setModalType(type);
+      setModalVisible(true);
+    };
+  
+    const toggleModal = () => {
+      setModalVisible(!isModalVisible);
+    };
+    const imageContext = useImage();
+    const setImage = imageContext?.setImage;
+
+  const { openGallery, openCamera } = ImagePickerComponent({
+      onImageSelected: setImage,
+    });
+  
+    // Handler baru yang gabung pick image + tutup modal
+    const handlePickImage = async () => {
+      await openGallery();
+      setModalVisible(false);
+    };
+  
+    const handleOpenCamera = async () => {
+      await openCamera();
+      setModalVisible(false);
+    };
+
   return (
     <Background>
       <View className="">
@@ -79,12 +113,18 @@ export default function Panduanktp() {
             </View>
           ))}
         </View>
-        <View className="mt-4 items-center">
+        <View className="mt-4 items-center gap-3">
           <TouchableOpacity
-            onPress={() => router.push("/screens/fotoktp")} 
+            onPress={openGallery} 
             className="bg-[#025F96] w-[300px] h-[35px] px-6 py-3 rounded-lg"
           >
-            <Text className="text-white text-base font-semibold text-center text-[16px]">Lanjut</Text>
+            <Text className="text-white text-base font-semibold text-center text-[16px]">Ambil Foto Galery</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={openCamera} 
+            className="bg-[#025F96] w-[300px] h-[35px] px-6 py-3 rounded-lg"
+          >
+            <Text className="text-white text-base font-semibold text-center text-[16px]">Ambil Foto Kamera</Text>
           </TouchableOpacity>
         </View>
       </View>
