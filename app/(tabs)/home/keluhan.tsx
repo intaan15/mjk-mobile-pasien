@@ -7,7 +7,7 @@ import { images } from "../../../constants/images";
 
 export default function Keluhan() {
   const router = useRouter();
-  const { spesialis } = useLocalSearchParams();
+  const { spesialis, doctorName } = useLocalSearchParams();
   const [keluhanText, setKeluhanText] = useState("");
 
   return (
@@ -19,7 +19,7 @@ export default function Keluhan() {
               <MaterialIcons name="arrow-back-ios" size={24} color="#025F96" />
             </TouchableOpacity>
             <Text className="text-skyDark font-bold text-xl ml-2">
-              {spesialis ? `Kuisioner untuk Poli ${spesialis}` : "Kuisioner"}
+              {doctorName ? `Kuisioner untuk ${doctorName}` : "Kuisioner"}
             </Text>
           </View>
           <Image
