@@ -9,7 +9,9 @@ import vline from '../assets/images/VertikalLine.png';
 import artikel from '../assets/images/artikeljantung.png';
 import artikelobat from '../assets/images/artikelpamol.jpg';
 import salahktp from '../assets/images/ktpsalah.png';
-import benarktp from '../assets/images/ktpbenar.png'
+import benarktp from '../assets/images/ktpbenar.png';
+import benarselfie from '../assets/images/selfiebenar.png';
+import salahselfie from '../assets/images/selfiesalah.png';
 
 export const images = {
     bg,
@@ -22,5 +24,7 @@ export const images = {
     artikel,
     artikelobat,
     salahktp,
-    benarktp
+    benarktp,
+    benarselfie,
+    salahselfie
 };

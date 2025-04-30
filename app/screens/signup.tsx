@@ -181,7 +181,7 @@ export default function Register() {
                 </TouchableOpacity>
                 <Text>Selfie dengan KTP</Text>
                 <TouchableOpacity
-                  onPress={() => router.push("./panduanktp")}
+                  onPress={() => router.push("./panduanselfie")}
                   // value={identifier}
                   // onChangeText={setIdentifier}
                   className="bg-transparent border-[#06B400] border-2 text-black px-4 py-3 rounded-xl"
