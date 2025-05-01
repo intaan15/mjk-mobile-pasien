@@ -1,14 +1,81 @@
-import { View, Text, TextInput, Image, TouchableOpacity } from "react-native";
-import React, { useState } from "react";
+import { View, Text, TextInput, Image, TouchableOpacity, Alert } from "react-native";
+import React, { useState, useEffect } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Background from "../../../components/background";
 import { images } from "../../../constants/images";
+import axios from "axios";
+import * as SecureStore from "expo-secure-store";
 
 export default function Keluhan() {
   const router = useRouter();
-  const { spesialis, doctorName } = useLocalSearchParams();
+  const { spesialis, doctorName, selectedTime, selectedDate } = useLocalSearchParams();
   const [keluhanText, setKeluhanText] = useState("");
+  const [doctorId, setDoctorId] = useState<string | null>(null);
+  const [masyarakatId, setMasyarakatId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDoctor = async () => {
+      try {
+        const res = await axios.get(`https://mjk-backend-production.up.railway.app/api/dokter/getbyname/${doctorName}`);
+        setDoctorId(res.data._id);
+      } catch (err) {
+        Alert.alert("Error", "Gagal mengambil data dokter.");
+      }
+    };
+
+    fetchDoctor();
+  }, [doctorName]);
+
+  useEffect(() => {
+    const fetchMasyarakat = async () => {
+      try {
+        const token = await SecureStore.getItemAsync("token");
+        if (!token) return;
+
+        const res = await axios.get("https://mjk-backend-production.up.railway.app/api/masyarakat/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setMasyarakatId(res.data._id);
+      } catch (err) {
+        Alert.alert("Error", "Gagal mengambil data masyarakat.");
+      }
+    };
+
+    fetchMasyarakat();
+  }, []);
+
+  const handleSubmit = async () => {
+    if (!doctorId || !masyarakatId || !selectedTime || !selectedDate) {
+      Alert.alert("Data tidak lengkap", "Pastikan semua data tersedia.");
+      return;
+    }
+
+    try {
+      const date = new Date(selectedDate as string);
+      const [hour, minute] = (selectedTime as string).split(":").map(Number);
+      const jamSelesaiDate = new Date(date);
+      jamSelesaiDate.setHours(hour);
+      jamSelesaiDate.setMinutes(minute + 30);
+
+      const payload = {
+        dokter_id: doctorId,
+        masyarakat_id: masyarakatId,
+        tgl_konsul: date.toISOString(),
+        keluhan_pasien: keluhanText,
+        jumlah_konsul: 1,
+        status_konsul: "menunggu",
+      };
+
+      await axios.post("https://mjk-backend-production.up.railway.app/api/jadwal/create", payload);
+      Alert.alert("Sukses", "Jadwal konsultasi berhasil dibuat!");
+      router.replace("/(tabs)/home");
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert("Gagal", error?.response?.data?.message || "Terjadi kesalahan.");
+    }
+  };
 
   return (
     <Background>
@@ -19,14 +86,10 @@ export default function Keluhan() {
               <MaterialIcons name="arrow-back-ios" size={24} color="#025F96" />
             </TouchableOpacity>
             <Text className="text-skyDark font-bold text-xl ml-2">
-              {doctorName ? `Kuisioner untuk ${doctorName}` : "Kuisioner"}
+              {doctorName ? `Keluhan untuk ${doctorName}` : "Keluhan"}
             </Text>
           </View>
-          <Image
-            className="h-10 w-12"
-            source={images.logo}
-            resizeMode="contain"
-          />
+          <Image className="h-10 w-12" source={images.logo} resizeMode="contain" />
         </View>
 
         <View className="items-center">
@@ -47,12 +110,7 @@ export default function Keluhan() {
             <View className="items-end pt-10">
               <TouchableOpacity
                 className="px-8 bg-skyDark rounded-lg text-center"
-                // onPress={() =>
-                //   router.push({
-                //     pathname: "/(tabs)/home/listdokter",
-                //     params: { spesialis, keluhan: keluhanText },
-                //   })
-                // }
+                onPress={handleSubmit}
               >
                 <Text className="p-3 text-slate-100 font-bold text-sm">
                   Kirim
