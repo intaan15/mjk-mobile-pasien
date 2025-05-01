@@ -12,8 +12,8 @@ import Background from "../../../components/background";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import axios from "axios";
+import * as SecureStore from 'expo-secure-store';
 
-// Definisikan tipe untuk waktu slot
 interface TimeSlot {
   time: string;
   available: boolean;
@@ -21,13 +21,12 @@ interface TimeSlot {
 
 const ScheduleScreen = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [availableTimes, setAvailableTimes] = useState<TimeSlot[]>([]); // Mendeklarasikan tipe dengan benar
+  const [availableTimes, setAvailableTimes] = useState<TimeSlot[]>([]);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const router = useRouter();
   const { doctorName, spesialis } = useLocalSearchParams();
   const [doctorId, setDoctorId] = useState<string | null>(null);
 
-  // Fetch data dokter berdasarkan nama
   useEffect(() => {
     const fetchDoctorData = async () => {
       try {
@@ -37,7 +36,7 @@ const ScheduleScreen = () => {
         const doctor = response.data;
 
         if (doctor) {
-          setDoctorId(doctor._id); // Set doctor ID
+          setDoctorId(doctor._id);
         }
       } catch (error: any) {
         console.error("Error fetching doctor data:", error.response ? error.response.data : error.message);
@@ -48,114 +47,91 @@ const ScheduleScreen = () => {
     fetchDoctorData();
   }, [doctorName]);
 
-  // Fetch jadwal dokter berdasarkan tanggal yang dipilih
   useEffect(() => {
     if (doctorId) {
       const fetchSchedule = async () => {
         try {
-          const selectedDateUTC = new Date(selectedDate).toISOString();
-          const response = await axios.get(
-            `https://mjk-backend-production.up.railway.app/api/dokter/jadwal/${doctorId}`
-          );
-          
-          const filteredTimes = response.data.filter((schedule: any) => {
-            const scheduleDate = new Date(schedule.tanggal);
-            return scheduleDate.toISOString().split("T")[0] === selectedDate.toISOString().split("T")[0];
+          const url = `https://mjk-backend-production.up.railway.app/api/dokter/getbyid/${doctorId}`;
+          const response = await axios.get(url);
+          const jadwal = response.data.jadwal;
+  
+          const selectedDateOnly = new Date(selectedDate).toISOString().split("T")[0];
+          const matchingJadwal = jadwal.find((item: any) => {
+            const jadwalDateOnly = new Date(item.tanggal).toISOString().split("T")[0];
+            return jadwalDateOnly === selectedDateOnly;
           });
-
-          // Jika ada jadwal untuk tanggal yang dipilih, buat slot waktu per 30 menit
-          const timeSlots = filteredTimes.flatMap((item: any) => {
-            const startTime = item.jam_mulai.split(":").map(Number);
-            const endTime = item.jam_selesai.split(":").map(Number);
-            let timeSlots = [];
-
-            let currentTime = new Date(selectedDate);
-            currentTime.setHours(startTime[0]);
-            currentTime.setMinutes(startTime[1]);
-
-            const endDate = new Date(selectedDate);
-            endDate.setHours(endTime[0]);
-            endDate.setMinutes(endTime[1]);
-
-            // Generate slots of 30 minutes
-            while (currentTime < endDate) {
-              const hour = String(currentTime.getHours()).padStart(2, "0");  // padStart untuk jam
-              const minute = String(currentTime.getMinutes()).padStart(2, "0");  // padStart untuk menit
-              timeSlots.push({
-                time: `${hour}:${minute}`,
-                available: true,
-              });
-
-              currentTime.setMinutes(currentTime.getMinutes() + 30);
-            }
-
-            // Jika slot terakhir lebih kecil dari 30 menit, buat slot terakhir berdasarkan waktu selesai
-            if (currentTime < endDate) {
-              const hour = String(endDate.getHours()).padStart(2, "0");
-              const minute = String(endDate.getMinutes()).padStart(2, "0");
-              timeSlots.push({
-                time: `${hour}:${minute}`,
-                available: true,
-              });
-            }
-
-            return timeSlots;
-          });
-
-          setAvailableTimes(timeSlots); // Set available times with 30-minute intervals
-        } catch (error) {
-          console.error("Error fetching schedule:", error);
+  
+          if (matchingJadwal) {
+            setAvailableTimes(matchingJadwal.jam);
+          } else {
+            setAvailableTimes([]);
+          }
+        } catch (error: any) {
+          if (error.response) {
+            console.error("API Error:", error.response.data);
+            console.error("Status code:", error.response.status);
+          } else {
+            console.error("Error message:", error.message);
+          }
         }
       };
-
+  
       fetchSchedule();
     }
   }, [selectedDate, doctorId]);
+  
 
   const handleDateChange = (date: Date) => {
     setSelectedDate(date);
   };
-
+  const calculateEndTime = (date: Date, time: string): string => {
+    const [hour, minute] = time.split(":").map(Number);
+    const endDate = new Date(date);
+    endDate.setHours(hour);
+    endDate.setMinutes(minute);
+    endDate.setMinutes(endDate.getMinutes() + 30);
+    
+    const hours = String(endDate.getHours()).padStart(2, "0");
+    const minutes = String(endDate.getMinutes()).padStart(2, "0");
+    
+    return `${hours}:${minutes}`;
+  };
+  
   const handlePilihJadwal = async () => {
-    if (!selectedTime) return;
-
+    if (!selectedTime) {
+      Alert.alert("Peringatan", "Pilih waktu terlebih dahulu.");
+      return;
+    }
+  
     try {
-      const tanggalFormatted = selectedDate.toISOString(); // Convert to UTC
-      const [hour, minute] = selectedTime.split(":").map(Number);
-      const jamSelesaiDate = new Date(selectedDate);
-      jamSelesaiDate.setHours(hour);
-      jamSelesaiDate.setMinutes(minute + 30);
-      const jam_selesai = `${String(jamSelesaiDate.getHours()).padStart(2, "0")}:${String(jamSelesaiDate.getMinutes()).padStart(2, "0")}`;
-
-      const response = await axios.post("https://mjk-backend-production.up.railway.app/api/jadwal/create", {
-        dokter_id: doctorId,
-        masyarakat_id: "userId", // Pastikan userId tersedia dari state atau context aplikasi
-        verifikasi_id: "verificationId", // Pastikan verifikasiId juga tersedia
-        tgl_konsul: tanggalFormatted,
-        keluhan_pasien: "Keluhan pasien", // Ganti sesuai input dari pasien
-        jumlah_konsul: 1, // Ganti sesuai jumlah konsul yang diinginkan
+      const userId = await SecureStore.getItemAsync("userId");
+      if (!userId) throw new Error("ID masyarakat tidak ditemukan");
+  
+      const tanggalFormatted = selectedDate.toISOString();
+      const jam_selesai = calculateEndTime(selectedDate, selectedTime);
+      const jamId = selectedTime;
+      
+      await axios.patch(`https://mjk-backend-production.up.railway.app/api/jadwal/${doctorId}/jam/${jamId}`, {
+        tanggal: tanggalFormatted,
+        jam_mulai: selectedTime,
+        jam_selesai,
       });
-
-      // Setelah jadwal berhasil disimpan, nonaktifkan slot yang telah dipilih
-      const updatedAvailableTimes = availableTimes.map((item) => {
-        if (item.time === selectedTime) {
-          return { ...item, available: false }; // Set slot yang dipilih menjadi tidak tersedia
-        }
-        return item;
-      });
-
-      setAvailableTimes(updatedAvailableTimes); // Update availableTimes dengan yang baru
-
+  
       Alert.alert("Sukses", "Jadwal berhasil disimpan!");
       router.push({
         pathname: "/(tabs)/home/keluhan",
         params: { doctorName, spesialis, selectedTime },
       });
     } catch (error: any) {
-      console.error(error);
-      Alert.alert("Gagal", error?.response?.data?.message || "Terjadi kesalahan.");
+      if (error.response) {
+        console.error("API Error:", error.response.data);
+        Alert.alert("Gagal", error.response.data.message || "Terjadi kesalahan.");
+      } else {
+        console.error("Error message:", error.message);
+        Alert.alert("Gagal", "Terjadi kesalahan jaringan.");
+      }
     }
-  };
+  };  
 
   return (
     <Background>
@@ -183,38 +159,44 @@ const ScheduleScreen = () => {
             <View className="pt-1">
               <View className="h-[2px] bg-skyDark w-full" />
               <View className="flex flex-wrap flex-row pt-4 gap-2 justify-between">
-                {availableTimes.length > 0 ? (
-                  availableTimes.map((item, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      disabled={!item.available}
-                      onPress={() => setSelectedTime(item.time)}
-                      className={`p-2 rounded-md w-[23%] text-center border-2
-                        ${
-                          !item.available
-                            ? "bg-slate-300 border-slate-300"
-                            : selectedTime === item.time
-                            ? "bg-skyDark border-skyDark"
-                            : "bg-transparent border-skyDark"
-                        }`}
+                {availableTimes.map((item, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    disabled={!item.available}
+                    onPress={() => setSelectedTime(item.time)}
+                    style={{
+                      padding: 8,
+                      borderRadius: 8,
+                      width: "23%",
+                      // textAlign: "center",
+                      borderWidth: 2,
+                      backgroundColor: item.available
+                        ? selectedTime === item.time
+                          ? "#025F96" // SkyDark if selected
+                          : "transparent"
+                        : "#E5E5E5", // Gray if unavailable
+                      borderColor: item.available
+                        ? selectedTime === item.time
+                          ? "#025F96"
+                          : "#025F96"
+                        : "#E5E5E5",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        color: item.available
+                          ? selectedTime === item.time
+                            ? "white"
+                            : "#025F96"
+                          : "white",
+                        textAlign: "center",
+                      }}
                     >
-                      <Text
-                        className={`text-lg text-center
-                          ${
-                            !item.available
-                              ? "text-white"
-                              : selectedTime === item.time
-                              ? "text-white"
-                              : "text-skyDark"
-                          }`}
-                      >
-                        {item.time}
-                      </Text>
-                    </TouchableOpacity>
-                  ))
-                ) : (
-                  <Text className="text-center text-skyDark">Tidak ada jadwal untuk tanggal ini</Text>
-                )}
+                      {item.time}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
             </View>
           )}
