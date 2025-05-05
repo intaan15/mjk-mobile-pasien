@@ -12,7 +12,7 @@ export default function Keluhan() {
   const { spesialis, doctorName, selectedTime, selectedDate } = useLocalSearchParams();
   const [keluhanText, setKeluhanText] = useState("");
   const [doctorId, setDoctorId] = useState<string | null>(null);
-  const [masyarakatId, setMasyarakatId] = useState<string | null>(null);
+  const [userId, setuserId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchDoctor = async () => {
@@ -28,26 +28,25 @@ export default function Keluhan() {
   }, [doctorName]);
 
   useEffect(() => {
-    const fetchMasyarakat = async () => {
+    const fetchUserId = async () => {
       try {
-        const token = await SecureStore.getItemAsync("token");
-        if (!token) return;
-
-        const res = await axios.get("https://mjk-backend-production.up.railway.app/api/masyarakat/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setMasyarakatId(res.data._id);
+        const storedUserId = await SecureStore.getItemAsync("userId");
+        if (storedUserId) {
+          setuserId(storedUserId);
+        } else {
+          console.log("No userId found in SecureStore");
+        }
       } catch (err) {
-        Alert.alert("Error", "Gagal mengambil data masyarakat.");
+        Alert.alert("Error", "Gagal mengambil data pengguna.");
       }
     };
 
-    fetchMasyarakat();
+    fetchUserId();
   }, []);
 
   const handleSubmit = async () => {
-    if (!doctorId || !masyarakatId || !selectedTime || !selectedDate) {
+
+    if (!doctorId || !userId || !selectedTime || !selectedDate || !keluhanText) {
       Alert.alert("Data tidak lengkap", "Pastikan semua data tersedia.");
       return;
     }
@@ -61,7 +60,7 @@ export default function Keluhan() {
 
       const payload = {
         dokter_id: doctorId,
-        masyarakat_id: masyarakatId,
+        masyarakat_id: userId,
         tgl_konsul: date.toISOString(),
         keluhan_pasien: keluhanText,
         jumlah_konsul: 1,

@@ -12,9 +12,10 @@ import Background from "../../../components/background";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import axios from "axios";
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from "expo-secure-store";
 
 interface TimeSlot {
+  _id: string;
   time: string;
   available: boolean;
 }
@@ -39,7 +40,10 @@ const ScheduleScreen = () => {
           setDoctorId(doctor._id);
         }
       } catch (error: any) {
-        console.error("Error fetching doctor data:", error.response ? error.response.data : error.message);
+        console.error(
+          "Error fetching doctor data:",
+          error.response ? error.response.data : error.message
+        );
         Alert.alert("Terjadi Kesalahan", "Gagal mengambil data dokter.");
       }
     };
@@ -54,13 +58,17 @@ const ScheduleScreen = () => {
           const url = `https://mjk-backend-production.up.railway.app/api/dokter/getbyid/${doctorId}`;
           const response = await axios.get(url);
           const jadwal = response.data.jadwal;
-  
-          const selectedDateOnly = new Date(selectedDate).toISOString().split("T")[0];
+
+          const selectedDateOnly = new Date(selectedDate)
+            .toISOString()
+            .split("T")[0];
           const matchingJadwal = jadwal.find((item: any) => {
-            const jadwalDateOnly = new Date(item.tanggal).toISOString().split("T")[0];
+            const jadwalDateOnly = new Date(item.tanggal)
+              .toISOString()
+              .split("T")[0];
             return jadwalDateOnly === selectedDateOnly;
           });
-  
+
           if (matchingJadwal) {
             setAvailableTimes(matchingJadwal.jam);
           } else {
@@ -75,63 +83,82 @@ const ScheduleScreen = () => {
           }
         }
       };
-  
+
       fetchSchedule();
     }
   }, [selectedDate, doctorId]);
-  
 
   const handleDateChange = (date: Date) => {
     setSelectedDate(date);
   };
+
   const calculateEndTime = (date: Date, time: string): string => {
     const [hour, minute] = time.split(":").map(Number);
     const endDate = new Date(date);
     endDate.setHours(hour);
     endDate.setMinutes(minute);
     endDate.setMinutes(endDate.getMinutes() + 30);
-    
+
     const hours = String(endDate.getHours()).padStart(2, "0");
     const minutes = String(endDate.getMinutes()).padStart(2, "0");
-    
+
     return `${hours}:${minutes}`;
   };
-  
+
   const handlePilihJadwal = async () => {
     if (!selectedTime) {
       Alert.alert("Peringatan", "Pilih waktu terlebih dahulu.");
       return;
     }
-  
+
     try {
       const userId = await SecureStore.getItemAsync("userId");
       if (!userId) throw new Error("ID masyarakat tidak ditemukan");
-  
+
+      const selectedJam = availableTimes.find(
+        (item) => item.time === selectedTime
+      );
+      if (!selectedJam) {
+        Alert.alert("Peringatan", "Waktu tidak tersedia.");
+        return;
+      }
+
+      const jamId = selectedJam._id;
+
       const tanggalFormatted = selectedDate.toISOString();
       const jam_selesai = calculateEndTime(selectedDate, selectedTime);
-      const jamId = selectedTime;
-      
-      await axios.patch(`https://mjk-backend-production.up.railway.app/api/jadwal/${doctorId}/jam/${jamId}`, {
-        tanggal: tanggalFormatted,
-        jam_mulai: selectedTime,
-        jam_selesai,
-      });
-  
-      Alert.alert("Sukses", "Jadwal berhasil disimpan!");
+
+      await axios.patch(
+        `https://mjk-backend-production.up.railway.app/api/dokter/jadwal/${doctorId}/jam/${jamId}`,
+        {
+          tanggal: tanggalFormatted,
+          jam_mulai: selectedTime,
+          jam_selesai,
+        }
+      );
+
       router.push({
         pathname: "/(tabs)/home/keluhan",
-        params: { doctorName, spesialis, selectedTime },
+        params: {
+          doctorName,
+          spesialis,
+          selectedTime,
+          selectedDate: tanggalFormatted,
+        },
       });
     } catch (error: any) {
       if (error.response) {
         console.error("API Error:", error.response.data);
-        Alert.alert("Gagal", error.response.data.message || "Terjadi kesalahan.");
+        Alert.alert(
+          "Gagal",
+          error.response.data.message || "Terjadi kesalahan."
+        );
       } else {
         console.error("Error message:", error.message);
         Alert.alert("Gagal", "Terjadi kesalahan jaringan.");
       }
     }
-  };  
+  };
 
   return (
     <Background>
@@ -149,10 +176,16 @@ const ScheduleScreen = () => {
       </View>
 
       {/* Main Content */}
-      <ScrollView className="px-6 py-4 mt-[-30px]" contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView
+        className="px-6 py-4 mt-[-30px]"
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
         {/* DatePicker */}
         <View className="flex-1 flex-col p-2">
-          <DatePickerComponent label="Pilih Tanggal" onDateChange={handleDateChange} />
+          <DatePickerComponent
+            label="Pilih Tanggal"
+            onDateChange={handleDateChange}
+          />
 
           {/* Time Slots */}
           {selectedDate && (
@@ -168,7 +201,6 @@ const ScheduleScreen = () => {
                       padding: 8,
                       borderRadius: 8,
                       width: "23%",
-                      // textAlign: "center",
                       borderWidth: 2,
                       backgroundColor: item.available
                         ? selectedTime === item.time
