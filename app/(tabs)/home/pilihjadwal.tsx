@@ -180,6 +180,23 @@ const ScheduleScreen = () => {
         className="px-6 py-4 mt-[-30px]"
         contentContainerStyle={{ paddingBottom: 100 }}
       >
+        {/* Tanggal */}
+        <View className="flex-row items-center justify-between pb-4 px-4">
+          <View className="flex-row items-center gap-1">
+            <View className="w-5 h-5 bg-gray-300 rounded-md" />
+            <Text className="text-skyDark text-sm font-bold">
+              Tidak Tersedia
+            </Text>
+          </View>
+          <View className="flex-row items-center gap-1">
+            <View className="w-5 h-5 bg-skyDark rounded-md" />
+            <Text className="text-skyDark text-sm font-bold">Pilihanmu</Text>
+          </View>
+          <View className="flex-row items-center gap-1">
+            <View className="w-5 h-5 rounded-md border-2 border-skyDark bg-transparent" />
+            <Text className="text-skyDark text-sm font-bold">Tersedia</Text>
+          </View>
+        </View>
         {/* DatePicker */}
         <View className="flex-1 flex-col p-2">
           <DatePickerComponent
@@ -206,12 +223,12 @@ const ScheduleScreen = () => {
                         ? selectedTime === item.time
                           ? "#025F96" // SkyDark if selected
                           : "transparent"
-                        : "#E5E5E5", // Gray if unavailable
+                        : "#D1D5DB", // Gray if unavailable
                       borderColor: item.available
                         ? selectedTime === item.time
                           ? "#025F96"
                           : "#025F96"
-                        : "#E5E5E5",
+                        : "#D1D5DB",
                     }}
                   >
                     <Text
