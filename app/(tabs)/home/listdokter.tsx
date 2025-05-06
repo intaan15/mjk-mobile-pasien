@@ -17,7 +17,7 @@ type Doctor = {
 
 export default function Index() {
   const router = useRouter();
-  const { spesialis, keluhan } = useLocalSearchParams();
+  const { spesialis } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
 
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -91,7 +91,6 @@ export default function Index() {
                     params: {
                       doctorId: doctor._id,
                       doctorName: doctor.nama_dokter,
-                      keluhan: keluhan,
                     },
                   })
                 }

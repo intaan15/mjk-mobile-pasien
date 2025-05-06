@@ -62,6 +62,7 @@ export default function Keluhan() {
         dokter_id: doctorId,
         masyarakat_id: userId,
         tgl_konsul: date.toISOString(),
+        jam_konsul: selectedTime,
         keluhan_pasien: keluhanText,
         jumlah_konsul: 1,
         status_konsul: "menunggu",

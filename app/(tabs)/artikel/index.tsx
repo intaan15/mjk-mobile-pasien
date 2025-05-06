@@ -22,7 +22,7 @@ export default function ArtikelList() {
   useEffect(() => {
     const fetchArtikels = async () => {
       try {
-        const response = await fetch("https://mjk-backend-production.up.railway.app/api/artikel");
+        const response = await fetch("https://mjk-backend-production.up.railway.app/api/artikel/getall");
         const data = await response.json();
         setArtikels(data);
       } catch (error) {
