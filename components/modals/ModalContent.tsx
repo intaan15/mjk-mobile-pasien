@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Text, View, TouchableOpacity } from "react-native";
+import React, { useState, useEffect } from "react";
+import { Text, View, TouchableOpacity, TextInput } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -9,6 +9,7 @@ import ImagePickerComponent, {
 } from "../../components/picker/imagepicker";
 import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";
+import axios from "axios";
 
 interface ModalContentProps {
   modalType: string;
@@ -16,6 +17,19 @@ interface ModalContentProps {
   onClose?: () => void;
   onPickImage?: () => void;
   onOpenCamera?: () => void;
+  onUpdateSuccess?: () => void;
+}
+
+
+interface User {
+  nama_masyarakat: string;
+  username_masyarakat: string;
+  email_masyarakat: string;
+  nik_masyarakat: string;
+  alamat_masyarakat: string;
+  notlp_masyarakat: string;
+  jeniskelamin_masyarakat: string;
+  tgl_lahir_masyarakat: string;
 }
 
 const ModalContent: React.FC<ModalContentProps> = ({
@@ -23,12 +37,100 @@ const ModalContent: React.FC<ModalContentProps> = ({
   onTimeSlotsChange,
   onClose,
   onPickImage,
+  onUpdateSuccess,
   onOpenCamera,
 }) => {
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
   const [isPickerVisible, setPickerVisibility] = useState(false);
   const [isPickingStartTime, setIsPickingStartTime] = useState(true);
+
+  const [nama, setNama] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [noTlp, setNoTlp] = useState("");
+  const [alamat, setAlamat] = useState("");
+  const [jenisKelamin, setJenisKelamin] = useState("");
+  const [tglLahir, setTglLahir] = useState("");
+
+  const [userData, setUserData] = useState<User | null>(null);
+
+  useEffect(() => {
+    if (userData) {
+      setNama(userData.nama_masyarakat || "");
+      setUsername(userData.username_masyarakat || "");
+      setEmail(userData.email_masyarakat || "");
+      setNoTlp(userData.notlp_masyarakat || "");
+      setAlamat(userData.alamat_masyarakat || "");
+      setJenisKelamin(userData.jeniskelamin_masyarakat || "");
+      setTglLahir(userData.tgl_lahir_masyarakat || ""); 
+
+    }
+  }, [userData]);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const masyarakatId = await SecureStore.getItemAsync("userId");
+        console.log("UserID dari SecureStore:", masyarakatId);
+
+        if (!masyarakatId) {
+          alert("User ID tidak ditemukan");
+          return;
+        }
+
+        const cleanedId = masyarakatId.replace(/"/g, "");
+        const response = await axios.get(
+          `https://mjk-backend-production.up.railway.app/api/masyarakat/getbyid/${cleanedId}`
+        );
+
+        console.log("User data dari API:", response.data);
+        setUserData(response.data); // ubah sesuai bentuk respons API
+      } catch (error: any) {
+        console.error("Gagal mengambil data profil:", error);
+        alert(error.response?.data?.message || "Gagal mengambil data user");
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+
+  const handleSubmit = async () => {
+    try {
+      const masyarakatId = await SecureStore.getItemAsync("userId");
+      const cleanedMasyarakatId = masyarakatId?.replace(/"/g, "");
+
+      const response = await axios.patch(
+        `https://mjk-backend-production.up.railway.app/api/masyarakat/update/${cleanedMasyarakatId}`,
+        {
+          nama_masyarakat: nama,
+          username_masyarakat: username,
+          email_masyarakat: email,
+          notlp_masyarakat: noTlp,
+          alamat_masyarakat: alamat,
+          jeniskelamin_masyarakat: jenisKelamin,
+          tgl_lahir_masyarakat: tglLahir,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // alert("Data berhasil diperbarui!");
+      onUpdateSuccess?.();
+    } catch (error: any) {
+      if (error.response) {
+        console.error("Gagal update:", error.response.data);
+        alert(error.response.data.message || "Gagal update data.");
+      } else {
+        console.error("Gagal update:", error.message);
+        alert("Gagal terhubung ke server.");
+      }
+    }
+  };
 
   const formatTime = (date: Date | null): string => {
     return date
@@ -60,10 +162,10 @@ const ModalContent: React.FC<ModalContentProps> = ({
   };
 
   const imageContext = useImage();
-    const profileImage = imageContext?.profileImage;
-    const setImage = imageContext?.setImage;
+  const profileImage = imageContext?.profileImage;
+  const setImage = imageContext?.setImage;
 
-const router = useRouter();
+  const router = useRouter();
   const handleLogout = async () => {
     await SecureStore.deleteItemAsync("userToken");
     onClose?.(); // nutup modal
@@ -71,6 +173,103 @@ const router = useRouter();
   };
 
   switch (modalType) {
+    // PROFIL
+    case "editprofil":
+      return (
+        <View>
+          {/* Ganti Password */}
+          <Text className="font-bold text-2xl text-skyDark mt-4 text-center">
+            Edit profil
+          </Text>
+          {/* <View className="w-full h-[2px] bg-skyDark" /> */}
+          <View className="flex flex-col items-center px-5">
+            <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">
+              Nama
+            </Text>
+            <TextInput
+              placeholder="Nama"
+              // secureTextEntry
+              value={nama}
+              onChangeText={setNama}
+              className="border-2 rounded-xl border-gray-400 p-2 w-full"
+              placeholderTextColor="#888"
+            />
+            <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">
+              Username
+            </Text>
+            <TextInput
+              placeholder="contoh123"
+              // secureTextEntry
+              value={username}
+              onChangeText={setUsername}
+              className="border-2 rounded-xl border-gray-400 p-2 w-full"
+              placeholderTextColor="#888"
+            />
+            <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">
+              Email
+            </Text>
+            <TextInput
+              placeholder="contoh@gmail.com"
+              // secureTextEntry
+              value={email}
+              onChangeText={setEmail}
+              className="border-2 rounded-xl border-gray-400 p-2 w-full"
+              placeholderTextColor="#888"
+            />
+            <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">
+              Nomor telepon
+            </Text>
+            <TextInput
+              placeholder="0821312312312"
+              // secureTextEntry
+              value={noTlp}
+              onChangeText={setNoTlp}
+              className="border-2 rounded-xl border-gray-400 p-2 w-full"
+              placeholderTextColor="#888"
+            />
+            <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">
+              Alamat
+            </Text>
+            <TextInput
+              placeholder="Tulang"
+              // secureTextEntry
+              value={alamat}
+              onChangeText={setAlamat}
+              className="border-2 rounded-xl border-gray-400 p-2 w-full"
+              placeholderTextColor="#888"
+            />
+            <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">
+              Jenis Kelamin
+            </Text>
+            <TextInput
+              placeholder="Tulang"
+              // secureTextEntry
+              value={jenisKelamin}
+              onChangeText={setJenisKelamin}
+              className="border-2 rounded-xl border-gray-400 p-2 w-full"
+              placeholderTextColor="#888"
+            />
+            <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">
+              Tanggal Lahir
+            </Text>
+            <TextInput
+              placeholder="Tulang"
+              // secureTextEntry
+              value={tglLahir}
+              onChangeText={setTglLahir}
+              className="border-2 rounded-xl border-gray-400 p-2 w-full"
+              placeholderTextColor="#888"
+            />
+            <TouchableOpacity
+              className="p-2 rounded-xl w-2/4 mt-6 bg-skyDark"
+              onPress={handleSubmit}
+            >
+              <Text className="text-white text-center font-bold">Simpan</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      );
+
     case "keluarakun":
       return (
         <View>

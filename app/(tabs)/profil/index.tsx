@@ -14,6 +14,12 @@ import { images } from "../../../constants/images";
 import Background from "../../../components/background";
 import Settings from "../../../components/settings";
 import { Ionicons } from "@expo/vector-icons";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import ModalContent from "../../../components/modals/ModalContent";
+import ModalTemplate from "../../../components/modals/ModalTemplate";
+import { useRouter } from "expo-router";
+
+
 
 interface User {
   nama_masyarakat: string;
@@ -34,6 +40,8 @@ export default function ProfileScreen() {
   const [passwordLama, setPasswordLama] = useState("");
   const [passwordBaru, setPasswordBaru] = useState("");
   const [konfirmasiPassword, setKonfirmasiPassword] = useState("");
+  const [modalType, setModalType] = useState("");
+  const [isModalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     fetchUserData();
@@ -112,6 +120,11 @@ export default function ProfileScreen() {
     }
   };
 
+  const openModal = (type: string) => {
+    setModalType(type);
+    setModalVisible(true);
+  };
+
   return (
     <Background>
       <View className="flex-1">
@@ -152,6 +165,12 @@ export default function ProfileScreen() {
               elevation: 15,
             }}
           >
+            <TouchableOpacity
+              className="items-end"
+              onPress={() => openModal("editprofil")}
+            >
+              <FontAwesome5 name="edit" size={24} color="#025F96" />
+            </TouchableOpacity>
             <Text className="font-bold text-lg text-skyDark">Nama</Text>
             <Text className="text-gray-700">{userData.nama_masyarakat}</Text>
 
@@ -240,6 +259,19 @@ export default function ProfileScreen() {
           <Settings />
         </ScrollView>
       </View>
+      <ModalTemplate
+        isVisible={isModalVisible}
+        onClose={() => setModalVisible(false)}
+      >
+        <ModalContent
+          modalType={modalType}
+          onClose={() => setModalVisible(false)}
+          onUpdateSuccess={() => {
+            fetchUserData();
+            setModalVisible(false);
+          }}
+        />
+      </ModalTemplate>
     </Background>
   );
 }

@@ -34,7 +34,7 @@ const ModalTemplate: React.FC<ModalTemplateProps> = ({
           onPress={onClose}
           className="absolute top-2 right-4 z-10"
         >
-          <Text className="text-2xl text-gray-700">×</Text>
+          {/* <Text className="text-2xl text-gray-700">×</Text> */}
         </TouchableOpacity>
         {children}
       </View>

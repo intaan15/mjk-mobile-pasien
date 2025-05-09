@@ -8,17 +8,17 @@ export default function RootLayout() {
       {/* <StatusBar hidden={true} /> */}
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen
-          name="(tabs)"
+          name="(screens/signin)"
           options={{
             headerShown: false,
           }}
         />
-        <Stack.Screen
+        {/* <Stack.Screen
           name="chat/[id]"
           options={{
             headerShown: false,
           }}
-        />
+        /> */}
       </Stack>
     </>
   );
