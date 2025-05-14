@@ -17,6 +17,8 @@ import { Ionicons } from "@expo/vector-icons";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import ModalContent from "../../../components/modals/ModalContent";
 import ModalTemplate from "../../../components/modals/ModalTemplate";
+import { ImageProvider, useImage } from "../../../components/picker/imagepicker";
+
 import { useRouter } from "expo-router";
 
 
@@ -35,7 +37,15 @@ interface User {
   foto_profil_masyarakat: string | null;
 }
 
+
 export default function ProfileScreen() {
+  return (
+    <ImageProvider>
+      <App />
+    </ImageProvider>
+  );
+}
+function App() {
   const [userData, setUserData] = useState<User | null>(null);
   const [passwordLama, setPasswordLama] = useState("");
   const [passwordBaru, setPasswordBaru] = useState("");

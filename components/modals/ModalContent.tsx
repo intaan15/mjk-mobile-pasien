@@ -20,7 +20,6 @@ interface ModalContentProps {
   onUpdateSuccess?: () => void;
 }
 
-
 interface User {
   nama_masyarakat: string;
   username_masyarakat: string;
@@ -30,6 +29,7 @@ interface User {
   notlp_masyarakat: string;
   jeniskelamin_masyarakat: string;
   tgl_lahir_masyarakat: string;
+  foto_profil_masyarakat: string;
 }
 
 const ModalContent: React.FC<ModalContentProps> = ({
@@ -63,8 +63,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
       setNoTlp(userData.notlp_masyarakat || "");
       setAlamat(userData.alamat_masyarakat || "");
       setJenisKelamin(userData.jeniskelamin_masyarakat || "");
-      setTglLahir(userData.tgl_lahir_masyarakat || ""); 
-
+      setTglLahir(userData.tgl_lahir_masyarakat || "");
     }
   }, [userData]);
 
@@ -85,7 +84,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
         );
 
         console.log("User data dari API:", response.data);
-        setUserData(response.data); // ubah sesuai bentuk respons API
+        setUserData(response.data);
       } catch (error: any) {
         console.error("Gagal mengambil data profil:", error);
         alert(error.response?.data?.message || "Gagal mengambil data user");
@@ -94,7 +93,6 @@ const ModalContent: React.FC<ModalContentProps> = ({
 
     fetchUser();
   }, []);
-
 
   const handleSubmit = async () => {
     try {
@@ -119,8 +117,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
         }
       );
 
-      // alert("Data berhasil diperbarui!");
-      onUpdateSuccess?.();
+      onUpdateSuccess?.(); // Callback after success
     } catch (error: any) {
       if (error.response) {
         console.error("Gagal update:", error.response.data);
@@ -161,19 +158,127 @@ const ModalContent: React.FC<ModalContentProps> = ({
     return slots;
   };
 
+  const router = useRouter();
+  const handleLogout = async () => {
+    await SecureStore.deleteItemAsync("userToken");
+    onClose?.(); // Close modal
+    router.replace("/screens/signin"); // Redirect to login screen
+  };
+
+  // Context for image picker
   const imageContext = useImage();
   const profileImage = imageContext?.profileImage;
   const setImage = imageContext?.setImage;
 
-  const router = useRouter();
-  const handleLogout = async () => {
-    await SecureStore.deleteItemAsync("userToken");
-    onClose?.(); // nutup modal
-    router.replace("/screens/signin"); // redirect ke halaman login
+  const uploadImageToServer = async () => {
+    console.log("🔍 uploadImageToServer() dipanggil");
+
+    // console.log("🔍 URI gambar:", profileImage?.uri);
+
+    if (!profileImage?.uri) {
+      // console.log("⛔ URI tidak ditemukan, keluar dari upload");
+      alert("Silakan pilih gambar terlebih dahulu.");
+      return;
+    }
+
+    const uri = profileImage.uri;
+    const fileName = uri.split("/").pop();
+    const fileType = fileName?.split(".").pop();
+
+    // console.log("🔍 File name:", fileName);
+    // console.log("🔍 File type:", fileType);
+
+    if (!fileName || !fileType) {
+      console.log("⛔ File name or type is missing");
+      alert("Gambar tidak valid.");
+      return;
+    }
+
+    const userId = await SecureStore.getItemAsync("userId");
+    const cleanedUserId = userId?.replace(/"/g, "");
+
+    if (!cleanedUserId) {
+      alert("User ID tidak ditemukan.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("image", {
+      uri,
+      name: fileName,
+      type: `image/${fileType}`,
+    } as any);
+    formData.append("id", cleanedUserId); 
+
+    try {
+      const response = await axios.post(
+        "http://10.52.170.231:3330/api/masyarakat/upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      console.log("Upload berhasil:", response.data);
+      alert("Foto berhasil diunggah!");
+    } catch (error: any) {
+      console.error("Upload gagal:", error.message);
+      alert("Gagal upload gambar");
+    }
+  };
+
+  const handleUpload = async () => {
+    await uploadImageToServer();   
+    onClose?.();       
   };
 
   switch (modalType) {
     // PROFIL
+    case "pilihgambar":
+      return (
+        <View className="bg-white p-6 rounded-2xl w-full items-center">
+          <Text className="text-xl font-semibold mb-4 text-center">
+            Pilih Foto
+          </Text>
+
+          <TouchableOpacity
+            className="flex-row items-center space-x-3 py-3 px-2 rounded-lg active:bg-gray-100 w-full"
+            onPress={onPickImage}
+          >
+            <MaterialCommunityIcons name="image" size={24} color="black" />
+            <Text className="text-base text-black">Ambil dari Galeri</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="flex-row items-center space-x-3 py-3 px-2 rounded-lg active:bg-gray-100 w-full"
+            onPress={onOpenCamera}
+          >
+            <MaterialCommunityIcons name="camera" size={24} color="black" />
+            <Text className="text-base text-black">Ambil dari Kamera</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="mt-5 py-3 bg-green-600 rounded-xl w-full"
+            onPress={uploadImageToServer}
+          >
+            <Text className="text-center text-white font-semibold text-base" onPress={handleUpload}>
+              Upload Foto
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="mt-3 py-3 bg-skyDark rounded-xl w-full"
+            onPress={onClose}
+          >
+            <Text className="text-center text-white font-semibold text-base">
+              Batal
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+
     case "editprofil":
       return (
         <View>
@@ -451,40 +556,6 @@ const ModalContent: React.FC<ModalContentProps> = ({
             }}
             onCancel={() => setPickerVisibility(false)}
           />
-        </View>
-      );
-
-    case "pilihgambar":
-      return (
-        <View className="bg-white p-6 rounded-2xl w-full items-center">
-          <Text className="text-xl font-semibold mb-4 text-center">
-            Pilih Foto
-          </Text>
-
-          <TouchableOpacity
-            className="flex-row items-center space-x-3 py-3 px-2 rounded-lg active:bg-gray-100 w-full"
-            onPress={onPickImage}
-          >
-            <MaterialCommunityIcons name="image" size={24} color="black" />
-            <Text className="text-base text-black">Ambil dari Galeri</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className="flex-row items-center space-x-3 py-3 px-2 rounded-lg active:bg-gray-100 w-full"
-            onPress={onOpenCamera}
-          >
-            <MaterialCommunityIcons name="camera" size={24} color="black" />
-            <Text className="text-base text-black">Ambil dari Kamera</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className="mt-5 py-3 bg-skyDark rounded-xl w-full"
-            onPress={onClose}
-          >
-            <Text className="text-center text-white font-semibold text-base">
-              Batal
-            </Text>
-          </TouchableOpacity>
         </View>
       );
 
