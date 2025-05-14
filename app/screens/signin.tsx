@@ -21,7 +21,7 @@ export default function SignIn() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
-  
+
   const handleLogin = async () => {
     try {
       const response = await axios.post(
@@ -36,7 +36,7 @@ export default function SignIn() {
       await SecureStore.setItemAsync("userToken", token);
       await SecureStore.setItemAsync("userId", userId);
       router.replace("/(tabs)/home");
-    } catch (error: unknown) {
+    } catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.response) {
           alert(`Error: ${error.response.data.message || "Gagal login"}`);
@@ -56,65 +56,63 @@ export default function SignIn() {
       <StatusBar backgroundColor="#f6f6f6" barStyle="dark-content" />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1 w-full h-full"
+        style={{ flex: 1 }}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView
+            className="flex-1"
             contentContainerStyle={{
               flexGrow: 1,
               justifyContent: "center",
-              alignItems: "center",
-              paddingVertical: 20,
+              paddingHorizontal: 20,
+              paddingVertical: 40,
             }}
             keyboardShouldPersistTaps="handled"
           >
-            <View className="items-center pb-24">
+            <View className="items-center mb-6 pb-24">
               <Image
-                className="w-44 h-48"
                 source={require("../../assets/images/logo.png")}
+                className="w-60 h-44"
                 resizeMode="contain"
               />
-              <Text className="text-4xl font-bold text-skyDark">Masuk</Text>
+              <Text className="text-[32px] font-bold text-[#025F96]">
+                Masuk
+              </Text>
             </View>
-            <View className="w-full max-w-sm flex items-center">
-              <View className="flex flex-col gap-4 w-full">
-                <Text>Nama Pengguna atau NIK</Text>
-                <TextInput
-                  placeholder="Masukkan Username/NIK"
-                  value={identifier}
-                  onChangeText={setIdentifier}
-                  className="bg-transparent border-gray-400 border-2 text-black px-4 py-3 rounded-xl"
-                  placeholderTextColor="#ccc"
-                />
-                <Text>Kata Sandi</Text>
-                <TextInput
-                  placeholder="Masukkan Kata Sandi"
-                  secureTextEntry
-                  value={password}
-                  onChangeText={setPassword}
-                  className="bg-transparent border-2 border-gray-400 text-black px-4 py-3 rounded-xl"
-                  placeholderTextColor="#ccc"
-                />
-              </View>
+
+            <View className="w-full px-8">
+              <Text className="mb-2 text-base text-black">
+                Nama Pengguna atau NIK
+              </Text>
+              <TextInput
+                placeholder="Masukkan Username/NIK"
+                value={identifier}
+                onChangeText={setIdentifier}
+                placeholderTextColor="#999"
+                className="border-2 border-gray-300 p-3 rounded-xl mb-4 text-black"
+              />
+
+              <Text className="mb-2 text-base text-black">Kata Sandi</Text>
+              <TextInput
+                placeholder="Masukkan Kata Sandi"
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+                placeholderTextColor="#999"
+                className="border-2 border-gray-300 p-3 rounded-xl mb-6 text-black"
+              />
+
               <TouchableOpacity
-                className="bg-skyDark py-3 px-6 rounded-3xl mt-6 w-4/6 "
+                className="bg-[#025F96] py-3 rounded-xl items-center mb-4 w-64 self-center"
                 onPress={handleLogin}
               >
-                <Text className="text-xl font-normal text-white text-center">
-                  Masuk
-                </Text>
+                <Text className="text-white text-lg">Masuk</Text>
               </TouchableOpacity>
-              <View className="flex-row pt-4">
-                <Text>Belum punya akun? </Text>
+
+              <View className="flex-row justify-center">
+                <Text className="text-black">Belum punya akun? </Text>
                 <TouchableOpacity onPress={() => router.replace("./signup")}>
-                  <Text
-                    style={{
-                      color: "#025F96",
-                      textDecorationLine: "underline",
-                    }}
-                  >
-                    Registrasi
-                  </Text>
+                  <Text className="text-[#025F96] underline">Registrasi</Text>
                 </TouchableOpacity>
               </View>
             </View>
