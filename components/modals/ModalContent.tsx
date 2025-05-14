@@ -488,6 +488,99 @@ const ModalContent: React.FC<ModalContentProps> = ({
         </View>
       );
 
+    // SIGNIN
+    case "limiter":
+      return (
+        <View>
+          <Text className="text-center text-lg font-bold text-skyDark">
+            Terlalu banyak percobaan login. Coba lagi nanti.
+          </Text>
+
+          <View className="w-full h-[2px] bg-skyDark my-5" />
+
+          <TouchableOpacity
+            className=" text-center text-skyDark font-medium w-full"
+            onPress={onClose}
+          >
+            <Text className="text-center text-skyDark">Oke</Text>
+          </TouchableOpacity>
+        </View>
+      );
+
+    case "galat":
+      return (
+        <View>
+          <Text className="text-center text-lg font-bold text-skyDark">
+            Galat! Terjadi kesalahan yang tidak terduga
+          </Text>
+
+          <View className="w-full h-[2px] bg-skyDark my-5" />
+
+          <TouchableOpacity
+            className=" text-center text-skyDark font-medium w-full"
+            onPress={onClose}
+          >
+            <Text className="text-center text-skyDark">Oke</Text>
+          </TouchableOpacity>
+        </View>
+      );
+
+    case "masyarakatkosong":
+      return (
+        <View>
+          <Text className="text-center text-lg font-bold text-skyDark">
+            Harap masukkan username/NIK dan password
+          </Text>
+
+          <View className="w-full h-[2px] bg-skyDark my-5" />
+
+          <TouchableOpacity
+            className=" text-center text-skyDark font-medium w-full"
+            onPress={onClose}
+          >
+            <Text className="text-center text-skyDark">Oke</Text>
+          </TouchableOpacity>
+        </View>
+      );
+
+    case "gadaakun":
+      return (
+        <View>
+          <Text className="text-center text-lg font-bold text-skyDark">
+            Akun tidak ditemukan
+          </Text>
+
+          <View className="w-full h-[2px] bg-skyDark my-5" />
+
+          <TouchableOpacity
+            className=" text-center text-skyDark font-medium w-full"
+            onPress={onClose}
+          >
+            <Text className="text-center text-skyDark">Oke</Text>
+          </TouchableOpacity>
+        </View>
+      );
+
+    case "pwsalah":
+      return (
+        <View>
+          <Text className="text-center text-lg font-bold text-skyDark">
+            Password salah
+          </Text>
+
+          <View className="w-full h-[2px] bg-skyDark my-5" />
+
+          <TouchableOpacity
+            className=" text-center text-skyDark font-medium w-full"
+            onPress={onClose}
+          >
+            <Text className="text-center text-skyDark">Oke</Text>
+          </TouchableOpacity>
+        </View>
+      );
+
+      
+
     default:
       return <Text>Modal tidak ditemukan.</Text>;
   }

@@ -16,13 +16,23 @@ import { useRouter } from "expo-router";
 import Background from "../../components/background";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
+import ModalTemplate from "../../components/modals/ModalTemplate";
+import ModalContent from "../../components/modals/ModalContent";
 
 export default function SignIn() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalType, setModalType] = useState("");
 
   const handleLogin = async () => {
+    if (!identifier || !password) {
+      setModalType("masyarakatkosong");
+      setModalVisible(true);
+      return;
+    }
+
     try {
       const response = await axios.post(
         "https://mjk-backend-production.up.railway.app/api/auth/login_masyarakat",
@@ -36,18 +46,28 @@ export default function SignIn() {
       await SecureStore.setItemAsync("userToken", token);
       await SecureStore.setItemAsync("userId", userId);
       router.replace("/(tabs)/home");
-    } catch (error) {
+    } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        if (error.response) {
-          alert(`Error: ${error.response.data.message || "Gagal login"}`);
-        } else if (error.request) {
-          alert("Tidak ada respon dari server. Coba lagi nanti.");
+        const status = error.response?.status;
+        const message = error.response?.data?.message;
+
+        if (status === 429) {
+          setModalType("limiter");
+        } else if (status === 400) {
+          if (message === "Akun tidak ditemukan") {
+            setModalType("gadaakun");
+          } else if (message === "Password salah") {
+            setModalType("pwsalah");
+          } else {
+            setModalType("galat");
+          }
         } else {
-          alert(`Terjadi kesalahan: ${error.message}`);
+          setModalType("galat");
         }
       } else {
-        alert("Terjadi kesalahan yang tidak terduga: " + error);
+        setModalType("galat");
       }
+      setModalVisible(true);
     }
   };
 
@@ -119,6 +139,15 @@ export default function SignIn() {
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
+      <ModalTemplate
+        isVisible={modalVisible}
+        onClose={() => setModalVisible(false)} // Menutup modal
+      >
+        <ModalContent
+          modalType={modalType}
+          onClose={() => setModalVisible(false)} // Menutup modal dari dalam content
+        />
+      </ModalTemplate>
     </Background>
   );
 }
