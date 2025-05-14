@@ -78,7 +78,7 @@ export default function ArtikelList() {
                 >
                   <Image
                     className="rounded-2xl w-full h-24 p-1"
-                    source={{ uri: item.gambar_artikel }}
+                    source={{ uri: `https://mjk-backend-production.up.railway.app/imagesdokter/${item.gambar_artikel}` }}
                     resizeMode="cover"
                   />
                   <View className="flex-row justify-between w-full">

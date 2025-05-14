@@ -155,7 +155,9 @@ export default function ProfileScreen() {
           <View className="absolute top-28 left-1/2 -translate-x-1/2">
             {userData.foto_profil_masyarakat ? (
               <Image
-                source={{ uri: userData.foto_profil_masyarakat }}
+                source={{
+                  uri: `https://mjk-backend-production.up.railway.app/imagesdokter/${userData.foto_profil_masyarakat}`,
+                }}
                 className="w-32 h-32 rounded-full border-4 border-skyDark"
               />
             ) : (

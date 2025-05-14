@@ -55,15 +55,24 @@ export default function Selengkapnya() {
               {artikel.nama_artikel}
             </Text>
           </View>
-          <Image className="h-10 w-12" source={images.logo} resizeMode="contain" />
+          <Image
+            className="h-10 w-12"
+            source={images.logo}
+            resizeMode="contain"
+          />
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 50 }} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 50 }}
+          showsVerticalScrollIndicator={false}
+        >
           <View className="bg-white rounded-2xl shadow-md mt-4">
             <View className="p-3">
               <Image
                 className="w-full h-48 rounded-xl mb-4"
-                source={{ uri: artikel.gambar_artikel }}
+                source={{
+                  uri: `https://mjk-backend-production.up.railway.app/imagesdokter/${artikel.gambar_artikel}`,
+                }}
                 resizeMode="cover"
               />
               <Text className="text-skyDark text-right text-sm font-medium pb-1">
