@@ -579,7 +579,78 @@ const ModalContent: React.FC<ModalContentProps> = ({
         </View>
       );
 
-      
+    // RESET PASSWORD
+    case "ubahberhasil":
+      return (
+        <View>
+          <Text className="text-center text-lg font-bold text-skyDark">
+            Password berhasil diubah
+          </Text>
+
+          <View className="w-full h-[2px] bg-skyDark my-5" />
+
+          <TouchableOpacity
+            className=" text-center text-skyDark font-medium w-full"
+            onPress={onClose}
+          >
+            <Text className="text-center text-skyDark">Oke</Text>
+          </TouchableOpacity>
+        </View>
+      );
+
+    case "pwlamasalah":
+      return (
+        <View>
+          <Text className="text-center text-lg font-bold text-skyDark">
+            Password lama salah
+          </Text>
+
+          <View className="w-full h-[2px] bg-skyDark my-5" />
+
+          <TouchableOpacity
+            className=" text-center text-skyDark font-medium w-full"
+            onPress={onClose}
+          >
+            <Text className="text-center text-skyDark">Oke</Text>
+          </TouchableOpacity>
+        </View>
+      );
+
+    case "pwtidakcocok":
+      return (
+        <View>
+          <Text className="text-center text-lg font-bold text-skyDark">
+            Konfirmasi password tidak cocok
+          </Text>
+
+          <View className="w-full h-[2px] bg-skyDark my-5" />
+
+          <TouchableOpacity
+            className=" text-center text-skyDark font-medium w-full"
+            onPress={onClose}
+          >
+            <Text className="text-center text-skyDark">Oke</Text>
+          </TouchableOpacity>
+        </View>
+      );
+
+    case "kolompwkosong":
+      return (
+        <View>
+          <Text className="text-center text-lg font-bold text-skyDark">
+            Semua kolom harus diisi
+          </Text>
+
+          <View className="w-full h-[2px] bg-skyDark my-5" />
+
+          <TouchableOpacity
+            className=" text-center text-skyDark font-medium w-full"
+            onPress={onClose}
+          >
+            <Text className="text-center text-skyDark">Oke</Text>
+          </TouchableOpacity>
+        </View>
+      );
 
     default:
       return <Text>Modal tidak ditemukan.</Text>;

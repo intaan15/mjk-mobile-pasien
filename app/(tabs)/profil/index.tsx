@@ -88,10 +88,9 @@ export default function ProfileScreen() {
       const token = await SecureStore.getItemAsync("userToken");
 
       if (!token) {
-        return Alert.alert(
-          "Gagal",
-          "Token tidak ditemukan, silakan login ulang"
-        );
+        setModalType("kolompwkosong");
+        setModalVisible(true);
+        return;
       }
 
       const res = await axios.patch(
@@ -108,7 +107,8 @@ export default function ProfileScreen() {
         }
       );
 
-      Alert.alert("Berhasil", res.data.message);
+      setModalType("ubahberhasil");
+      setModalVisible(true);
       setPasswordLama("");
       setPasswordBaru("");
       setKonfirmasiPassword("");
@@ -116,7 +116,17 @@ export default function ProfileScreen() {
       const msg =
         error.response?.data?.message ||
         "Terjadi kesalahan saat mengubah password";
-      Alert.alert("Gagal", msg);
+
+      if (msg.includes("Password lama salah")) {
+        setModalType("pwlamasalah");
+      } else if (msg.includes("Konfirmasi password tidak cocok")) {
+        setModalType("pwtidakcocok");
+      } else if (msg.includes("Semua field harus diisi")) {
+        setModalType("kolompwkosong");
+      } else {
+        setModalType("kolompwkosong");
+      }
+      setModalVisible(true);
     }
   };
 
