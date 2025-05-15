@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -19,9 +19,11 @@ import * as SecureStore from "expo-secure-store";
 import * as ImagePicker from "expo-image-picker";
 import DatePickerComponent from "../../components/picker/datepicker";
 import TabButton from "../../components/tabbutton";
+import { useLocalSearchParams } from "expo-router";
 
 const Register = () => {
   const router = useRouter();
+  const params = useLocalSearchParams();
 
   const [form, setForm] = useState({
     nama: "",
@@ -67,10 +69,26 @@ const Register = () => {
 
 
   const handleRegister = async () => {
+    // Cek ada field kosong
+    const isEmptyField = Object.values(form).some(
+      (val) => val == null || val.trim() === ""
+    );
+    if (isEmptyField) {
+      alert("Mohon lengkapi semua data!");
+      return;
+    }
 
-    const isEmptyField = Object.values(form).some((val) => val == null || val.trim() === "");
-    
     try {
+      // Ambil foto dari SecureStore
+      const ktpUri = await SecureStore.getItemAsync("fotoKTP");
+      const selfieUri = await SecureStore.getItemAsync("selfieKTP");
+
+      if (!ktpUri || !selfieUri) {
+        alert("Foto KTP dan Selfie KTP harus diisi.");
+        return;
+      }
+
+      // Buat payload sesuai yang backend minta
       const payload = {
         nama_masyarakat: form.nama,
         username_masyarakat: form.username,
@@ -81,13 +99,13 @@ const Register = () => {
         notlp_masyarakat: form.notlp,
         jeniskelamin_masyarakat: form.jenisKelamin,
         tgl_lahir_masyarakat: form.tglLahir,
-        foto_ktp_masyarakat: "foto ktp.jpg", 
-        selfie_ktp_masyarakat: "selfie ktp.jpg", 
-        foto_profil_masyarakat: "foto_profil.jpg", 
+        foto_ktp_masyarakat: ktpUri, // pakai uri dari SecureStore
+        selfie_ktp_masyarakat: selfieUri, // pakai uri dari SecureStore
       };
 
+      // Kirim ke backend
       const response = await axios.post(
-        "http://10.52.170.111:3330/api/auth/register_masyarakat",
+        "https://mjk-backend-production.up.railway.app/api/auth/register_masyarakat",
         payload,
         {
           headers: {
@@ -99,12 +117,12 @@ const Register = () => {
       alert("Registrasi berhasil!");
       router.replace("./signin");
     } catch (error) {
-      // console.error(error.response?.data || error.message);
       alert(
-        "Gagal registrasi: " + ((error as any).response?.data?.message || (error as any).message)
+        "Gagal registrasi: " + (error.response?.data?.message || error.message)
       );
     }
   };
+  
 
   const handleGenderSelect = (gender) => {
     setSelectedTab(gender);
@@ -228,7 +246,7 @@ const Register = () => {
                     ))}
                   </View>
                 </View>
-
+                <Text>Tanggal Lahir</Text>
                 <View className="bg-transparent border-2 border-gray-400 text-black px-4 py-3 rounded-xl">
                   <DatePickerComponent
                     label="Tanggal Terpilih"

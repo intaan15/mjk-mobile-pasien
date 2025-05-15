@@ -16,6 +16,8 @@ import {
     ImageProvider,
   } from "../../components/picker/imagepicker";
   import React, { useState } from 'react';
+  import * as SecureStore from "expo-secure-store";
+  import * as ImagePicker from "expo-image-picker";
   
   
   const panduan = [
@@ -49,15 +51,47 @@ export default function panduanselfie() {
         });
       
         // Handler baru yang gabung pick image + tutup modal
-        const handlePickImage = async () => {
-          await openGallery();
-          setModalVisible(false);
-        };
-      
-        const handleOpenCamera = async () => {
-          await openCamera();
-          setModalVisible(false);
-        };
+       const handlePickImage = async () => {
+             console.log("handlePickImage dipanggil");
+       
+             const result = await ImagePicker.launchImageLibraryAsync({
+               mediaTypes: ImagePicker.MediaTypeOptions.Images,
+               allowsEditing: true,
+               aspect: [4, 6],
+               quality: 1,
+             });
+       
+             console.log("Hasil result:", result);
+       
+             if (!result.canceled && result.assets && result.assets.length > 0) {
+               const uri = result.assets[0].uri;
+               console.log("URI ditemukan:", uri);
+               await SecureStore.setItemAsync("selfieKTP", uri);
+               router.push("/screens/signup"); 
+             } else {
+               console.log("Gagal ambil gambar atau user batalin");
+             }
+           };
+       
+           const handleOpenCamera = async () => {
+             const result = await ImagePicker.launchCameraAsync({
+               mediaTypes: ImagePicker.MediaTypeOptions.Images,
+               allowsEditing: true,
+               aspect: [4, 6],
+               quality: 1,
+             });
+       
+             console.log("Hasil result:", result);
+       
+             if (!result.canceled && result.assets && result.assets.length > 0) {
+               const uri = result.assets[0].uri;
+               console.log("URI ditemukan:", uri);
+               await SecureStore.setItemAsync("selfieKTP", uri);
+               router.push("/screens/signup"); 
+             } else {
+               console.log("Gagal ambil gambar atau user batalin");
+             }
+           };
 
   return (
     <Background>
@@ -121,13 +155,13 @@ export default function panduanselfie() {
             </View>
             <View className="mt-4 items-center gap-3">
             <TouchableOpacity
-                onPress={openGallery} 
+                onPress={handlePickImage} 
                 className="bg-[#025F96] w-[300px] h-[35px] px-6 py-3 rounded-lg"
             >
                 <Text className="text-white text-base font-semibold text-center text-[16px]">Ambil Foto Galery</Text>
             </TouchableOpacity>
             <TouchableOpacity
-                onPress={openCamera} 
+                onPress={handleOpenCamera} 
                 className="bg-[#025F96] w-[300px] h-[35px] px-6 py-3 rounded-lg"
             >
                 <Text className="text-white text-base font-semibold text-center text-[16px]">Ambil Foto Kamera</Text>

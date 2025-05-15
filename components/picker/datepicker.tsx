@@ -26,7 +26,7 @@ const DatePickerComponent = ({ label, onDateChange }) => {
   return (
     <View className="flex flex-col items-start justify-center">
       <TouchableOpacity
-        className="flex flex-row items-center text-skyDark"
+        className="flex flex-row items-center text-skyDark w-full"
         onPress={() => setDatePickerVisibility(true)}
       >
         <MaterialIcons name="date-range" size={24} color="#025F96" />
