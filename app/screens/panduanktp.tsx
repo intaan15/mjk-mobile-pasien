@@ -72,6 +72,7 @@ export default function Panduanktp() {
     };
 
     const handleOpenCamera = async () => {
+      
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,

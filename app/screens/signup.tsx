@@ -43,92 +43,113 @@ const Register = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTab, setSelectedTab] = useState("");
 
+  // ** Restore form dari SecureStore saat komponen mount **
+  useEffect(() => {
+    const restoreFormData = async () => {
+      const savedForm = await SecureStore.getItemAsync("formData");
+      if (savedForm) {
+        setForm(JSON.parse(savedForm));
+      }
+    };
+
+    restoreFormData();
+  }, []);
 
   const handleInputChange = (field, value) => {
-    setForm({ ...form, [field]: value });
+    setForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
-
-  const handlePickImage = async (field) => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      alert("Izin akses galeri ditolak!");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.7,
-    });
-
-    if (!result.canceled) {
-      handleInputChange(field, result.assets[0].uri);
-    }
-  };
-
 
   const handleRegister = async () => {
-    // Cek ada field kosong
-    const isEmptyField = Object.values(form).some(
-      (val) => val == null || val.trim() === ""
-    );
-    if (isEmptyField) {
-      alert("Mohon lengkapi semua data!");
-      return;
-    }
-
     try {
-      // Ambil foto dari SecureStore
       const ktpUri = await SecureStore.getItemAsync("fotoKTP");
       const selfieUri = await SecureStore.getItemAsync("selfieKTP");
+
+      console.log("URI KTP:", ktpUri);
+      console.log("URI Selfie:", selfieUri);
 
       if (!ktpUri || !selfieUri) {
         alert("Foto KTP dan Selfie KTP harus diisi.");
         return;
       }
 
-      // Buat payload sesuai yang backend minta
-      const payload = {
-        nama_masyarakat: form.nama,
-        username_masyarakat: form.username,
-        password_masyarakat: form.password,
-        email_masyarakat: form.email,
-        nik_masyarakat: form.nik,
-        alamat_masyarakat: form.alamat,
-        notlp_masyarakat: form.notlp,
-        jeniskelamin_masyarakat: form.jenisKelamin,
-        tgl_lahir_masyarakat: form.tglLahir,
-        foto_ktp_masyarakat: ktpUri, // pakai uri dari SecureStore
-        selfie_ktp_masyarakat: selfieUri, // pakai uri dari SecureStore
+      const getFileInfo = (uri) => {
+        const filename = uri.split("/").pop();
+        const match = /\.(\w+)$/.exec(filename ?? "");
+        const ext = match?.[1];
+        const mimeType =
+          ext === "jpg" || ext === "jpeg"
+            ? "image/jpeg"
+            : ext === "png"
+            ? "image/png"
+            : "application/octet-stream";
+        return { name: filename, type: mimeType };
       };
 
-      // Kirim ke backend
+      const formData = new FormData();
+
+      // Tambahkan data teks
+      formData.append("nama_masyarakat", form.nama);
+      formData.append("username_masyarakat", form.username);
+      formData.append("password_masyarakat", form.password);
+      formData.append("email_masyarakat", form.email);
+      formData.append("nik_masyarakat", form.nik);
+      formData.append("alamat_masyarakat", form.alamat);
+      formData.append("notlp_masyarakat", form.notlp);
+      formData.append("jeniskelamin_masyarakat", form.jenisKelamin);
+      formData.append("tgl_lahir_masyarakat", form.tglLahir);
+
+      // Tambahkan file
+      // File foto KTP
+      const ktpInfo = getFileInfo(ktpUri);
+      formData.append("foto_ktp_masyarakat", {
+        uri: ktpUri,
+        type: ktpInfo.type,
+        name: ktpInfo.name,
+      } as any);
+
+      // File selfie KTP
+      const selfieInfo = getFileInfo(selfieUri);
+      formData.append("selfie_ktp_masyarakat", {
+        uri: selfieUri,
+        name: selfieInfo.name,
+        type: selfieInfo.type,
+      } as any);
+
+      // Kirim pakai axios
       const response = await axios.post(
-        "https://mjk-backend-production.up.railway.app/api/auth/register_masyarakat",
-        payload,
+        "http://10.52.170.111:3330/api/auth/register_masyarakat",
+        formData,
         {
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "multipart/form-data",
           },
         }
       );
 
       alert("Registrasi berhasil!");
+      await SecureStore.deleteItemAsync("formData");
+      await SecureStore.deleteItemAsync("fotoKTP");
+      await SecureStore.deleteItemAsync("selfieKTP");
       router.replace("./signin");
     } catch (error) {
+      console.log("Error:", error);
+      console.log("Error response:", error.response?.data);
       alert(
         "Gagal registrasi: " + (error.response?.data?.message || error.message)
       );
     }
   };
-  
 
+  // Gender select handler
   const handleGenderSelect = (gender) => {
     setSelectedTab(gender);
     handleInputChange("jenisKelamin", gender);
   };
 
+  // Date change handler
   const handleDateChange = (event, selected) => {
     setShowDatePicker(Platform.OS === "ios");
     if (selected) {
@@ -137,8 +158,16 @@ const Register = () => {
       handleInputChange("tglLahir", formattedDate);
     }
   };
-  
-  
+  const saveFormAndNavigate = async (path) => {
+    try {
+      await SecureStore.setItemAsync("formData", JSON.stringify(form));
+      router.push(path);
+    } catch (error) {
+      console.log("Error:", error);
+      console.log("Error response:", error.response?.data);
+
+    }
+  };
 
   return (
     <Background>
@@ -229,6 +258,7 @@ const Register = () => {
                   className="bg-transparent border-gray-400 border-2 text-black px-4 py-3 rounded-xl"
                   placeholderTextColor="#ccc"
                 />
+
                 <Text>Jenis Kelamin</Text>
                 <View
                   // value={identifier}
@@ -246,6 +276,7 @@ const Register = () => {
                     ))}
                   </View>
                 </View>
+
                 <Text>Tanggal Lahir</Text>
                 <View className="bg-transparent border-2 border-gray-400 text-black px-4 py-3 rounded-xl">
                   <DatePickerComponent
@@ -260,20 +291,15 @@ const Register = () => {
                   />
                 </View>
 
-                <Text>Foto KTP</Text>
                 <TouchableOpacity
-                  onPress={() => router.push("./panduanktp")}
-                  // value={identifier}
-                  // onChangeText={setIdentifier}
-                  className="bg-transparent border-[#06B400]  border-2 text-black px-4 py-3 rounded-xl"
+                  onPress={() => saveFormAndNavigate("./panduanktp")}
+                  className="bg-transparent border-[#06B400] border-2 text-black px-4 py-3 rounded-xl"
                 >
                   <Text className="text-[#06B400] ">Masukkan Foto KTP</Text>
                 </TouchableOpacity>
-                <Text>Selfie dengan KTP</Text>
+
                 <TouchableOpacity
-                  onPress={() => router.push("./panduanselfie")}
-                  // value={identifier}
-                  // onChangeText={setIdentifier}
+                  onPress={() => saveFormAndNavigate("./panduanselfie")}
                   className="bg-transparent border-[#06B400] border-2 text-black px-4 py-3 rounded-xl"
                 >
                   <Text className="text-[#06B400] ">Selfie dengan KTP</Text>
