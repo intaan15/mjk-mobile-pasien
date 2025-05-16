@@ -10,6 +10,8 @@ import ImagePickerComponent, {
 import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";
 import axios from "axios";
+import DatePickerComponent from "../../components/picker/datepicker";
+
 
 interface ModalContentProps {
   modalType: string;
@@ -52,6 +54,8 @@ const ModalContent: React.FC<ModalContentProps> = ({
   const [alamat, setAlamat] = useState("");
   const [jenisKelamin, setJenisKelamin] = useState("");
   const [tglLahir, setTglLahir] = useState("");
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
 
   const [userData, setUserData] = useState<User | null>(null);
 
@@ -212,7 +216,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
 
     try {
       const response = await axios.post(
-        "http://10.52.170.231:3330/api/masyarakat/upload",
+        "http://10.52.170.227:3330/api/masyarakat/upload",
         formData,
         {
           headers: {
@@ -354,17 +358,22 @@ const ModalContent: React.FC<ModalContentProps> = ({
               className="border-2 rounded-xl border-gray-400 p-2 w-full"
               placeholderTextColor="#888"
             />
+
             <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">
               Tanggal Lahir
             </Text>
-            <TextInput
-              placeholder="Tulang"
-              // secureTextEntry
-              value={tglLahir}
-              onChangeText={setTglLahir}
-              className="border-2 rounded-xl border-gray-400 p-2 w-full"
-              placeholderTextColor="#888"
-            />
+
+            <View className="border-2 border-gray-400 rounded-xl w-full p-[4px]">
+            <DatePickerComponent
+              label="Tanggal Lahir"
+              initialDate={tglLahir ? new Date(tglLahir) : null}
+              onDateChange={(date) => {
+                const formatted = date.toISOString().split("T")[0];
+                setTglLahir(formatted);
+              }}
+              />
+            </View>
+
             <TouchableOpacity
               className="p-2 rounded-xl w-2/4 mt-6 bg-skyDark"
               onPress={handleSubmit}

@@ -60,7 +60,7 @@ export default function index() {
         setUserData(response.data);
       }
     } catch (error) {
-      console.error("Gagal mengambil data profil:", error);
+      router.push("/screens/signin")
     }
   };
 
