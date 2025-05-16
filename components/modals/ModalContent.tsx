@@ -12,7 +12,6 @@ import { useRouter } from "expo-router";
 import axios from "axios";
 import DatePickerComponent from "../../components/picker/datepicker";
 
-
 interface ModalContentProps {
   modalType: string;
   onTimeSlotsChange?: (slots: string[]) => void;
@@ -55,7 +54,6 @@ const ModalContent: React.FC<ModalContentProps> = ({
   const [jenisKelamin, setJenisKelamin] = useState("");
   const [tglLahir, setTglLahir] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
-
 
   const [userData, setUserData] = useState<User | null>(null);
 
@@ -212,7 +210,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
       name: fileName,
       type: `image/${fileType}`,
     } as any);
-    formData.append("id", cleanedUserId); 
+    formData.append("id", cleanedUserId);
 
     try {
       const response = await axios.post(
@@ -234,8 +232,8 @@ const ModalContent: React.FC<ModalContentProps> = ({
   };
 
   const handleUpload = async () => {
-    await uploadImageToServer();   
-    onClose?.();       
+    await uploadImageToServer();
+    onClose?.();
   };
 
   switch (modalType) {
@@ -267,8 +265,11 @@ const ModalContent: React.FC<ModalContentProps> = ({
             className="mt-5 py-3 bg-green-600 rounded-xl w-full"
             onPress={uploadImageToServer}
           >
-            <Text className="text-center text-white font-semibold text-base" onPress={handleUpload}>
-              Upload Foto
+            <Text
+              className="text-center text-white font-semibold text-base"
+              onPress={handleUpload}
+            >
+              Unggah Foto
             </Text>
           </TouchableOpacity>
 
@@ -288,7 +289,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
         <View>
           {/* Ganti Password */}
           <Text className="font-bold text-2xl text-skyDark mt-4 text-center">
-            Edit profil
+            Ubah Profil
           </Text>
           {/* <View className="w-full h-[2px] bg-skyDark" /> */}
           <View className="flex flex-col items-center px-5">
@@ -304,7 +305,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
               placeholderTextColor="#888"
             />
             <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">
-              Username
+              Nama Pengguna
             </Text>
             <TextInput
               placeholder="contoh123"
@@ -326,7 +327,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
               placeholderTextColor="#888"
             />
             <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">
-              Nomor telepon
+              Nomor Telepon
             </Text>
             <TextInput
               placeholder="0821312312312"
@@ -350,27 +351,38 @@ const ModalContent: React.FC<ModalContentProps> = ({
             <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">
               Jenis Kelamin
             </Text>
-            <TextInput
-              placeholder="Tulang"
-              // secureTextEntry
-              value={jenisKelamin}
-              onChangeText={setJenisKelamin}
-              className="border-2 rounded-xl border-gray-400 p-2 w-full"
-              placeholderTextColor="#888"
-            />
+            <View className="flex flex-row rounded-xl border-2 border-[#ccc] overflow-hidden mt-1">
+              {["Laki-laki", "Perempuan"].map((gender) => (
+                <TouchableOpacity
+                  key={gender}
+                  className={`w-1/2 p-2 items-center ${
+                    jenisKelamin === gender ? "bg-skyDark" : "bg-white"
+                  }`}
+                  onPress={() => setJenisKelamin(gender)}
+                >
+                  <Text
+                    className={`font-semibold ${
+                      jenisKelamin === gender ? "text-white" : "text-skyDark"
+                    }`}
+                  >
+                    {gender}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
             <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">
               Tanggal Lahir
             </Text>
 
             <View className="border-2 border-gray-400 rounded-xl w-full p-[4px]">
-            <DatePickerComponent
-              label="Tanggal Lahir"
-              initialDate={tglLahir ? new Date(tglLahir) : null}
-              onDateChange={(date) => {
-                const formatted = date.toISOString().split("T")[0];
-                setTglLahir(formatted);
-              }}
+              <DatePickerComponent
+                label="Tanggal Lahir"
+                initialDate={tglLahir ? new Date(tglLahir) : null}
+                onDateChange={(date) => {
+                  const formatted = date.toISOString().split("T")[0];
+                  setTglLahir(formatted);
+                }}
               />
             </View>
 
@@ -646,6 +658,60 @@ const ModalContent: React.FC<ModalContentProps> = ({
         <View>
           <Text className="text-center text-lg font-bold text-skyDark">
             Password salah
+          </Text>
+
+          <View className="w-full h-[2px] bg-skyDark my-5" />
+
+          <TouchableOpacity
+            className=" text-center text-skyDark font-medium w-full"
+            onPress={onClose}
+          >
+            <Text className="text-center text-skyDark">Oke</Text>
+          </TouchableOpacity>
+        </View>
+      );
+
+    case "belumverif":
+      return (
+        <View>
+          <Text className="text-center text-lg font-bold text-skyDark">
+            Akun anda masih dalam proses verisifkasi data
+          </Text>
+
+          <View className="w-full h-[2px] bg-skyDark my-5" />
+
+          <TouchableOpacity
+            className=" text-center text-skyDark font-medium w-full"
+            onPress={onClose}
+          >
+            <Text className="text-center text-skyDark">Oke</Text>
+          </TouchableOpacity>
+        </View>
+      );
+
+    case "bodong":
+      return (
+        <View>
+          <Text className="text-center text-lg font-bold text-skyDark">
+            Akun anda bodong
+          </Text>
+
+          <View className="w-full h-[2px] bg-skyDark my-5" />
+
+          <TouchableOpacity
+            className=" text-center text-skyDark font-medium w-full"
+            onPress={onClose}
+          >
+            <Text className="text-center text-skyDark">Oke</Text>
+          </TouchableOpacity>
+        </View>
+      );
+
+    case "ditolak":
+      return (
+        <View>
+          <Text className="text-center text-lg font-bold text-skyDark">
+            Akun anda ditolak
           </Text>
 
           <View className="w-full h-[2px] bg-skyDark my-5" />

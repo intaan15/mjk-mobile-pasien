@@ -59,16 +59,28 @@ export default function SignIn() {
           } else if (message === "Password salah") {
             setModalType("pwsalah");
           } else {
-            setModalType("galat");
+            // setModalType("galat");
+          }
+        } else if (status === 403) {
+          if (message === "Akun belum diverifikasi") {
+            setModalType("belumverif");
+          } else if (message === "Akun anda ditolak") {
+            setModalType("ditolak");
+          } else if (message === "Akun anda bodong") {
+            setModalType("bodong");
+          } else {
+            // setModalType("galat");
           }
         } else {
-          setModalType("galat");
+          // setModalType("galat");
         }
       } else {
-        setModalType("galat");
+        // setModalType("galat");
       }
+
       setModalVisible(true);
     }
+    
   };
 
   return (

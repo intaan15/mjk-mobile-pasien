@@ -152,7 +152,7 @@ function App() {
           {/* Header Profil */}
           <View className="relative pt-12 bg-skyLight rounded-b-[50px] py-28">
             <View className="absolute inset-0 flex items-center justify-between flex-row px-12">
-              <Text className="text-skyDark text-2xl font-bold">Profile</Text>
+              <Text className="text-skyDark text-2xl font-bold">Profil</Text>
               <Image
                 className="h-10 w-12"
                 source={images.logo}
@@ -197,7 +197,7 @@ function App() {
             <Text className="text-gray-700">{userData.nama_masyarakat}</Text>
 
             <Text className="font-bold text-lg text-skyDark mt-2">
-              Username
+              Nama Pengguna
             </Text>
             <Text className="text-gray-700">
               {userData.username_masyarakat}
@@ -233,7 +233,7 @@ function App() {
 
             {/* Ganti Password */}
             <Text className="font-bold text-lg text-skyDark mt-4">
-              Ganti Password
+              Ganti Kata Sandi
             </Text>
             <View className="w-full h-[2px] bg-skyDark" />
             <View className="flex flex-col items-center">
