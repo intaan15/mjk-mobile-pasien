@@ -11,6 +11,7 @@ import {
   Keyboard,
   StatusBar,
   TouchableOpacity,
+  Alert
 } from "react-native";
 import { useRouter } from "expo-router";
 import Background from "../../components/background";
@@ -35,25 +36,32 @@ const Register = () => {
     notlp: "",
     jenisKelamin: "",
     tglLahir: "",
-    fotoKTP: null,
-    selfieKTP: null,
+    fotoKTP: "",
+    selfieKTP: "",
   });
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTab, setSelectedTab] = useState("");
+  const [ktpUri, setKtpUri] = useState("");
+  const [selfieUri, setSelfieUri] = useState("");
+
 
   // ** Restore form dari SecureStore saat komponen mount **
   useEffect(() => {
     const restoreFormData = async () => {
       const savedForm = await SecureStore.getItemAsync("formData");
-      if (savedForm) {
-        setForm(JSON.parse(savedForm));
-      }
+      const savedKtp = await SecureStore.getItemAsync("fotoKTP");
+      const savedSelfie = await SecureStore.getItemAsync("selfieKTP");
+
+      if (savedForm) setForm(JSON.parse(savedForm));
+      if (savedKtp) setKtpUri(savedKtp);
+      if (savedSelfie) setSelfieUri(savedSelfie);
     };
 
     restoreFormData();
   }, []);
+  
 
   const handleInputChange = (field, value) => {
     setForm((prev) => ({
@@ -64,14 +72,12 @@ const Register = () => {
 
   const handleRegister = async () => {
     try {
-      const ktpUri = await SecureStore.getItemAsync("fotoKTP");
-      const selfieUri = await SecureStore.getItemAsync("selfieKTP");
+      const userId = await SecureStore.getItemAsync("userId");
+      const fotoKTP = await SecureStore.getItemAsync("fotoKTP");
+      const selfieKTP = await SecureStore.getItemAsync("selfieKTP");
 
-      console.log("URI KTP:", ktpUri);
-      console.log("URI Selfie:", selfieUri);
-
-      if (!ktpUri || !selfieUri) {
-        alert("Foto KTP dan Selfie KTP harus diisi.");
+      if (!userId || !fotoKTP || !selfieKTP) {
+        Alert.alert("Gagal", "Semua data harus diisi.");
         return;
       }
 
@@ -90,7 +96,7 @@ const Register = () => {
 
       const formData = new FormData();
 
-      // Tambahkan data teks
+      // Data teks
       formData.append("nama_masyarakat", form.nama);
       formData.append("username_masyarakat", form.username);
       formData.append("password_masyarakat", form.password);
@@ -101,26 +107,39 @@ const Register = () => {
       formData.append("jeniskelamin_masyarakat", form.jenisKelamin);
       formData.append("tgl_lahir_masyarakat", form.tglLahir);
 
-      // Tambahkan file
       // File foto KTP
-      const ktpInfo = getFileInfo(ktpUri);
+      const ktpInfo = getFileInfo(fotoKTP);
       formData.append("foto_ktp_masyarakat", {
-        uri: ktpUri,
+        uri: fotoKTP,
         type: ktpInfo.type,
         name: ktpInfo.name,
-      } as any);
+      });
 
       // File selfie KTP
-      const selfieInfo = getFileInfo(selfieUri);
+      const selfieInfo = getFileInfo(selfieKTP);
       formData.append("selfie_ktp_masyarakat", {
-        uri: selfieUri,
+        uri: selfieKTP,
         name: selfieInfo.name,
         type: selfieInfo.type,
-      } as any);
+      });
 
-      // Kirim pakai axios
+      console.log("Form data sebelum kirim:", {
+        nama: form.nama,
+        username: form.username,
+        password: form.password,
+        email: form.email,
+        nik: form.nik,
+        alamat: form.alamat,
+        notlp: form.notlp,
+        jenisKelamin: form.jenisKelamin,
+        tglLahir: form.tglLahir,
+        fotoKTP,
+        selfieKTP,
+      });
+      
+
       const response = await axios.post(
-        "http://10.52.170.111:3330/api/auth/register_masyarakat",
+        "http://10.52.170.227:3330/api/auth/register_masyarakat",
         formData,
         {
           headers: {
@@ -142,6 +161,7 @@ const Register = () => {
       );
     }
   };
+  
 
   // Gender select handler
   const handleGenderSelect = (gender) => {

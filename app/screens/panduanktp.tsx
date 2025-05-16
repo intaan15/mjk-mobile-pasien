@@ -29,68 +29,68 @@ const panduan = [
 export default function Panduanktp() {
   const router = useRouter();
   const [isModalVisible, setModalVisible] = useState(false);
-    const [modalType, setModalType] = useState("info");
-  
-    const openModal = (type: string) => {
-      setModalType(type);
-      setModalVisible(true);
-    };
-  
-    const toggleModal = () => {
-      setModalVisible(!isModalVisible);
-    };
-    const imageContext = useImage();
-    const setImage = imageContext?.setImage;
+  const [modalType, setModalType] = useState("info");
+  const [ktpUri, setKtpUri] = useState("");
+  const [selfieUri, setSelfieUri] = useState("");
+
+  const openModal = (type: string) => {
+    setModalType(type);
+    setModalVisible(true);
+  };
+
+  const toggleModal = () => {
+    setModalVisible(!isModalVisible);
+  };
+  const imageContext = useImage();
+  const setImage = imageContext?.setImage;
 
   const { openGallery, openCamera } = ImagePickerComponent({
-      onImageSelected: setImage,
+    onImageSelected: setImage,
+  });
+
+  // Handler baru yang gabung pick image + tutup modal
+
+  // ✅ Untuk ambil KTP dari galeri
+  const handlePickImage = async () => {
+    console.log("handlePickImage dipanggil");
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
     });
-  
-    // Handler baru yang gabung pick image + tutup modal
-    
 
-    const handlePickImage = async () => {
-      console.log("handlePickImage dipanggil");
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const uri = result.assets[0].uri;
+      console.log("URI KTP ditemukan dari galeri:", uri);
+      await SecureStore.setItemAsync("fotoKTP", uri); // ✅ tetap sebagai fotoKTP
+      setKtpUri(uri);
+      router.push("/screens/signup");
+    } else {
+      console.log("Gagal ambil gambar dari galeri");
+    }
+  };
 
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
-      });
+  // ✅ Untuk ambil KTP dari kamera
+  const handleOpenCamera = async () => {
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
 
-      console.log("Hasil result:", result);
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const uri = result.assets[0].uri;
-        console.log("URI ditemukan:", uri);
-        await SecureStore.setItemAsync("fotoKTP", uri);
-        router.push("/screens/signup"); // atau "./signup" tergantung struktur router kamu
-      } else {
-        console.log("Gagal ambil gambar atau user batalin");
-      }
-    };
-
-    const handleOpenCamera = async () => {
-      
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
-      });
-
-      console.log("Hasil result:", result);
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const uri = result.assets[0].uri;
-        console.log("URI ditemukan:", uri);
-        await SecureStore.setItemAsync("fotoKTP", uri);
-        router.push("/screens/signup"); // atau "./signup" tergantung struktur router kamu
-      } else {
-        console.log("Gagal ambil gambar atau user batalin");
-      }
-    };
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const uri = result.assets[0].uri;
+      console.log("URI KTP ditemukan dari kamera:", uri);
+      await SecureStore.setItemAsync("fotoKTP", uri); // ✅ tetap sebagai fotoKTP
+      setKtpUri(uri);
+      router.push("/screens/signup");
+    } else {
+      console.log("Gagal ambil gambar dari kamera");
+    }
+  };
 
   return (
     <Background>
@@ -112,32 +112,39 @@ export default function Panduanktp() {
         </View>
         <View className="items-center">
           <View className=" w-4/5">
-            <Text className=" text-skyDark text-[22px] font-extrabold">Panduan Foto KTP</Text>
+            <Text className=" text-skyDark text-[22px] font-extrabold">
+              Panduan Foto KTP
+            </Text>
             <Text className="text-[15px] mt-5 font-medium">
-            Pastikan foto yang kamu ambil nanti sesuai dengan panduan dibawah ini.
+              Pastikan foto yang kamu ambil nanti sesuai dengan panduan dibawah
+              ini.
             </Text>
           </View>
           <View className="flex flex-row gap-4 mt-4 ">
             <View className="bg-[#00FF4033] w-[160px] h-[316px] rounded-[15px] px-3">
               <View className="flex flex-row gap-3 py-4">
                 <FontAwesome name="check-circle" size={24} color="#00A629" />
-                <Text className="text-[#00A629] font-bold text-[20px]">Benar</Text>
+                <Text className="text-[#00A629] font-bold text-[20px]">
+                  Benar
+                </Text>
               </View>
               <Image
-              className="h-[251px] w-[140px]"
-              source={images.benarktp}
-              resizeMode="contain"
+                className="h-[251px] w-[140px]"
+                source={images.benarktp}
+                resizeMode="contain"
               />
             </View>
             <View className="bg-[#FF003033] w-[160px] h-[316px] rounded-[15px] px-3">
               <View className="flex flex-row gap-3 py-4">
                 <FontAwesome name="times-circle" size={24} color="#A60000" />
-                <Text className="text-[#A60000] font-bold text-[20px] ">Salah</Text>
+                <Text className="text-[#A60000] font-bold text-[20px] ">
+                  Salah
+                </Text>
               </View>
               <Image
-              className="h-[260px] w-[140px]"
-              source={images.salahktp}
-              resizeMode="contain"
+                className="h-[260px] w-[140px]"
+                source={images.salahktp}
+                resizeMode="contain"
               />
             </View>
           </View>
@@ -146,25 +153,31 @@ export default function Panduanktp() {
           {panduan.map((item, index) => (
             <View key={index} className="flex flex-row items-start mb-1 w-5/6">
               <Text className="text-lg text-black mr-2">•</Text>
-              <Text className="text-base font-medium text-black flex-1">{item}</Text>
+              <Text className="text-base font-medium text-black flex-1">
+                {item}
+              </Text>
             </View>
           ))}
         </View>
         <View className="mt-4 items-center gap-3">
           <TouchableOpacity
-            onPress={handlePickImage} 
+            onPress={handlePickImage}
             className="bg-[#025F96] w-[300px] h-[35px] px-6 py-3 rounded-lg"
           >
-            <Text className="text-white text-base font-semibold text-center text-[16px]">Ambil Foto Galery</Text>
+            <Text className="text-white text-base font-semibold text-center text-[16px]">
+              Ambil Foto Galery
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={handleOpenCamera} 
+            onPress={handleOpenCamera}
             className="bg-[#025F96] w-[300px] h-[35px] px-6 py-3 rounded-lg"
           >
-            <Text className="text-white text-base font-semibold text-center text-[16px]">Ambil Foto Kamera</Text>
+            <Text className="text-white text-base font-semibold text-center text-[16px]">
+              Ambil Foto Kamera
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
     </Background>
-  )
+  );
 }
