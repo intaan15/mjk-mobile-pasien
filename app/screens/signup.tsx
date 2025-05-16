@@ -41,8 +41,8 @@ const Register = () => {
   });
 
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedTab, setSelectedTab] = useState("");
+  const [selectedDate, setSelectedDate] = useState(null);
+    const [selectedTab, setSelectedTab] = useState("");
   const [ktpUri, setKtpUri] = useState("");
   const [selfieUri, setSelfieUri] = useState("");
 
@@ -54,13 +54,28 @@ const Register = () => {
       const savedKtp = await SecureStore.getItemAsync("fotoKTP");
       const savedSelfie = await SecureStore.getItemAsync("selfieKTP");
 
-      if (savedForm) setForm(JSON.parse(savedForm));
+      if (savedForm) {
+        const parsedForm = JSON.parse(savedForm);
+        setForm(parsedForm);
+
+        // Sinkronkan selectedTab untuk jenis kelamin
+        if (parsedForm.jenisKelamin) {
+          setSelectedTab(parsedForm.jenisKelamin);
+        }
+        if (parsedForm.tglLahir) {
+          const dateObj = new Date(parsedForm.tglLahir);
+          setSelectedDate(dateObj);
+        }
+        
+      }
+
       if (savedKtp) setKtpUri(savedKtp);
       if (savedSelfie) setSelfieUri(savedSelfie);
     };
 
     restoreFormData();
   }, []);
+  
   
 
   const handleInputChange = (field, value) => {
@@ -189,6 +204,8 @@ const Register = () => {
     }
   };
 
+  
+
   return (
     <Background>
       <StatusBar backgroundColor="#f6f6f6" barStyle="dark-content" />
@@ -280,18 +297,14 @@ const Register = () => {
                 />
 
                 <Text>Jenis Kelamin</Text>
-                <View
-                  // value={identifier}
-                  // onChangeText={setIdentifier}
-                  className="bg-transparent border-gray-400 border-2 text-black  rounded-xl"
-                >
+                <View className="bg-transparent border-gray-400 border-2 text-black  rounded-xl">
                   <View className="flex flex-row rounded-xl border-2 border-[#ccc] overflow-hidden">
                     {["Laki-laki", "Perempuan"].map((tab) => (
                       <TabButton
                         key={tab}
                         label={tab}
                         isActive={selectedTab === tab}
-                        onPress={() => handleGenderSelect(tab)} // pakai fungsi ini
+                        onPress={() => handleGenderSelect(tab)}
                       />
                     ))}
                   </View>
@@ -301,6 +314,7 @@ const Register = () => {
                 <View className="bg-transparent border-2 border-gray-400 text-black px-4 py-3 rounded-xl">
                   <DatePickerComponent
                     label="Tanggal Terpilih"
+                    initialDate={selectedDate}
                     onDateChange={(date) => {
                       setSelectedDate(date);
                       handleInputChange(
