@@ -15,6 +15,7 @@ import Background from "../../../components/background";
 import { images } from "../../../constants/images";
 import axios from "axios";
 import { useFocusEffect } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 
 type Doctor = {
   _id: string;
@@ -107,15 +108,19 @@ export default function Index() {
                 }
               >
                 <View className="px-4">
-                  <Image
-                    source={
-                      doctor.foto_profil_dokter
-                        ? { uri: doctor.foto_profil_dokter }
-                        : images.foto
-                    }
-                    className="h-16 w-16 rounded-full border border-gray-300"
-                    resizeMode="cover"
-                  />
+                  {doctor.foto_profil_dokter ? (
+                    <Image
+                      source={{
+                        uri: `https://mjk-backend-production.up.railway.app/uploads/${doctor.foto_profil_dokter}`,
+                      }}
+                      className="h-16 w-16 rounded-full border border-gray-300"
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View className="h-16 w-16 rounded-full border border-gray-300 items-center justify-center bg-gray-200">
+                      <Ionicons name="person" size={32} color="#0C4A6E" />
+                    </View>
+                  )}
                 </View>
                 <View className="w-3/4">
                   <Text className="font-bold text-base text-skyDark pb-1">
