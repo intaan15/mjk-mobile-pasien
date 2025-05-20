@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -17,7 +17,10 @@ import { Ionicons } from "@expo/vector-icons";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import ModalContent from "../../../components/modals/ModalContent";
 import ModalTemplate from "../../../components/modals/ModalTemplate";
-import { ImageProvider, useImage } from "../../../components/picker/imagepicker";
+import {
+  ImageProvider,
+  useImage,
+} from "../../../components/picker/imagepicker";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 
@@ -35,7 +38,6 @@ interface User {
   foto_profil_masyarakat: string | null;
 }
 
-
 export default function ProfileScreen() {
   return (
     <ImageProvider>
@@ -51,9 +53,11 @@ function App() {
   const [modalType, setModalType] = useState("");
   const [isModalVisible, setModalVisible] = useState(false);
 
-  useEffect(() => {
-    fetchUserData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserData();
+    }, [])
+  );
 
   const fetchUserData = async () => {
     try {
