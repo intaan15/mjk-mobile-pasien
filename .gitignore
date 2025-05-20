@@ -8,4 +8,5 @@ web-build/
 expo-env.d.ts
 .DS_Store
 .env*.local
+.env
 # @end expo-cli

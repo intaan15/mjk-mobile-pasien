@@ -21,6 +21,7 @@ import * as ImagePicker from "expo-image-picker";
 import DatePickerComponent from "../../components/picker/datepicker";
 import TabButton from "../../components/tabbutton";
 import { useLocalSearchParams } from "expo-router";
+import { BASE_URL } from "@env";
 
 const Register = () => {
   const router = useRouter();
@@ -41,8 +42,8 @@ const Register = () => {
   });
 
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(null);
-    const [selectedTab, setSelectedTab] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTab, setSelectedTab] = useState("");
   const [ktpUri, setKtpUri] = useState("");
   const [selfieUri, setSelfieUri] = useState("");
 
@@ -128,7 +129,7 @@ const Register = () => {
         uri: fotoKTP,
         type: ktpInfo.type,
         name: ktpInfo.name,
-      });
+      } as any);
 
       // File selfie KTP
       const selfieInfo = getFileInfo(selfieKTP);
@@ -136,7 +137,7 @@ const Register = () => {
         uri: selfieKTP,
         name: selfieInfo.name,
         type: selfieInfo.type,
-      });
+      } as any);
 
       console.log("Form data sebelum kirim:", {
         nama: form.nama,
@@ -154,7 +155,7 @@ const Register = () => {
       
 
       const response = await axios.post(
-        "http://10.52.170.227:3330/api/auth/register_masyarakat",
+        `${BASE_URL}/auth/register_masyarakat`,
         formData,
         {
           headers: {

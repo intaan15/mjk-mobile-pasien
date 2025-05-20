@@ -16,6 +16,8 @@ import { images } from "../../../constants/images";
 import axios from "axios";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import * as SecureStore from "expo-secure-store";
+import { BASE_URL } from "@env";
 
 type Doctor = {
   _id: string;
@@ -36,9 +38,14 @@ export default function Index() {
     useCallback(() => {
       const fetchDoctors = async () => {
         try {
-          const response = await axios.get(
-            "https://mjk-backend-production.up.railway.app/api/dokter/getall"
-          );
+          const token = await SecureStore.getItemAsync("userToken");
+          if (!token) return;
+
+          const response = await axios.get(`${BASE_URL}/dokter/getall`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
           setDoctors(response.data);
         } catch (error) {
           console.error("Gagal fetch data dokter:", error);

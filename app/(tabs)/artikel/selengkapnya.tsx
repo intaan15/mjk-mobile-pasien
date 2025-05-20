@@ -4,6 +4,8 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import Background from "../../../components/background";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { images } from "../../../constants/images";
+import { BASE_URL } from "@env";
+import * as SecureStore from "expo-secure-store";
 
 export default function Selengkapnya() {
   const router = useRouter();
@@ -13,7 +15,13 @@ export default function Selengkapnya() {
   useEffect(() => {
     const fetchArtikelDetail = async () => {
       try {
-        const response = await fetch(`https://mjk-backend-production.up.railway.app/api/artikel/getbyid/${id}`);
+        const token = await SecureStore.getItemAsync("userToken");
+        if (!token) return;
+        const response = await fetch(`${BASE_URL}/artikel/getbyid/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         const data = await response.json();
         setArtikel(data);
       } catch (error) {

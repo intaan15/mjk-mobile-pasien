@@ -1,5 +1,5 @@
 import { View, Text, Image, TouchableOpacity } from "react-native";
-import React, {useState, useEffect, useCallback} from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "expo-router";
 import Background from "../../../components/background";
 import { images } from "../../../constants/images";
@@ -20,6 +20,7 @@ import HatiIcon from "../../../assets/icons/hati.svg";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import { useFocusEffect } from "@react-navigation/native";
+import { BASE_URL } from "@env";
 
 const spesialisList = [
   { name: "Umum", Icon: UmumIcon },
@@ -55,15 +56,22 @@ export default function index() {
   const fetchUserData = async () => {
     try {
       const userId = await SecureStore.getItemAsync("userId");
+      const token = await SecureStore.getItemAsync("userToken");
+      if (!token && !userId) return;
       const cleanedUserId = userId?.replace(/"/g, "");
       if (cleanedUserId) {
         const response = await axios.get(
-          `https://mjk-backend-production.up.railway.app/api/masyarakat/getbyid/${cleanedUserId}`
+          `${BASE_URL}/masyarakat/getbyid/${cleanedUserId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         setUserData(response.data);
       }
     } catch (error) {
-      router.push("/screens/signin")
+      router.push("/screens/signin");
     }
   };
 

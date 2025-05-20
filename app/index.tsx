@@ -3,6 +3,7 @@ import SplashScreen from "./splashscreen";
 import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";
 import axios from "axios";
+import { BASE_URL } from "@env";
 
 export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
@@ -15,7 +16,7 @@ export default function Index() {
       if (token) {
         try {
           await axios.get(
-            "https://mjk-backend-production.up.railway.app/api/auth/login_masyarakat",
+            `${BASE_URL}/auth/login_masyarakat`,
             {
               headers: { Authorization: `Bearer ${token}` },
             }

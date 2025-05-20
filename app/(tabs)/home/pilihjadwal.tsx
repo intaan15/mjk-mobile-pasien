@@ -13,6 +13,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
+import { BASE_URL } from "@env";
 
 interface TimeSlot {
   _id: string;
@@ -33,11 +34,10 @@ const ScheduleScreen = () => {
       try {
         const token = await SecureStore.getItemAsync("userToken");
         if (!token) {
-          console.log("Token tidak ditemukan");
           return;
         }
         const response = await axios.get(
-          `https://mjk-backend-production.up.railway.app/api/dokter/getbyname/${doctorName}`,
+          `${BASE_URL}/dokter/getbyname/${doctorName}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -70,7 +70,7 @@ const ScheduleScreen = () => {
             console.log("Token tidak ditemukan");
             return;
           }
-          const response = await axios.get(`https://mjk-backend-production.up.railway.app/api/dokter/getbyid/${doctorId}`,
+          const response = await axios.get(`${BASE_URL}/dokter/getbyid/${doctorId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -152,7 +152,7 @@ const ScheduleScreen = () => {
       const jam_selesai = calculateEndTime(selectedDate, selectedTime);
 
       await axios.patch(
-        `https://mjk-backend-production.up.railway.app/api/dokter/jadwal/${doctorId}/jam/${jamId}`,
+        `${BASE_URL}/dokter/jadwal/${doctorId}/jam/${jamId}`,
         {
           tanggal: tanggalFormatted,
           jam_mulai: selectedTime,

@@ -1,4 +1,11 @@
-import { View, Text, TextInput, Image, TouchableOpacity, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Image,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
 import React, { useState, useEffect } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -6,10 +13,12 @@ import Background from "../../../components/background";
 import { images } from "../../../constants/images";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
+import { BASE_URL } from "@env";
 
 export default function Keluhan() {
   const router = useRouter();
-  const { spesialis, doctorName, selectedTime, selectedDate } = useLocalSearchParams();
+  const { spesialis, doctorName, selectedTime, selectedDate } =
+    useLocalSearchParams();
   const [keluhanText, setKeluhanText] = useState("");
   const [doctorId, setDoctorId] = useState<string | null>(null);
   const [userId, setuserId] = useState<string | null>(null);
@@ -17,7 +26,16 @@ export default function Keluhan() {
   useEffect(() => {
     const fetchDoctor = async () => {
       try {
-        const res = await axios.get(`https://mjk-backend-production.up.railway.app/api/dokter/getbyname/${doctorName}`);
+        const token = await SecureStore.getItemAsync("userToken");
+        if (!token) return;
+        const res = await axios.get(
+          `${BASE_URL}/dokter/getbyname/${doctorName}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setDoctorId(res.data._id);
       } catch (err) {
         Alert.alert("Error", "Gagal mengambil data dokter.");
@@ -45,13 +63,19 @@ export default function Keluhan() {
   }, []);
 
   const handleSubmit = async () => {
-
-    if (!doctorId || !userId || !selectedTime || !selectedDate || !keluhanText) {
+    if (
+      !doctorId ||
+      !userId ||
+      !selectedTime ||
+      !selectedDate ||
+      !keluhanText
+    ) {
       Alert.alert("Data tidak lengkap", "Pastikan semua data tersedia.");
       return;
     }
 
     try {
+                const token = await SecureStore.getItemAsync("userToken");
       const date = new Date(selectedDate as string);
       const [hour, minute] = (selectedTime as string).split(":").map(Number);
       const jamSelesaiDate = new Date(date);
@@ -68,12 +92,21 @@ export default function Keluhan() {
         status_konsul: "menunggu",
       };
 
-      await axios.post("https://mjk-backend-production.up.railway.app/api/jadwal/create", payload);
+      await axios.post(
+        `${BASE_URL}/jadwal/create`,
+        payload, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },}
+      );
       Alert.alert("Sukses", "Jadwal konsultasi berhasil dibuat!");
       router.replace("/(tabs)/home");
     } catch (error: any) {
       console.error(error);
-      Alert.alert("Gagal", error?.response?.data?.message || "Terjadi kesalahan.");
+      Alert.alert(
+        "Gagal",
+        error?.response?.data?.message || "Terjadi kesalahan."
+      );
     }
   };
 
@@ -89,7 +122,11 @@ export default function Keluhan() {
               {doctorName ? `Keluhan untuk ${doctorName}` : "Keluhan"}
             </Text>
           </View>
-          <Image className="h-10 w-12" source={images.logo} resizeMode="contain" />
+          <Image
+            className="h-10 w-12"
+            source={images.logo}
+            resizeMode="contain"
+          />
         </View>
 
         <View className="items-center">
