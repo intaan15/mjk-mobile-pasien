@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Background from "../../../components/background";
@@ -11,6 +11,7 @@ import AccIcon from "../../../assets/icons/ctg.svg";
 import WaitIcon from "../../../assets/icons/wait.svg";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
+import { useFocusEffect } from "@react-navigation/native";
 
 const getDayName = (dateString: string) => {
   const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
@@ -24,7 +25,8 @@ export default function Jadwal() {
   const [jadwalList, setJadwalList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  useFocusEffect(
+    useCallback(() => {
     const fetchJadwal = async () => {
       try {
         const userId = await SecureStore.getItemAsync("userId");
@@ -45,7 +47,8 @@ export default function Jadwal() {
     };
 
     fetchJadwal();
-  }, []);
+  }, [])
+);
 
   return (
     <Background>
@@ -79,7 +82,7 @@ export default function Jadwal() {
             }}
             showsVerticalScrollIndicator={false}
           >
-            <View className="gap-5 pb-6 w-4/5">
+            <View className="gap-5 pb-6 w-11/12">
               {jadwalList.length === 0 ? (
                 <Text className="text-center text-gray-500 text-base">Belum ada jadwal konsultasi.</Text>
               ) : (
