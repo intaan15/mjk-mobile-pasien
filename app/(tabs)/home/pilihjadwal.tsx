@@ -31,8 +31,18 @@ const ScheduleScreen = () => {
   useEffect(() => {
     const fetchDoctorData = async () => {
       try {
+        const token = await SecureStore.getItemAsync("userToken");
+        if (!token) {
+          console.log("Token tidak ditemukan");
+          return;
+        }
         const response = await axios.get(
-          `https://mjk-backend-production.up.railway.app/api/dokter/getbyname/${doctorName}`
+          `https://mjk-backend-production.up.railway.app/api/dokter/getbyname/${doctorName}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         const doctor = response.data;
 
@@ -55,8 +65,17 @@ const ScheduleScreen = () => {
     if (doctorId) {
       const fetchSchedule = async () => {
         try {
-          const url = `https://mjk-backend-production.up.railway.app/api/dokter/getbyid/${doctorId}`;
-          const response = await axios.get(url);
+          const token = await SecureStore.getItemAsync("userToken");
+          if (!token) {
+            console.log("Token tidak ditemukan");
+            return;
+          }
+          const response = await axios.get(`https://mjk-backend-production.up.railway.app/api/dokter/getbyid/${doctorId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
           const jadwal = response.data.jadwal;
 
           const selectedDateOnly = new Date(selectedDate)
@@ -113,8 +132,12 @@ const ScheduleScreen = () => {
 
     try {
       const userId = await SecureStore.getItemAsync("userId");
+      const token = await SecureStore.getItemAsync("userToken");
       if (!userId) throw new Error("ID masyarakat tidak ditemukan");
-
+      if (!token) {
+        console.log("Token tidak ditemukan");
+        return;
+      }
       const selectedJam = availableTimes.find(
         (item) => item.time === selectedTime
       );
@@ -134,6 +157,11 @@ const ScheduleScreen = () => {
           tanggal: tanggalFormatted,
           jam_mulai: selectedTime,
           jam_selesai,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 

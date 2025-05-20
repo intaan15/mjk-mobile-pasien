@@ -1,11 +1,20 @@
-import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator } from "react-native";
-import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { FontAwesome } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Background from "../../../components/background";
 import { images } from "../../../constants/images";
+import axios from "axios";
+import { useFocusEffect } from "@react-navigation/native";
 
 type Doctor = {
   _id: string;
@@ -19,25 +28,27 @@ export default function Index() {
   const router = useRouter();
   const { spesialis } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
-
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDoctors = async () => {
-      try {
-        const response = await fetch("https://mjk-backend-production.up.railway.app/api/dokter/getall");
-        const data = await response.json();
-        setDoctors(data);
-      } catch (error) {
-        console.error("Gagal fetch data dokter:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  useFocusEffect(
+    useCallback(() => {
+      const fetchDoctors = async () => {
+        try {
+          const response = await axios.get(
+            "https://mjk-backend-production.up.railway.app/api/dokter/getall"
+          );
+          setDoctors(response.data);
+        } catch (error) {
+          console.error("Gagal fetch data dokter:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
 
-    fetchDoctors();
-  }, []);
+      fetchDoctors();
+    }, [])
+  );
 
   const filteredDoctors = spesialis
     ? doctors.filter((doctor) => doctor.spesialis_dokter === spesialis)

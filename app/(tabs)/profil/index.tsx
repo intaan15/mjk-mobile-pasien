@@ -18,10 +18,8 @@ import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import ModalContent from "../../../components/modals/ModalContent";
 import ModalTemplate from "../../../components/modals/ModalTemplate";
 import { ImageProvider, useImage } from "../../../components/picker/imagepicker";
-
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-
-
 
 interface User {
   nama_masyarakat: string;
@@ -271,7 +269,7 @@ function App() {
                 placeholderTextColor="#888"
               />
               <TouchableOpacity
-                className="p-2 rounded-xl w-2/4 mt-6 bg-skyDark"
+                className="px-12 py-3 rounded-xl mt-6 bg-skyDark"
                 onPress={handleGantiPassword}
               >
                 <Text className="text-white text-center font-bold">Simpan</Text>

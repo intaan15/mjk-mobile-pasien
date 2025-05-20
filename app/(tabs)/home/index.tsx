@@ -1,5 +1,5 @@
 import { View, Text, Image, TouchableOpacity } from "react-native";
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useCallback} from "react";
 import { useRouter } from "expo-router";
 import Background from "../../../components/background";
 import { images } from "../../../constants/images";
@@ -19,6 +19,7 @@ import GinjalIcon from "../../../assets/icons/ginjal.svg";
 import HatiIcon from "../../../assets/icons/hati.svg";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
+import { useFocusEffect } from "@react-navigation/native";
 
 const spesialisList = [
   { name: "Umum", Icon: UmumIcon },
@@ -45,9 +46,11 @@ export default function index() {
   const router = useRouter();
   const [userData, setUserData] = useState<User | null>(null);
 
-  useEffect(() => {
-    fetchUserData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserData();
+    }, [])
+  );
 
   const fetchUserData = async () => {
     try {
