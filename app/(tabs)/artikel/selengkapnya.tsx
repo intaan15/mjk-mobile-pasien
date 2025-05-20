@@ -66,7 +66,7 @@ export default function Selengkapnya() {
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 50 }}
           showsVerticalScrollIndicator={false}
         >
-          <View className="bg-white rounded-2xl shadow-md mt-4">
+          <View className="bg-white rounded-2xl shadow-md mt-4 mb-32">
             <View className="p-3">
               <Image
                 className="w-full h-48 rounded-xl mb-4"

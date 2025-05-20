@@ -1,37 +1,36 @@
-import {
-  View,
-  Text,
-  Image,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
-import React, { useState, useEffect } from "react";
+import { View, Text, Image, ScrollView, TouchableOpacity } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "expo-router";
 import Background from "../../../components/background";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import TabButton from "../../../components/tabbutton";
 import { images } from "../../../constants/images";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function ArtikelList() {
-  const [artikels, setArtikels] = useState<any[]>([]); 
+  const [artikels, setArtikels] = useState<any[]>([]);
   const [selectedTab, setSelectedTab] = useState("Kesehatan");
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    const fetchArtikels = async () => {
-      try {
-        const response = await fetch("https://mjk-backend-production.up.railway.app/api/artikel/getall");
-        const data = await response.json();
-        setArtikels(data);
-      } catch (error) {
-        console.error("Error fetching artikels:", error);
-      }
-    };
+  useFocusEffect(
+    useCallback(() => {
+      const fetchArtikels = async () => {
+        try {
+          const response = await fetch(
+            "https://mjk-backend-production.up.railway.app/api/artikel/getall"
+          );
+          const data = await response.json();
+          setArtikels(data);
+        } catch (error) {
+          console.error("Error fetching artikels:", error);
+        }
+      };
 
-    fetchArtikels();
-  }, []);
+      fetchArtikels();
+    }, [])
+  );
 
   return (
     <Background>
@@ -44,7 +43,11 @@ export default function ArtikelList() {
             </TouchableOpacity>
             <Text className="text-skyDark font-bold text-xl ml-2">Artikel</Text>
           </View>
-          <Image className="h-10 w-12" source={images.logo} resizeMode="contain" />
+          <Image
+            className="h-10 w-12"
+            source={images.logo}
+            resizeMode="contain"
+          />
         </View>
 
         {/* Menu Tab */}
@@ -64,7 +67,7 @@ export default function ArtikelList() {
           contentContainerStyle={{
             alignItems: "center",
             paddingTop: 20,
-            paddingBottom: insets.bottom + 300,
+            paddingBottom: insets.bottom + 200,
           }}
           showsVerticalScrollIndicator={false}
         >
@@ -78,7 +81,9 @@ export default function ArtikelList() {
                 >
                   <Image
                     className="rounded-2xl w-full h-24 p-1"
-                    source={{ uri: `https://mjk-backend-production.up.railway.app/imagesdokter/${item.gambar_artikel}` }}
+                    source={{
+                      uri: `https://mjk-backend-production.up.railway.app/imagesdokter/${item.gambar_artikel}`,
+                    }}
                     resizeMode="cover"
                   />
                   <View className="flex-row justify-between w-full">
