@@ -19,6 +19,7 @@ import WaitIcon from "../../../assets/icons/wait.svg";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
+import { BASE_URL } from "@env";
 import { useFocusEffect } from "@react-navigation/native";
 
 const getDayName = (dateString: string) => {
@@ -38,10 +39,16 @@ export default function Jadwal() {
       const fetchJadwal = async () => {
         try {
           const userId = await SecureStore.getItemAsync("userId");
-          if (!userId) return;
+          const token = await SecureStore.getItemAsync("userToken");
+          if (!userId && !token) return;
 
           const res = await axios.get(
-            "https://mjk-backend-production.up.railway.app/api/jadwal/getall"
+            `${BASE_URL}/jadwal/getall`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
           );
 
           const filtered = res.data.filter((j: any) => {

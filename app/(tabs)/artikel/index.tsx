@@ -7,6 +7,8 @@ import TabButton from "../../../components/tabbutton";
 import { images } from "../../../constants/images";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
+import { BASE_URL } from "@env";
+import * as SecureStore from "expo-secure-store";
 
 export default function ArtikelList() {
   const [artikels, setArtikels] = useState<any[]>([]);
@@ -18,9 +20,13 @@ export default function ArtikelList() {
     useCallback(() => {
       const fetchArtikels = async () => {
         try {
-          const response = await fetch(
-            "https://mjk-backend-production.up.railway.app/api/artikel/getall"
-          );
+          const token = await SecureStore.getItemAsync("userToken");
+          if (!token) return;
+          const response = await fetch(`${BASE_URL}/artikel/getall`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
           const data = await response.json();
           setArtikels(data);
         } catch (error) {

@@ -12,6 +12,7 @@ import Background from "../../../components/background";
 import { images } from "../../../constants/images";
 import TabButton from "../../../components/tabbutton";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { BASE_URL } from "@env";
 
 const { width } = Dimensions.get("window");
 

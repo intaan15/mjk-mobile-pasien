@@ -23,6 +23,7 @@ import {
 } from "../../../components/picker/imagepicker";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
+import { BASE_URL } from "@env";
 
 interface User {
   nama_masyarakat: string;
@@ -62,10 +63,20 @@ function App() {
   const fetchUserData = async () => {
     try {
       const userId = await SecureStore.getItemAsync("userId");
+      const token = await SecureStore.getItemAsync("userToken");
+
+      if (!token && !userId) {
+        return;
+      }
       const cleanedUserId = userId?.replace(/"/g, "");
       if (cleanedUserId) {
         const response = await axios.get(
-          `https://mjk-backend-production.up.railway.app/api/masyarakat/getbyid/${cleanedUserId}`
+          `${BASE_URL}/masyarakat/getbyid/${cleanedUserId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         setUserData(response.data);
       }
@@ -106,7 +117,7 @@ function App() {
       }
 
       const res = await axios.patch(
-        "https://mjk-backend-production.up.railway.app/api/masyarakat/ubah-password",
+        `${BASE_URL}/masyarakat/ubah-password`,
         {
           password_lama: passwordLama,
           password_baru: passwordBaru,

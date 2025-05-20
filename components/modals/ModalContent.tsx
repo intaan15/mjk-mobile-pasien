@@ -11,6 +11,7 @@ import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import DatePickerComponent from "../../components/picker/datepicker";
+import { BASE_URL } from "@env";
 
 interface ModalContentProps {
   modalType: string;
@@ -73,14 +74,17 @@ const ModalContent: React.FC<ModalContentProps> = ({
     const fetchUser = async () => {
       try {
         const masyarakatId = await SecureStore.getItemAsync("userId");
-
+const token = await SecureStore.getItemAsync("userToken");
         if (!masyarakatId) {
           return;
         }
 
         const cleanedId = masyarakatId.replace(/"/g, "");
         const response = await axios.get(
-          `https://mjk-backend-production.up.railway.app/api/masyarakat/getbyid/${cleanedId}`
+          `${BASE_URL}/masyarakat/getbyid/${cleanedId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
         );
 
         setUserData(response.data);
@@ -97,9 +101,10 @@ const ModalContent: React.FC<ModalContentProps> = ({
     try {
       const masyarakatId = await SecureStore.getItemAsync("userId");
       const cleanedMasyarakatId = masyarakatId?.replace(/"/g, "");
+          const token = await SecureStore.getItemAsync("userToken");
 
       const response = await axios.patch(
-        `https://mjk-backend-production.up.railway.app/api/masyarakat/update/${cleanedMasyarakatId}`,
+        `${BASE_URL}/masyarakat/update/${cleanedMasyarakatId}`,
         {
           nama_masyarakat: nama,
           username_masyarakat: username,
@@ -112,11 +117,12 @@ const ModalContent: React.FC<ModalContentProps> = ({
         {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
         }
       );
 
-      onUpdateSuccess?.(); // Callback after success
+      onUpdateSuccess?.();
     } catch (error: any) {
       if (error.response) {
         console.error("Gagal update:", error.response.data);
@@ -242,7 +248,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
       }
 
       const response = await axios.delete(
-        `http://mjk-backend-production.up.railway.app/api/masyarakat/delete/${userId}`,
+        `${BASE_URL}/masyarakat/delete/${userId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
