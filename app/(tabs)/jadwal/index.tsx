@@ -1,4 +1,11 @@
-import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -11,6 +18,7 @@ import AccIcon from "../../../assets/icons/ctg.svg";
 import WaitIcon from "../../../assets/icons/wait.svg";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 
 const getDayName = (dateString: string) => {
@@ -27,28 +35,30 @@ export default function Jadwal() {
 
   useFocusEffect(
     useCallback(() => {
-    const fetchJadwal = async () => {
-      try {
-        const userId = await SecureStore.getItemAsync("userId");
-        if (!userId) return;
+      const fetchJadwal = async () => {
+        try {
+          const userId = await SecureStore.getItemAsync("userId");
+          if (!userId) return;
 
-        const res = await axios.get("https://mjk-backend-production.up.railway.app/api/jadwal/getall");
+          const res = await axios.get(
+            "https://mjk-backend-production.up.railway.app/api/jadwal/getall"
+          );
 
-        const filtered = res.data.filter((j: any) => {
-          return j.masyarakat_id && j.masyarakat_id._id === userId;
-        });
+          const filtered = res.data.filter((j: any) => {
+            return j.masyarakat_id && j.masyarakat_id._id === userId;
+          });
 
-        setJadwalList(filtered);
-      } catch (err: any) {
-        console.error("Gagal fetch jadwal:", err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+          setJadwalList(filtered);
+        } catch (err: any) {
+          console.error("Gagal fetch jadwal:", err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
 
-    fetchJadwal();
-  }, [])
-);
+      fetchJadwal();
+    }, [])
+  );
 
   return (
     <Background>
@@ -71,7 +81,9 @@ export default function Jadwal() {
         {loading ? (
           <View className="flex-1 justify-center items-center mt-20">
             <ActivityIndicator size="large" color="#025F96" />
-            <Text className="mt-2 text-skyDark font-semibold">Memuat jadwal...</Text>
+            <Text className="mt-2 text-skyDark font-semibold">
+              Memuat jadwal...
+            </Text>
           </View>
         ) : (
           <ScrollView
@@ -84,7 +96,9 @@ export default function Jadwal() {
           >
             <View className="gap-5 pb-6 w-11/12">
               {jadwalList.length === 0 ? (
-                <Text className="text-center text-gray-500 text-base">Belum ada jadwal konsultasi.</Text>
+                <Text className="text-center text-gray-500 text-base">
+                  Belum ada jadwal konsultasi.
+                </Text>
               ) : (
                 jadwalList.map((jadwal, index) => (
                   <View
@@ -93,11 +107,20 @@ export default function Jadwal() {
                   >
                     <View className="flex-row">
                       <View className="px-4">
-                        <Image
-                          source={images.foto}
-                          className="h-16 w-16 rounded-full border border-gray-300"
-                          resizeMode="cover"
-                        />
+                        {jadwal.dokter_id?.foto_profil_dokter &&
+                        jadwal.dokter_id?.nama_dokter ? (
+                          <Image
+                            source={{
+                              uri: `https://mjk-backend-production.up.railway.app/uploads/${jadwal.dokter_id.foto_profil_dokter}`,
+                            }}
+                            className="h-20 w-20 rounded-full border border-gray-300"
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <View className="h-20 w-20 rounded-full border border-gray-300 items-center justify-center bg-gray-200">
+                            <Ionicons name="person" size={40} color="#0C4A6E" />
+                          </View>
+                        )}
                       </View>
                       <View className="w-3/4">
                         <Text className="font-bold text-base text-skyDark pb-1">
@@ -106,7 +129,9 @@ export default function Jadwal() {
                         <View className="h-[2px] bg-skyDark w-11/12" />
                         <View className="flex-row pt-1 items-center">
                           <FontAwesome name="star" size={20} color="#025F96" />
-                          <Text className="font-bold text-base text-skyDark pl-1">{jadwal.dokter_id?.rating_dokter}</Text>
+                          <Text className="font-bold text-base text-skyDark pl-1">
+                            {jadwal.dokter_id?.rating_dokter}
+                          </Text>
                         </View>
                       </View>
                     </View>
@@ -116,11 +141,14 @@ export default function Jadwal() {
                           {getDayName(jadwal.tgl_konsul)},
                         </Text>
                         <Text className="font-bold text-sm text-skyDark">
-                          {new Date(jadwal.tgl_konsul).toLocaleDateString("id-ID", {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })}
+                          {new Date(jadwal.tgl_konsul).toLocaleDateString(
+                            "id-ID",
+                            {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric",
+                            }
+                          )}
                         </Text>
                         <Text className="font-bold text-sm text-skyDark">
                           Pukul {jadwal.jam_konsul}
@@ -136,9 +164,15 @@ export default function Jadwal() {
                               : "bg-skyDark"
                           }`}
                         >
-                          {jadwal.status_konsul === "menunggu" && <WaitIcon width={18} height={18} />}
-                          {jadwal.status_konsul === "diterima" && <AccIcon width={18} height={18} />}
-                          {jadwal.status_konsul === "ditolak" && <CancelIcon width={18} height={18} />}
+                          {jadwal.status_konsul === "menunggu" && (
+                            <WaitIcon width={18} height={18} />
+                          )}
+                          {jadwal.status_konsul === "diterima" && (
+                            <AccIcon width={18} height={18} />
+                          )}
+                          {jadwal.status_konsul === "ditolak" && (
+                            <CancelIcon width={18} height={18} />
+                          )}
                           <View className="w-3/4 justify-center items-center">
                             <Text className="text-white font-bold text-sm capitalize">
                               {jadwal.status_konsul}
