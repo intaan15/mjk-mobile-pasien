@@ -168,7 +168,7 @@ const Register = () => {
       await SecureStore.deleteItemAsync("fotoKTP");
       await SecureStore.deleteItemAsync("selfieKTP");
       router.replace("./signin");
-    } catch (error) {
+    } catch (error: any) {
       console.log("Error:", error);
       console.log("Error response:", error.response?.data);
       alert(
@@ -197,7 +197,7 @@ const Register = () => {
     try {
       await SecureStore.setItemAsync("formData", JSON.stringify(form));
       router.push(path);
-    } catch (error) {
+    } catch (error: any) {
       console.log("Error:", error);
       console.log("Error response:", error.response?.data);
 

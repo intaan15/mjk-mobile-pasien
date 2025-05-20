@@ -439,7 +439,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
             Anda yakin akan keluar?
           </Text>
 
-          <View className="flex flex-row justify-between items-center px-5">
+          <View className="flex flex-row justify-between items-center px-10">
             <TouchableOpacity className="px-10 py-3" onPress={onClose}>
               <Text className=" text-center text-skyDark font-medium w-full">
                 Batal
@@ -483,7 +483,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
             Anda yakin akan menghapus akun?
           </Text>
 
-          <View className="flex flex-row justify-between items-center px-5">
+          <View className="flex flex-row justify-between items-center px-10">
             <TouchableOpacity className="px-10 py-3" onPress={onClose}>
               <Text className=" text-center text-skyDark font-medium w-full">
                 Batal
@@ -509,7 +509,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
             Anda yakin akan menghapus foto profil?
           </Text>
 
-          <View className="flex flex-row justify-between items-center px-5">
+          <View className="flex flex-row justify-between items-center px-10">
             <TouchableOpacity className="px-10 py-3" onPress={onClose}>
               <Text className=" text-center text-skyDark font-medium w-full">
                 Batal

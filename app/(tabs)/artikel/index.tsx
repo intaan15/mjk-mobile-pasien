@@ -51,7 +51,7 @@ export default function ArtikelList() {
         </View>
 
         {/* Menu Tab */}
-        <View className="flex flex-row mx-6 rounded-xl border-2 border-skyDark overflow-hidden">
+        <View className="flex flex-row mx-6 rounded-xl border-2 border-skyDark overflow-hidden mb-5">
           {["Kesehatan", "Obat"].map((tab) => (
             <TabButton
               key={tab}
