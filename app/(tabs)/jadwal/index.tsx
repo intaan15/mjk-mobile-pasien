@@ -11,14 +11,13 @@ import { useRouter } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Background from "../../../components/background";
 import { images } from "../../../constants/images";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import CancelIcon from "../../../assets/icons/cancel.svg";
 import AccIcon from "../../../assets/icons/ctg.svg";
 import WaitIcon from "../../../assets/icons/wait.svg";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
-import { Ionicons } from "@expo/vector-icons";
 import { BASE_URL } from "@env";
 import { useFocusEffect } from "@react-navigation/native";
 

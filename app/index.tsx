@@ -23,26 +23,29 @@ export default function Index() {
           );
           // delay 2 detik, lalu masuk home
           setTimeout(() => {
-            setIsLoading(false);
+            setIsLoading(true);
             router.replace("/(tabs)/home");
-          }, 2000);
+          }, 0);
         } catch (error) {
-          await SecureStore.deleteItemAsync("userToken");
+          // await SecureStore.deleteItemAsync("userToken");
           setTimeout(() => {
-            setIsLoading(false);
-            router.replace("/screens/signin");
-          }, 2000);
+            setIsLoading(true);
+            router.replace("/(tabs)/home");
+            // router.replace("/screens/signin");
+          }, 0);
         }
       } else {
+        await SecureStore.deleteItemAsync("userToken");
         setTimeout(() => {
-          setIsLoading(false);
-          router.replace("/screens/signin");
-        }, 2000);
+          setIsLoading(true);
+          router.replace("/(tabs)/home");
+          // router.replace("/screens/signin");
+        }, 0);
       }
     };
 
     handleStartup();
   }, []);
 
-  return <>{isLoading ? <SplashScreen /> : null}</>;
+  // return <>{isLoading ? <SplashScreen /> : null}</>;
 }
