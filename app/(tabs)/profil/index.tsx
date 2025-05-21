@@ -74,6 +74,7 @@ function App() {
           `${BASE_URL}/masyarakat/getbyid/${cleanedUserId}`,
           {
             headers: {
+              "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
           }
@@ -125,6 +126,7 @@ function App() {
         },
         {
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         }

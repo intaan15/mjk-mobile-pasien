@@ -40,6 +40,7 @@ const ScheduleScreen = () => {
           `${BASE_URL}/dokter/getbyname/${doctorName}`,
           {
             headers: {
+              "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
           }
@@ -73,6 +74,7 @@ const ScheduleScreen = () => {
           const response = await axios.get(`${BASE_URL}/dokter/getbyid/${doctorId}`,
             {
               headers: {
+                "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
               },
             });
@@ -160,6 +162,7 @@ const ScheduleScreen = () => {
         },
         {
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         }

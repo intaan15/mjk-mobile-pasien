@@ -46,6 +46,7 @@ export default function Jadwal() {
             `${BASE_URL}/jadwal/getall`,
             {
               headers: {
+                "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
               },
             }

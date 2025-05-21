@@ -91,6 +91,7 @@ const Register = () => {
       const userId = await SecureStore.getItemAsync("userId");
       const fotoKTP = await SecureStore.getItemAsync("fotoKTP");
       const selfieKTP = await SecureStore.getItemAsync("selfieKTP");
+      const token = await SecureStore.getItemAsync("userToken");
 
       if (!userId || !fotoKTP || !selfieKTP) {
         Alert.alert("Gagal", "Semua data harus diisi.");
@@ -160,6 +161,7 @@ const Register = () => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
           },
         }
       );

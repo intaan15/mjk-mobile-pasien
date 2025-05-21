@@ -74,7 +74,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
     const fetchUser = async () => {
       try {
         const masyarakatId = await SecureStore.getItemAsync("userId");
-const token = await SecureStore.getItemAsync("userToken");
+        const token = await SecureStore.getItemAsync("userToken");
         if (!masyarakatId) {
           return;
         }
@@ -83,7 +83,10 @@ const token = await SecureStore.getItemAsync("userToken");
         const response = await axios.get(
           `${BASE_URL}/masyarakat/getbyid/${cleanedId}`,
           {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
 
@@ -101,7 +104,7 @@ const token = await SecureStore.getItemAsync("userToken");
     try {
       const masyarakatId = await SecureStore.getItemAsync("userId");
       const cleanedMasyarakatId = masyarakatId?.replace(/"/g, "");
-          const token = await SecureStore.getItemAsync("userToken");
+      const token = await SecureStore.getItemAsync("userToken");
 
       const response = await axios.patch(
         `${BASE_URL}/masyarakat/update/${cleanedMasyarakatId}`,
@@ -251,6 +254,7 @@ const token = await SecureStore.getItemAsync("userToken");
         `${BASE_URL}/masyarakat/delete/${userId}`,
         {
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         }
@@ -260,7 +264,7 @@ const token = await SecureStore.getItemAsync("userToken");
         await SecureStore.deleteItemAsync("userToken");
         await SecureStore.deleteItemAsync("userId");
         onClose?.();
-        alert("akun anda berhasil dihapus")
+        alert("akun anda berhasil dihapus");
         router.replace("/screens/signin");
       } else {
         alert("Terjadi kesalahan saat menghapus akun.");
