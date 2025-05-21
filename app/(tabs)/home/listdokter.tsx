@@ -43,6 +43,7 @@ export default function Index() {
 
           const response = await axios.get(`${BASE_URL}/dokter/getall`, {
             headers: {
+              "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
           });

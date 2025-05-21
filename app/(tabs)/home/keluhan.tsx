@@ -32,6 +32,7 @@ export default function Keluhan() {
           `${BASE_URL}/dokter/getbyname/${doctorName}`,
           {
             headers: {
+              "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
           }
@@ -96,6 +97,7 @@ export default function Keluhan() {
         `${BASE_URL}/jadwal/create`,
         payload, {
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },}
       );

@@ -24,6 +24,7 @@ export default function ArtikelList() {
           if (!token) return;
           const response = await fetch(`${BASE_URL}/artikel/getall`, {
             headers: {
+              "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
           });

@@ -64,6 +64,7 @@ export default function index() {
           `${BASE_URL}/masyarakat/getbyid/${cleanedUserId}`,
           {
             headers: {
+              "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
           }

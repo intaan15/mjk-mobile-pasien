@@ -19,6 +19,7 @@ export default function Selengkapnya() {
         if (!token) return;
         const response = await fetch(`${BASE_URL}/artikel/getbyid/${id}`, {
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
