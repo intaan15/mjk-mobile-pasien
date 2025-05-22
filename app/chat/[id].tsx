@@ -6,6 +6,10 @@ import {
   Image,
   FlatList,
   Modal,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
@@ -17,6 +21,7 @@ import { io } from "socket.io-client";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import { BASE_URL } from "@env";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const socket = io("https://mjk-backend-production.up.railway.app", {
   transports: ["websocket"], // <--- penting supaya pakai websocket langsung
@@ -162,7 +167,7 @@ export default function ChatScreen() {
 
   return (
     <Background>
-      <View className="flex-1">
+      <View style={{ flex: 1 }}>
         {/* Header */}
         <View className="flex-row justify-between items-center w-full px-5 bg-skyLight py-5 pt-10">
           <View className="flex-row items-center">
@@ -180,46 +185,63 @@ export default function ChatScreen() {
           />
         </View>
 
-        {/* Chat List */}
-        <FlatList
-          className="flex-1 px-4"
-          data={messages}
-          keyExtractor={(item, index) => index.toString()} // pastiin unique
-          renderItem={renderItem}
-          // contentContainerStyle={{ paddingBottom: 80 }}
-        />
+        {/* Main Chat Area */}
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={{ flex: 1 }}>
+              {/* Chat Messages */}
+              <FlatList
+                data={messages}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={renderItem}
+                contentContainerStyle={{
+                  paddingTop: 10,
+                  paddingBottom: 10,
+                }}
+                keyboardShouldPersistTaps="handled"
+                className="px-4 flex-1"
+              />
 
-        {/* Chat Input */}
-        <View className="flex-row items-end mt-2 px-4 bg-skyDark py-4 pb-6">
-          <TouchableOpacity onPress={() => sendImage(false)}>
-            <Ionicons name="image-outline" size={28} color="gray" />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => sendImage(true)} className="ml-2">
-            <Ionicons name="camera-outline" size={28} color="gray" />
-          </TouchableOpacity>
-
-          <View className="flex-1 ml-2 mr-2">
-            <TextInput
-              className="border border-gray-400 bg-[#C3E9FF] rounded-3xl p-2"
-              value={message}
-              onChangeText={setMessage}
-              placeholder="Tulis pesan..."
-              multiline={true}
-              textAlignVertical="top"
-            />
-          </View>
-
-          <TouchableOpacity
-            onPress={sendMessage}
-            disabled={!username || !message.trim()}
-            className={`bg-blue-500 px-4 py-2 rounded-lg mr-1 ${
-              !username || !message.trim() ? "opacity-50" : ""
-            }`}
-          >
-            <Text className="text-white font-semibold">Kirim</Text>
-          </TouchableOpacity>
-        </View>
+              {/* Chat Input */}
+              <View className="px-4 bg-skyDark py-4">
+                <View className="flex-row items-center">
+                  <TouchableOpacity onPress={() => sendImage(false)}>
+                    <Ionicons name="image-outline" size={28} color="gray" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => sendImage(true)}
+                    className="ml-2"
+                  >
+                    <Ionicons name="camera-outline" size={28} color="gray" />
+                  </TouchableOpacity>
+                  <View className="flex-1 ml-2 mr-2">
+                    <TextInput
+                      className="border border-gray-400 bg-[#C3E9FF] rounded-3xl p-2"
+                      value={message}
+                      onChangeText={setMessage}
+                      placeholder="Tulis pesan..."
+                      multiline
+                      textAlignVertical="top"
+                    />
+                  </View>
+                  <TouchableOpacity
+                    onPress={sendMessage}
+                    disabled={!username || !message.trim()}
+                    className={`bg-blue-500 px-4 py-2 rounded-lg mr-1 ${
+                      !username || !message.trim() ? "opacity-50" : ""
+                    }`}
+                  >
+                    <Text className="text-white font-semibold">Kirim</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
 
         {/* Preview Modal */}
         <Modal visible={!!previewImage} transparent={true} animationType="fade">
