@@ -6,6 +6,8 @@ import {
   ScrollView,
   Animated,
   Easing,
+  Dimensions,
+  StyleSheet,
 } from "react-native";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "expo-router";
@@ -62,6 +64,72 @@ const getDayName = (dateString: string) => {
 interface User {
   nama_masyarakat: string;
 }
+
+const MarqueeText = ({ text, style }: { text: string; style?: any }) => {
+  const screenWidth = Dimensions.get("window").width;
+  const containerWidth = screenWidth * 0.63;
+
+  const translateX = useRef(new Animated.Value(0)).current;
+  const [textWidth, setTextWidth] = useState(0);
+
+  useEffect(() => {
+    if (textWidth <= containerWidth) {
+      translateX.setValue(0);
+      return;
+    }
+
+    const duration = (textWidth + containerWidth) * 30;
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(translateX, {
+          toValue: -textWidth,
+          duration,
+          useNativeDriver: true,
+          easing: Easing.linear,
+        }),
+        Animated.timing(translateX, {
+          toValue: containerWidth,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    translateX.setValue(containerWidth);
+    animation.start();
+
+    return () => animation.stop();
+  }, [textWidth, containerWidth]);
+
+  return (
+    <View style={[styles.container, { width: containerWidth }]}>
+      <Animated.View
+        style={{
+          transform: [{ translateX }],
+          flexDirection: "row",
+        }}
+      >
+        <Text
+          style={[style, { flexShrink: 0 }]}
+          onLayout={(e) => setTextWidth(e.nativeEvent.layout.width)}
+          numberOfLines={1}
+          ellipsizeMode="clip"
+        >
+          {text + "     "}
+        </Text>
+        {textWidth > containerWidth && (
+          <Text
+            style={[style, { flexShrink: 0 }]}
+            numberOfLines={1}
+            ellipsizeMode="clip"
+          > 
+            {text + "     "}
+          </Text>
+        )}
+      </Animated.View>
+    </View>
+  );
+};
 
 export default function index() {
   const router = useRouter();
@@ -215,15 +283,21 @@ export default function index() {
       fetchJadwal();
     }, [])
   );
+
   return (
     <Background>
       <View className="flex-1">
         <View className="relative pt-12 bg-skyLight rounded-b-[50px] py-28">
           <View className="absolute inset-0 flex items-center justify-between flex-row px-12">
-            <Text className="text-skyDark text-2xl font-bold">
-              Selamat datang, {"\n"}
-              {userData ? userData.nama_masyarakat : "Loading..."}
-            </Text>
+            <View className="flex-1 mr-4">
+              <Text className="text-skyDark text-2xl font-bold pb-1">
+                Selamat datang,
+              </Text>
+              <MarqueeText
+                text={userData?.nama_masyarakat || "Loading..."}
+                style={{ fontSize: 20, color: "#025F96", fontWeight: "bold" }}
+              />
+            </View>
             <Image
               className="h-10 w-12"
               source={images.logo}
@@ -271,14 +345,15 @@ export default function index() {
               <View className="gap-5 pb-3 w-10/12">
                 {jadwalList
                   .filter((jadwal) => {
-                    const today = new Date();
-                    const jadwalDate = new Date(jadwal.tgl_konsul);
-                    today.setHours(0, 0, 0, 0);
-                    jadwalDate.setHours(0, 0, 0, 0);
+                    if (jadwal.status_konsul !== "diterima") return false;
 
-                    return (
-                      jadwal.status_konsul === "diterima" && jadwalDate >= today
-                    );
+                    const [hour, minute] = jadwal.jam_konsul
+                      .split(":")
+                      .map(Number);
+                    const jadwalDateTime = new Date(jadwal.tgl_konsul);
+                    jadwalDateTime.setHours(hour, minute, 0, 0);
+
+                    return jadwalDateTime >= new Date();
                   })
                   .sort(
                     (a, b) =>
@@ -445,3 +520,13 @@ export default function index() {
     </Background>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    overflow: "hidden",
+    flexDirection: "row",
+  },
+  text: {
+    color: "#025F96",
+  },
+});
