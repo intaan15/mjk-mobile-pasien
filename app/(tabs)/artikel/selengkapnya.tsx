@@ -1,4 +1,11 @@
-import { View, Text, Image, ScrollView, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Background from "../../../components/background";
@@ -11,12 +18,17 @@ export default function Selengkapnya() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const [artikel, setArtikel] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchArtikelDetail = async () => {
       try {
         const token = await SecureStore.getItemAsync("userToken");
-        if (!token) return;
+        if (!token) {
+          await SecureStore.deleteItemAsync("userToken");
+          await SecureStore.deleteItemAsync("userId");
+          router.replace("/screens/signin");
+        }
         const response = await fetch(`${BASE_URL}/artikel/getbyid/${id}`, {
           headers: {
             "Content-Type": "application/json",
@@ -26,7 +38,9 @@ export default function Selengkapnya() {
         const data = await response.json();
         setArtikel(data);
       } catch (error) {
-        console.error("Error fetching artikel detail:", error);
+        console.log("Error fetching artikel detail:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -70,32 +84,40 @@ export default function Selengkapnya() {
             resizeMode="contain"
           />
         </View>
-
-        <ScrollView
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 50 }}
-          showsVerticalScrollIndicator={false}
-        >
-          <View className="bg-white rounded-2xl shadow-md mt-4 mb-32">
-            <View className="p-3">
-              <Image
-                className="w-full h-48 rounded-xl mb-4"
-                source={{
-                  uri: `https://mjk-backend-production.up.railway.app/imagesdokter/${artikel.gambar_artikel}`,
-                }}
-                resizeMode="cover"
-              />
-              <Text className="text-skyDark text-right text-sm font-medium pb-1">
-                {new Date(artikel.tgl_terbit_artikel).toLocaleDateString()}
-              </Text>
-              <Text className="text-skyDark text-center font-bold text-xl pb-4">
-                {artikel.nama_artikel}
-              </Text>
-              <Text className="text-black text-base text-justify leading-relaxed">
-                {artikel.detail_artikel}
-              </Text>
-            </View>
+        {loading ? (
+          <View className="flex h-5/6 justify-center items-center">
+            <ActivityIndicator size="large" color="#025F96" />
+            <Text className="mt-2 text-skyDark font-semibold">
+              Memuat artikel . . .
+            </Text>
           </View>
-        </ScrollView>
+        ) : (
+          <ScrollView
+            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 50 }}
+            showsVerticalScrollIndicator={false}
+          >
+            <View className="bg-white rounded-2xl shadow-md mt-4 mb-32">
+              <View className="p-3">
+                <Image
+                  className="w-full h-48 rounded-xl mb-4"
+                  source={{
+                    uri: `https://mjk-backend-production.up.railway.app/imagesdokter/${artikel.gambar_artikel}`,
+                  }}
+                  resizeMode="cover"
+                />
+                <Text className="text-skyDark text-right text-sm font-medium pb-1">
+                  {new Date(artikel.tgl_terbit_artikel).toLocaleDateString()}
+                </Text>
+                <Text className="text-skyDark text-center font-bold text-xl pb-4">
+                  {artikel.nama_artikel}
+                </Text>
+                <Text className="text-black text-base text-justify leading-relaxed">
+                  {artikel.detail_artikel}
+                </Text>
+              </View>
+            </View>
+          </ScrollView>
+        )}
       </View>
     </Background>
   );

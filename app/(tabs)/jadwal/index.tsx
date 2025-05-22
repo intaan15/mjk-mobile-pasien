@@ -39,17 +39,19 @@ export default function Jadwal() {
         try {
           const userId = await SecureStore.getItemAsync("userId");
           const token = await SecureStore.getItemAsync("userToken");
+          if (!token) {
+            await SecureStore.deleteItemAsync("userToken");
+            await SecureStore.deleteItemAsync("userId");
+            router.replace("/screens/signin");
+          }
           if (!userId && !token) return;
 
-          const res = await axios.get(
-            `${BASE_URL}/jadwal/getall`,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+          const res = await axios.get(`${BASE_URL}/jadwal/getall`, {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
 
           const filtered = res.data.filter((j: any) => {
             return j.masyarakat_id && j.masyarakat_id._id === userId;
@@ -57,7 +59,7 @@ export default function Jadwal() {
 
           setJadwalList(filtered);
         } catch (err: any) {
-          console.error("Gagal fetch jadwal:", err.message);
+          console.log("Gagal fetch jadwal:", err.message);
         } finally {
           setLoading(false);
         }
@@ -86,10 +88,10 @@ export default function Jadwal() {
 
         {/* animasi loading */}
         {loading ? (
-          <View className="flex-1 justify-center items-center mt-20">
+          <View className="flex h-5/6 justify-center items-center">
             <ActivityIndicator size="large" color="#025F96" />
             <Text className="mt-2 text-skyDark font-semibold">
-              Memuat jadwal...
+              Memuat jadwal . . .
             </Text>
           </View>
         ) : (

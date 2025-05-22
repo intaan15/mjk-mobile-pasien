@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
@@ -53,6 +54,7 @@ function App() {
   const [konfirmasiPassword, setKonfirmasiPassword] = useState("");
   const [modalType, setModalType] = useState("");
   const [isModalVisible, setModalVisible] = useState(false);
+  const router = useRouter();
 
   useFocusEffect(
     useCallback(() => {
@@ -64,9 +66,10 @@ function App() {
     try {
       const userId = await SecureStore.getItemAsync("userId");
       const token = await SecureStore.getItemAsync("userToken");
-
-      if (!token && !userId) {
-        return;
+      if (!token) {
+        await SecureStore.deleteItemAsync("userToken");
+        await SecureStore.deleteItemAsync("userId");
+        router.replace("/screens/signin");
       }
       const cleanedUserId = userId?.replace(/"/g, "");
       if (cleanedUserId) {
@@ -82,16 +85,17 @@ function App() {
         setUserData(response.data);
       }
     } catch (error) {
-      console.error("Gagal mengambil data profil:", error);
+      console.log("Gagal mengambil data profil:", error);
     }
   };
 
   if (!userData) {
     return (
       <Background>
-        <View className="flex-1 justify-center items-center">
-          <Text className="text-skyDark text-xl font-bold">
-            Memuat profil...
+        <View className="flex h-full justify-center items-center">
+          <ActivityIndicator size="large" color="#025F96" />
+          <Text className="mt-2 text-skyDark font-semibold">
+            Memuat profil . . .
           </Text>
         </View>
       </Background>

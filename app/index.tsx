@@ -15,37 +15,15 @@ export default function Index() {
       const userId = await SecureStore.getItemAsync("userId");
 
       if (token && userId) {
-        // try {
-        //   // await axios.get(
-        //   //   `${BASE_URL}/auth/login_masyarakat`,
-        //   //   {
-        //   //     headers: { Authorization: `Bearer ${token}` },
-        //   //   }
-        //   // );
-        //   // delay 2 detik, lalu masuk home
-          setTimeout(() => {
-            setIsLoading(false);
-            router.replace("/(tabs)/home");
-          }, 2000); // iki 2000 gae 2 detik kalik
-        // } catch (error) {
-        //   // await SecureStore.deleteItemAsync("userToken");
-        //   // await SecureStore.deleteItemAsync("userId");
-        //   console.log("error : ",error)
-        //   // setTimeout(() => {
-        //   //   setIsLoading(false);
-        //   //   router.replace("/(tabs)/home");
-        //   //   // router.replace("/screens/signin");
-        //   // }, 2000);
-        // }
+        setTimeout(() => {
+          setIsLoading(false);
+          router.replace("/(tabs)/home");
+        }, 2000);
       } else {
         await SecureStore.deleteItemAsync("userToken");
         await SecureStore.deleteItemAsync("userId");
-        // alert("Token anda habis silahkan login ulang")
-        // console.log("token : ",token)
-        // console.log("error kabeh")
         setTimeout(() => {
           setIsLoading(false);
-          // router.replace("/(tabs)/home");
           router.replace("/screens/signin");
         }, 2000);
       }

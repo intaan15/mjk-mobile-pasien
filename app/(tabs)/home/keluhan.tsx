@@ -17,7 +17,7 @@ import { BASE_URL } from "@env";
 
 export default function Keluhan() {
   const router = useRouter();
-  const { spesialis, doctorName, selectedTime, selectedDate } =
+  const { spesialis, doctorName, doctor_Id, selectedTime, selectedDate } =
     useLocalSearchParams();
   const [keluhanText, setKeluhanText] = useState("");
   const [doctorId, setDoctorId] = useState<string | null>(null);
@@ -27,16 +27,18 @@ export default function Keluhan() {
     const fetchDoctor = async () => {
       try {
         const token = await SecureStore.getItemAsync("userToken");
+        if (!token) {
+          await SecureStore.deleteItemAsync("userToken");
+          await SecureStore.deleteItemAsync("userId");
+          router.replace("/screens/signin");
+        }
         if (!token) return;
-        const res = await axios.get(
-          `${BASE_URL}/dokter/getbyname/${doctorName}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await axios.get(`${BASE_URL}/dokter/getbyid/${doctor_Id}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
         setDoctorId(res.data._id);
       } catch (err) {
         Alert.alert("Error", "Gagal mengambil data dokter.");
@@ -44,7 +46,7 @@ export default function Keluhan() {
     };
 
     fetchDoctor();
-  }, [doctorName]);
+  }, [doctor_Id]);
 
   useEffect(() => {
     const fetchUserId = async () => {
@@ -56,7 +58,7 @@ export default function Keluhan() {
           console.log("No userId found in SecureStore");
         }
       } catch (err) {
-        Alert.alert("Error", "Gagal mengambil data pengguna.");
+        console.log("Gagal mengambil data pengguna.");
       }
     };
 
@@ -76,7 +78,7 @@ export default function Keluhan() {
     }
 
     try {
-                const token = await SecureStore.getItemAsync("userToken");
+      const token = await SecureStore.getItemAsync("userToken");
       const date = new Date(selectedDate as string);
       const [hour, minute] = (selectedTime as string).split(":").map(Number);
       const jamSelesaiDate = new Date(date);
@@ -93,18 +95,16 @@ export default function Keluhan() {
         status_konsul: "menunggu",
       };
 
-      await axios.post(
-        `${BASE_URL}/jadwal/create`,
-        payload, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },}
-      );
+      await axios.post(`${BASE_URL}/jadwal/create`, payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
       Alert.alert("Sukses", "Jadwal konsultasi berhasil dibuat!");
       router.replace("/(tabs)/home");
     } catch (error: any) {
-      console.error(error);
+      console.log(error);
       Alert.alert(
         "Gagal",
         error?.response?.data?.message || "Terjadi kesalahan."

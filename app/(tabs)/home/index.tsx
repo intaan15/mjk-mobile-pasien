@@ -81,10 +81,6 @@ export default function index() {
         try {
           const userId = await SecureStore.getItemAsync("userId");
           const token = await SecureStore.getItemAsync("userToken");
-          // if (!token || !userId) {
-            // alert("Token anda entek")
-            // router.replace("/screens/signin");
-          // }
           const cleanedUserId = userId?.replace(/"/g, "");
           if (cleanedUserId) {
             const response = await axios.get(
@@ -210,7 +206,7 @@ export default function index() {
 
           setJadwalList(filtered);
         } catch (err: any) {
-          console.error("Gagal fetch jadwal:", err.message);
+          console.log("Gagal fetch jadwal:", err.message);
         } finally {
           setLoading(false);
         }

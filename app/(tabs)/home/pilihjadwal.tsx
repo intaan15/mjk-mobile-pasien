@@ -6,6 +6,7 @@ import {
   ScrollView,
   StatusBar,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import DatePickerComponent from "../../../components/picker/datepicker";
 import Background from "../../../components/background";
@@ -26,18 +27,21 @@ const ScheduleScreen = () => {
   const [availableTimes, setAvailableTimes] = useState<TimeSlot[]>([]);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const router = useRouter();
-  const { doctorName, spesialis } = useLocalSearchParams();
+  const { doctorName, doctor_Id, spesialis } = useLocalSearchParams();
   const [doctorId, setDoctorId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDoctorData = async () => {
       try {
         const token = await SecureStore.getItemAsync("userToken");
         if (!token) {
-          return;
+          await SecureStore.deleteItemAsync("userToken");
+          await SecureStore.deleteItemAsync("userId");
+          router.replace("/screens/signin");
         }
         const response = await axios.get(
-          `${BASE_URL}/dokter/getbyname/${doctorName}`,
+          `${BASE_URL}/dokter/getbyid/${doctor_Id}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -51,16 +55,15 @@ const ScheduleScreen = () => {
           setDoctorId(doctor._id);
         }
       } catch (error: any) {
-        console.error(
+        console.log(
           "Error fetching doctor data:",
           error.response ? error.response.data : error.message
         );
-        Alert.alert("Terjadi Kesalahan", "Gagal mengambil data dokter.");
       }
     };
 
     fetchDoctorData();
-  }, [doctorName]);
+  }, [doctor_Id, doctorName]);
 
   useEffect(() => {
     if (doctorId) {
@@ -71,13 +74,15 @@ const ScheduleScreen = () => {
             console.log("Token tidak ditemukan");
             return;
           }
-          const response = await axios.get(`${BASE_URL}/dokter/getbyid/${doctorId}`,
+          const response = await axios.get(
+            `${BASE_URL}/dokter/getbyid/${doctorId}`,
             {
               headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
               },
-            });
+            }
+          );
           const jadwal = response.data.jadwal;
 
           const selectedDateOnly = new Date(selectedDate)
@@ -97,14 +102,15 @@ const ScheduleScreen = () => {
           }
         } catch (error: any) {
           if (error.response) {
-            console.error("API Error:", error.response.data);
-            console.error("Status code:", error.response.status);
+            console.log("API Error:", error.response.data);
+            console.log("Status code:", error.response.status);
           } else {
-            console.error("Error message:", error.message);
+            console.log("Error message:", error.message);
           }
+        } finally {
+          setLoading(false);
         }
       };
-
       fetchSchedule();
     }
   }, [selectedDate, doctorId]);
@@ -171,7 +177,7 @@ const ScheduleScreen = () => {
       router.push({
         pathname: "/(tabs)/home/keluhan",
         params: {
-          doctorName,
+          doctor_Id,
           spesialis,
           selectedTime,
           selectedDate: tanggalFormatted,
@@ -179,13 +185,13 @@ const ScheduleScreen = () => {
       });
     } catch (error: any) {
       if (error.response) {
-        console.error("API Error:", error.response.data);
+        console.log("API Error:", error.response.data);
         Alert.alert(
           "Gagal",
           error.response.data.message || "Terjadi kesalahan."
         );
       } else {
-        console.error("Error message:", error.message);
+        console.log("Error message:", error.message);
         Alert.alert("Gagal", "Terjadi kesalahan jaringan.");
       }
     }
@@ -236,51 +242,61 @@ const ScheduleScreen = () => {
           />
 
           {/* Time Slots */}
+
           {selectedDate && (
             <View className="pt-1">
               <View className="h-[2px] bg-skyDark w-full" />
-              <View className="flex flex-wrap flex-row pt-4 gap-2 justify-between">
-                {availableTimes.map((item, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    disabled={!item.available}
-                    onPress={() => setSelectedTime(item.time)}
-                    style={{
-                      padding: 8,
-                      borderRadius: 8,
-                      width: "23%",
-                      borderWidth: 2,
-                      backgroundColor: item.available
-                        ? selectedTime === item.time
-                          ? "#025F96" // SkyDark if selected
-                          : "transparent"
-                        : "#D1D5DB", // Gray if unavailable
-                      borderColor: item.available
-                        ? selectedTime === item.time
-                          ? "#025F96"
-                          : "#025F96"
-                        : "#D1D5DB",
-                    }}
-                  >
-                    <Text
+
+              {loading ? (
+                <View className="flex justify-center items-center h-full">
+                  <ActivityIndicator size="large" color="#025F96" />
+                  <Text className="mt-2 text-skyDark font-semibold">
+                    Memuat jadwal dokter...
+                  </Text>
+                </View>
+              ) : (
+                <View className="flex flex-wrap flex-row pt-4 gap-2 justify-between">
+                  {availableTimes.map((item, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      disabled={!item.available}
+                      onPress={() => setSelectedTime(item.time)}
                       style={{
-                        fontSize: 16,
-                        color: item.available
+                        padding: 8,
+                        borderRadius: 8,
+                        width: "23%",
+                        borderWidth: 2,
+                        backgroundColor: item.available
                           ? selectedTime === item.time
-                            ? "white"
+                            ? "#025F96"
+                            : "transparent"
+                          : "#D1D5DB",
+                        borderColor: item.available
+                          ? selectedTime === item.time
+                            ? "#025F96"
                             : "#025F96"
-                          : "white",
-                        textAlign: "center",
+                          : "#D1D5DB",
                       }}
                     >
-                      {item.time}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          color: item.available
+                            ? selectedTime === item.time
+                              ? "white"
+                              : "#025F96"
+                            : "white",
+                          textAlign: "center",
+                        }}
+                      >
+                        {item.time}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
           )}
-
           {/* Select Schedule Button */}
           <View className="pt-8 w-full items-center">
             <TouchableOpacity
