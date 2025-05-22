@@ -32,9 +32,7 @@ import axios from "axios";
 import { useFocusEffect } from "@react-navigation/native";
 import { BASE_URL } from "@env";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import CancelIcon from "../../../assets/icons/cancel.svg";
 import AccIcon from "../../../assets/icons/ctg.svg";
-import WaitIcon from "../../../assets/icons/wait.svg";
 
 const spesialisList = [
   { name: "Umum", Icon: UmumIcon },
@@ -83,7 +81,10 @@ export default function index() {
         try {
           const userId = await SecureStore.getItemAsync("userId");
           const token = await SecureStore.getItemAsync("userToken");
-          if (!token && !userId) return;
+          // if (!token || !userId) {
+            // alert("Token anda entek")
+            // router.replace("/screens/signin");
+          // }
           const cleanedUserId = userId?.replace(/"/g, "");
           if (cleanedUserId) {
             const response = await axios.get(
@@ -98,7 +99,7 @@ export default function index() {
             setUserData(response.data);
           }
         } catch (error) {
-          router.push("/screens/signin");
+          router.replace("/screens/signin");
         }
       };
       fetchUserData();
@@ -139,24 +140,20 @@ export default function index() {
     if (artikelPool.current.length === 0) return;
 
     const changeArticles = () => {
-      // Slide out to right and fade out
       Animated.parallel([
         Animated.timing(slideAnim, {
-          toValue: 300, // Slide to right
+          toValue: 300,
           duration: 500,
           useNativeDriver: true,
         }),
         Animated.timing(fadeAnim, {
-          toValue: 0, // Fade out
+          toValue: 0,
           duration: 500,
           useNativeDriver: true,
         }),
       ]).start(() => {
-        // Reset position off-screen left before sliding in
         slideAnim.setValue(-300);
         fadeAnim.setValue(0);
-
-        // Update artikel after animation completes
         const pool = artikelPool.current;
         currentIndex.current = (currentIndex.current + 2) % pool.length;
         const nextArticles = pool.slice(
@@ -164,7 +161,6 @@ export default function index() {
           currentIndex.current + 2
         );
 
-        // If not enough articles, get from beginning
         if (nextArticles.length < 2) {
           const remaining = 2 - nextArticles.length;
           setDisplayedArticles([...nextArticles, ...pool.slice(0, remaining)]);
@@ -172,16 +168,15 @@ export default function index() {
           setDisplayedArticles(nextArticles);
         }
 
-        // Slide in from left and fade in
         Animated.parallel([
           Animated.timing(slideAnim, {
-            toValue: 0, // Slide to normal position
-            duration: 700,
+            toValue: 0,
+            duration: 800,
             useNativeDriver: true,
             easing: Easing.out(Easing.quad),
           }),
           Animated.timing(fadeAnim, {
-            toValue: 1, // Fade in
+            toValue: 1,
             duration: 400,
             useNativeDriver: true,
           }),
@@ -189,7 +184,7 @@ export default function index() {
       });
     };
 
-    const interval = setInterval(changeArticles, 5000); // 5 seconds
+    const interval = setInterval(changeArticles, 5000);
 
     return () => clearInterval(interval);
   }, [artikels]);
@@ -271,6 +266,121 @@ export default function index() {
                   ))}
                 </View>
               </View>
+              <View className=" w-10/12 pt-9">
+                <Text className="text-lg text-skyDark font-bold pb-1">
+                  Jadwal Anda
+                </Text>
+                <View className="h-[2px] bg-skyDark w-full mb-5" />
+              </View>
+              <View className="gap-5 pb-3 w-10/12">
+                {jadwalList
+                  .filter((jadwal) => {
+                    const today = new Date();
+                    const jadwalDate = new Date(jadwal.tgl_konsul);
+                    today.setHours(0, 0, 0, 0);
+                    jadwalDate.setHours(0, 0, 0, 0);
+
+                    return (
+                      jadwal.status_konsul === "diterima" && jadwalDate >= today
+                    );
+                  })
+                  .sort(
+                    (a, b) =>
+                      new Date(a.tgl_konsul).getTime() -
+                      new Date(b.tgl_konsul).getTime()
+                  )
+                  .slice(0, 1)
+                  .map((jadwal, index) => (
+                    <View
+                      key={index}
+                      className="bg-white w-full h-40 rounded-3xl flex-col justify-center shadow-md"
+                    >
+                      <View className="flex-row">
+                        <View className="px-4">
+                          {jadwal.dokter_id?.foto_profil_dokter &&
+                          jadwal.dokter_id?.nama_dokter ? (
+                            <Image
+                              source={{
+                                uri: `https://mjk-backend-production.up.railway.app/uploads/${jadwal.dokter_id.foto_profil_dokter}`,
+                              }}
+                              className="h-20 w-20 rounded-full border border-gray-300"
+                              resizeMode="cover"
+                            />
+                          ) : (
+                            <View className="h-20 w-20 rounded-full border border-gray-300 items-center justify-center bg-gray-200">
+                              <Ionicons
+                                name="person"
+                                size={40}
+                                color="#0C4A6E"
+                              />
+                            </View>
+                          )}
+                        </View>
+                        <View className="w-3/4">
+                          <Text className="font-bold text-base text-skyDark pb-1">
+                            {jadwal.dokter_id?.nama_dokter || "Nama Dokter"}
+                          </Text>
+                          <View className="h-[2px] bg-skyDark w-11/12" />
+                          <View className="flex-row pt-1 items-center">
+                            <FontAwesome
+                              name="star"
+                              size={20}
+                              color="#025F96"
+                            />
+                            <Text className="font-bold text-base text-skyDark pl-1">
+                              {jadwal.dokter_id?.rating_dokter}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                      <View className="flex-row justify-between px-4">
+                        <View className="flex-col pt-1">
+                          <Text className="font-bold text-sm text-skyDark">
+                            {getDayName(jadwal.tgl_konsul)},
+                          </Text>
+                          <Text className="font-bold text-sm text-skyDark">
+                            {new Date(jadwal.tgl_konsul).toLocaleDateString(
+                              "id-ID",
+                              {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              }
+                            )}
+                          </Text>
+                          <Text className="font-bold text-sm text-skyDark">
+                            Pukul {jadwal.jam_konsul}
+                          </Text>
+                        </View>
+                        <View className="justify-center w-1/3 flex-col">
+                          <View className="p-2 flex-row gap-2 rounded-xl items-center justify-between bg-green-600">
+                            <AccIcon width={18} height={18} />
+                            <View className="w-3/4 justify-center items-center">
+                              <Text className="text-white font-bold text-sm capitalize">
+                                {jadwal.status_konsul}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                  ))}
+                {jadwalList.filter((jadwal) => {
+                  const today = new Date();
+                  const jadwalDate = new Date(jadwal.tgl_konsul);
+                  today.setHours(0, 0, 0, 0);
+                  jadwalDate.setHours(0, 0, 0, 0);
+
+                  return (
+                    jadwal.status_konsul === "diterima" && jadwalDate >= today
+                  );
+                }).length === 0 && (
+                  <Text className="text-center text-gray-500 text-base italic">
+                    Tidak ada jadwal konsultasi.
+                  </Text>
+                )}
+              </View>
+
               <View className=" w-10/12 pt-7">
                 <Text className="text-lg text-skyDark font-bold pb-1">
                   Informasi Kesehatan
@@ -327,8 +437,8 @@ export default function index() {
                     ))}
                   </Animated.View>
                 ) : (
-                  <Text className="text-skyDark">
-                    Tidak ada artikel tersedia
+                  <Text className="text-center text-gray-500 text-base italic">
+                    Memuat artikel . . .
                   </Text>
                 )}
               </View>
