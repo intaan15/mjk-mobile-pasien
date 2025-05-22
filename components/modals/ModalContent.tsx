@@ -169,6 +169,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
   const router = useRouter();
   const handleLogout = async () => {
     await SecureStore.deleteItemAsync("userToken");
+    await SecureStore.deleteItemAsync("userId");
     onClose?.(); // Close modal
     router.replace("/screens/signin"); // Redirect to login screen
   };
