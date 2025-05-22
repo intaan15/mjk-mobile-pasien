@@ -15,6 +15,8 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import * as ImagePicker from "expo-image-picker";
 import { io } from "socket.io-client";
 import * as SecureStore from "expo-secure-store";
+import axios from "axios";
+import { BASE_URL } from "@env";
 
 const socket = io("https://mjk-backend-production.up.railway.app", {
   transports: ["websocket"], // <--- penting supaya pakai websocket langsung
@@ -24,25 +26,54 @@ export default function ChatScreen() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([]); // juga perlu buat ini supaya FlatList punya data
-  const [previewImage, setPreviewImage] = useState(null); // **ini yang kamu butuhkan**
+  const [messages, setMessages] = useState([]);
+  const [previewImage, setPreviewImage] = useState(null);
 
+  // Ambil data user dari backend
   useEffect(() => {
-    async function getUserId() {
-      const storedUserId = await SecureStore.getItemAsync("userId");
-      if (storedUserId) {
-        setUsername(storedUserId);
-      } else {
-        setUsername("User" + Math.floor(Math.random() * 1000));
+    const fetchUsername = async () => {
+      try {
+        const userId = await SecureStore.getItemAsync("userId");
+        const token = await SecureStore.getItemAsync("userToken");
+
+        if (!userId || !token) {
+          console.log("Token atau ID tidak ditemukan.");
+          router.push("/screens/signin");
+          return;
+        }
+
+        const cleanedId = userId.replace(/"/g, "");
+        const response = await axios.get(
+          `${BASE_URL}/masyarakat/getbyid/${cleanedId}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const user = response.data;
+        if (user && user.nama_masyarakat) {
+          setUsername(user.nama_masyarakat);
+        } else {
+          console.log("Nama user tidak ditemukan dalam response.");
+          // router.push("/screens/signin");
+        }
+      } catch (error) {
+        console.log("Gagal fetch username:", error);
+        // router.push("/screens/signin");
       }
-    }
-    getUserId();
+    };
+
+    fetchUsername();
   }, []);
 
   useEffect(() => {
     console.log("Current username:", username);
   }, [username]);
 
+  // Terima pesan dari socket
   useEffect(() => {
     socket.on("chat message", (msg) => {
       console.log("Received message from socket:", msg);
@@ -53,9 +84,8 @@ export default function ChatScreen() {
       socket.off("chat message");
     };
   }, []);
-  
 
-  // ... pastikan cek username sudah ada sebelum kirim pesan
+  // Kirim pesan teks
   const sendMessage = () => {
     if (message.trim() && username) {
       const msgData = {
@@ -68,29 +98,34 @@ export default function ChatScreen() {
     }
   };
 
+  // Kirim gambar dari galeri/kamera
   const sendImage = async (fromCamera = false) => {
-    let result;
-    if (fromCamera) {
-      result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 0.7,
-        base64: true,
-      });
-    } else {
-      result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 0.7,
-        base64: true,
-      });
-    }
+    try {
+      let result;
+      if (fromCamera) {
+        result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          quality: 0.7,
+          base64: true,
+        });
+      } else {
+        result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          quality: 0.7,
+          base64: true,
+        });
+      }
 
-    if (!result.canceled && result.assets?.length > 0) {
-      const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
-      socket.emit("chat message", {
-        sender: username,
-        image: base64Image,
-        type: "image",
-      });
+      if (!result.canceled && result.assets?.length > 0) {
+        const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
+        socket.emit("chat message", {
+          sender: username,
+          image: base64Image,
+          type: "image",
+        });
+      }
+    } catch (error) {
+      console.error("Gagal mengirim gambar:", error);
     }
   };
 
