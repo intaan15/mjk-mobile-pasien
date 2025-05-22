@@ -14,6 +14,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as ImagePicker from "expo-image-picker";
 import { io } from "socket.io-client";
+import * as SecureStore from "expo-secure-store";
 
 const socket = io("https://mjk-backend-production.up.railway.app", {
   transports: ["websocket"], // <--- penting supaya pakai websocket langsung
@@ -21,55 +22,47 @@ const socket = io("https://mjk-backend-production.up.railway.app", {
 
 export default function ChatScreen() {
   const router = useRouter();
-  const [username] = useState("User" + Math.floor(Math.random() * 1000));
+  const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
-  interface Message {
-    sender: string;
-    text?: string;
-    image?: string;
-    type: "text" | "image";
-  }
-
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [previewImage, setPreviewImage] = useState(null);
+  const [messages, setMessages] = useState([]); // juga perlu buat ini supaya FlatList punya data
+  const [previewImage, setPreviewImage] = useState(null); // **ini yang kamu butuhkan**
 
   useEffect(() => {
-    // Event yang akan dipanggil saat koneksi berhasil
-    socket.on("connected", (data) => {
-      console.log(data.message); // Akan muncul "Successfully connected to backend"
+    async function getUserId() {
+      const storedUserId = await SecureStore.getItemAsync("userId");
+      if (storedUserId) {
+        setUsername(storedUserId);
+      } else {
+        setUsername("User" + Math.floor(Math.random() * 1000));
+      }
+    }
+    getUserId();
+  }, []);
+
+  useEffect(() => {
+    console.log("Current username:", username);
+  }, [username]);
+
+  useEffect(() => {
+    socket.on("chat message", (msg) => {
+      console.log("Received message from socket:", msg);
+      setMessages((prev) => [...prev, msg]);
     });
 
-    socket.on("connect", () => {
-      console.log("Connected to backend!");
-    });
-
-    socket.on("chat history", (msgs) => {
-      console.log("Chat history received:", msgs);
-      setMessages(msgs);
-    });
-
-    socket.on("chat message", (newMsg) => {
-      console.log("New chat message:", newMsg);
-      setMessages((prevMessages) => [...prevMessages, newMsg]);
-    });
-
-    // Bersihkan listener ketika komponen unmount
     return () => {
-      socket.off("connect");
-      socket.off("connected");
-      socket.off("chat history");
       socket.off("chat message");
     };
   }, []);
+  
 
+  // ... pastikan cek username sudah ada sebelum kirim pesan
   const sendMessage = () => {
-    if (message.trim()) {
+    if (message.trim() && username) {
       const msgData = {
         text: message,
         sender: username,
         type: "text",
       };
-      console.log("Sending message:", msgData);
       socket.emit("chat message", msgData);
       setMessage("");
     }
@@ -184,7 +177,10 @@ export default function ChatScreen() {
 
           <TouchableOpacity
             onPress={sendMessage}
-            className="bg-blue-500 px-4 py-2 rounded-lg mr-1"
+            disabled={!username || !message.trim()}
+            className={`bg-blue-500 px-4 py-2 rounded-lg mr-1 ${
+              !username || !message.trim() ? "opacity-50" : ""
+            }`}
           >
             <Text className="text-white font-semibold">Kirim</Text>
           </TouchableOpacity>
