@@ -132,7 +132,10 @@ export default function Jadwal() {
                         )}
                       </View>
                       <View className="w-3/4">
-                        <Text className="font-bold text-base text-skyDark pb-1">
+                        <Text className="w-11/12 truncate font-bold text-base text-skyDark pb-1"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                        >
                           {jadwal.dokter_id?.nama_dokter || "Nama Dokter"}
                         </Text>
                         <View className="h-[2px] bg-skyDark w-11/12" />

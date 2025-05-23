@@ -116,8 +116,10 @@ export default function ArtikelList() {
                       resizeMode="cover"
                     />
                     <View className="flex-row justify-between w-full">
-                      <View className="p-3">
-                        <Text className="font-bold text-base text-skyDark">
+                      <View className="p-3 w-8/12">
+                        <Text className="truncate font-bold text-base text-skyDark"
+                        numberOfLines={1}
+                        ellipsizeMode="tail">
                           {item.nama_artikel}
                         </Text>
                         <Text className="font-medium text-sm text-skyDark">

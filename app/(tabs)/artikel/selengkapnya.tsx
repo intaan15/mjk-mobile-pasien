@@ -70,11 +70,15 @@ export default function Selengkapnya() {
       <View className="flex">
         {/* Header */}
         <View className="flex flex-row justify-between items-center mb-4 w-full px-5 pt-8">
-          <View className="flex flex-row items-center">
+          <View className="flex flex-row items-center w-9/12">
             <TouchableOpacity onPress={() => router.back()}>
               <MaterialIcons name="arrow-back-ios" size={24} color="#025F96" />
             </TouchableOpacity>
-            <Text className="text-skyDark font-bold text-xl ml-2">
+            <Text
+              className="truncate text-skyDark font-bold text-xl ml-2"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {artikel.nama_artikel}
             </Text>
           </View>

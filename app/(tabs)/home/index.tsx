@@ -122,7 +122,7 @@ const MarqueeText = ({ text, style }: { text: string; style?: any }) => {
             style={[style, { flexShrink: 0 }]}
             numberOfLines={1}
             ellipsizeMode="clip"
-          > 
+          >
             {text + "     "}
           </Text>
         )}
@@ -388,7 +388,11 @@ export default function index() {
                           )}
                         </View>
                         <View className="w-3/4">
-                          <Text className="font-bold text-base text-skyDark pb-1">
+                          <Text
+                            className="w-11/12 font-bold text-base text-skyDark pb-1 truncate"
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                          >
                             {jadwal.dokter_id?.nama_dokter || "Nama Dokter"}
                           </Text>
                           <View className="h-[2px] bg-skyDark w-11/12" />
@@ -481,7 +485,11 @@ export default function index() {
                         />
                         <View className="flex-row justify-between p-3">
                           <View className="flex-1">
-                            <Text className="font-bold text-base text-skyDark">
+                            <Text
+                              className="truncate font-bold text-base text-skyDark"
+                              numberOfLines={1}
+                              ellipsizeMode="tail"
+                            >
                               {item.nama_artikel}
                             </Text>
                             <Text className="font-medium text-sm text-skyDark">

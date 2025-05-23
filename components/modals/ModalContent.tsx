@@ -93,7 +93,6 @@ const ModalContent: React.FC<ModalContentProps> = ({
         setUserData(response.data);
       } catch (error: any) {
         console.log("Gagal mengambil data profil:", error);
-        alert(error.response?.data?.message || "Gagal mengambil data user");
       }
     };
 
@@ -129,10 +128,8 @@ const ModalContent: React.FC<ModalContentProps> = ({
     } catch (error: any) {
       if (error.response) {
         console.log("Gagal update:", error.response.data);
-        alert(error.response.data.message || "Gagal update data.");
       } else {
         console.log("Gagal update:", error.message);
-        alert("Gagal terhubung ke server.");
       }
     }
   };
@@ -268,11 +265,10 @@ const ModalContent: React.FC<ModalContentProps> = ({
         alert("akun anda berhasil dihapus");
         router.replace("/screens/signin");
       } else {
-        alert("Terjadi kesalahan saat menghapus akun.");
+        console.log("Terjadi kesalahan saat menghapus akun.");
       }
     } catch (error) {
       console.log("Error deleting account:", error);
-      alert("Terjadi kesalahan server.");
     }
   };
 

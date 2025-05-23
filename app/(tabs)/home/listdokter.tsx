@@ -132,7 +132,11 @@ export default function Index() {
                     )}
                   </View>
                   <View className="w-3/4">
-                    <Text className="font-bold text-base text-skyDark pb-1">
+                    <Text
+                      className="w-11/12 truncate font-bold text-base text-skyDark pb-1"
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
                       {doctor.nama_dokter}
                     </Text>
                     <View className="h-[2px] bg-skyDark w-11/12" />
