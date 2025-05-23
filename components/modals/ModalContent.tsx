@@ -579,7 +579,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
       return (
         <View>
           <Text className="text-center text-lg font-bold text-skyDark">
-            Harap masukkan username/NIK dan password
+            Harap masukkan Nama Pengguna/NIK dan Kata Sandi
           </Text>
 
           <View className="w-full h-[2px] bg-skyDark mt-5 mb-3" />
@@ -615,7 +615,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
       return (
         <View>
           <Text className="text-center text-lg font-bold text-skyDark">
-            Password salah
+            Kata Sandi salah
           </Text>
 
           <View className="w-full h-[2px] bg-skyDark mt-5 mb-3" />
@@ -688,7 +688,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
       return (
         <View>
           <Text className="text-center text-lg font-bold text-skyDark">
-            Password berhasil diubah
+            Kata Sandi berhasil diubah
           </Text>
 
           <View className="w-full h-[2px] bg-skyDark mt-5 mb-3" />
@@ -706,7 +706,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
       return (
         <View>
           <Text className="text-center text-lg font-bold text-skyDark">
-            Password lama salah
+            Kata Sandi lama salah
           </Text>
 
           <View className="w-full h-[2px] bg-skyDark mt-5 mb-3" />
@@ -724,7 +724,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
       return (
         <View>
           <Text className="text-center text-lg font-bold text-skyDark">
-            Konfirmasi password tidak cocok
+            Konfirmasi Kata Sandi tidak cocok
           </Text>
 
           <View className="w-full h-[2px] bg-skyDark mt-5 mb-3" />
