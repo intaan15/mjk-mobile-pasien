@@ -13,12 +13,39 @@ export default function Index() {
     const handleStartup = async () => {
       const token = await SecureStore.getItemAsync("userToken");
       const userId = await SecureStore.getItemAsync("userId");
-
+  
       if (token && userId) {
-        setTimeout(() => {
-          setIsLoading(false);
-          router.replace("/(tabs)/home");
-        }, 2000);
+        try {
+          const response = await axios.get(`${BASE_URL}/masyarakat/getbyid/${userId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+  
+          const user = response.data;
+  
+          if (user.role === "masyarakat") {
+            console.log("User valid:", user.nama_masyarakat);
+            setTimeout(() => {
+              setIsLoading(false);
+              router.replace("/(tabs)/home");
+            }, 2000);
+          } else {
+            await SecureStore.deleteItemAsync("userToken");
+            await SecureStore.deleteItemAsync("userId");
+            setTimeout(() => {
+              setIsLoading(false);
+              router.replace("/screens/signin");
+            }, 2000);
+          }
+        } catch (error) {
+          await SecureStore.deleteItemAsync("userToken");
+          await SecureStore.deleteItemAsync("userId");
+          setTimeout(() => {
+            setIsLoading(false);
+            router.replace("/screens/signin");
+          }, 2000);
+        }
       } else {
         await SecureStore.deleteItemAsync("userToken");
         await SecureStore.deleteItemAsync("userId");
@@ -28,9 +55,10 @@ export default function Index() {
         }, 2000);
       }
     };
-
+  
     handleStartup();
   }, []);
+  
 
   return <>{isLoading ? <SplashScreen /> : null}</>;
 }

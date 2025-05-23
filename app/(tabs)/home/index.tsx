@@ -160,6 +160,12 @@ export default function index() {
                 },
               }
             );
+            if (response.data.role !== "masyarakat") {
+              await SecureStore.deleteItemAsync("userToken");
+              await SecureStore.deleteItemAsync("userId");
+              router.replace("/screens/signin");
+              return;
+            }      
             setUserData(response.data);
           }
         } catch (error) {
