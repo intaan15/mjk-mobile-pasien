@@ -77,6 +77,25 @@ const Register = () => {
     restoreFormData();
   }, []);
   
+  useEffect(() => {
+    const fetchStoredImages = async () => {
+      const savedKtp = await SecureStore.getItemAsync("fotoKTP");
+      const savedSelfie = await SecureStore.getItemAsync("selfieKTP");
+
+      if (savedKtp) {
+        setKtpUri(savedKtp); // untuk preview
+        setForm((prev) => ({ ...prev, fotoKTP: savedKtp })); // ⬅️ ini penting
+      }
+
+      if (savedSelfie) {
+        setSelfieUri(savedSelfie); // untuk preview
+        setForm((prev) => ({ ...prev, selfieKTP: savedSelfie })); // ⬅️ ini juga
+      }
+    };
+
+    fetchStoredImages();
+  }, []);
+  
   
 
   const handleInputChange = (field, value) => {
@@ -93,10 +112,20 @@ const Register = () => {
       const selfieKTP = await SecureStore.getItemAsync("selfieKTP");
       const token = await SecureStore.getItemAsync("userToken");
 
-      if (!userId || !fotoKTP || !selfieKTP) {
-        Alert.alert("Gagal", "Semua data harus diisi.");
+      // Validasi semua field form
+      for (const [key, value] of Object.entries(form)) {
+        if (!value) {
+          Alert.alert("Gagal", `Field ${key} belum diisi.`);
+          return;
+        }
+      }
+
+      if (!userId || !fotoKTP || !selfieKTP || !token) {
+        Alert.alert("Gagal", "Data user, foto KTP, atau token belum ada.");
         return;
       }
+
+      console.log("Form data sebelum kirim:", { ...form, fotoKTP, selfieKTP });
 
       const getFileInfo = (uri) => {
         const filename = uri.split("/").pop();
@@ -113,47 +142,25 @@ const Register = () => {
 
       const formData = new FormData();
 
-      // Data teks
-      formData.append("nama_masyarakat", form.nama);
-      formData.append("username_masyarakat", form.username);
-      formData.append("password_masyarakat", form.password);
-      formData.append("email_masyarakat", form.email);
-      formData.append("nik_masyarakat", form.nik);
-      formData.append("alamat_masyarakat", form.alamat);
-      formData.append("notlp_masyarakat", form.notlp);
-      formData.append("jeniskelamin_masyarakat", form.jenisKelamin);
-      formData.append("tgl_lahir_masyarakat", form.tglLahir);
+      // Append data
+      for (const [key, value] of Object.entries(form)) {
+        const fieldKey = key + "_masyarakat";
+        formData.append(fieldKey, value);
+      }
 
-      // File foto KTP
+      // Append images
       const ktpInfo = getFileInfo(fotoKTP);
+      const selfieInfo = getFileInfo(selfieKTP);
       formData.append("foto_ktp_masyarakat", {
         uri: fotoKTP,
         type: ktpInfo.type,
         name: ktpInfo.name,
       } as any);
-
-      // File selfie KTP
-      const selfieInfo = getFileInfo(selfieKTP);
       formData.append("selfie_ktp_masyarakat", {
         uri: selfieKTP,
-        name: selfieInfo.name,
         type: selfieInfo.type,
+        name: selfieInfo.name,
       } as any);
-
-      console.log("Form data sebelum kirim:", {
-        nama: form.nama,
-        username: form.username,
-        password: form.password,
-        email: form.email,
-        nik: form.nik,
-        alamat: form.alamat,
-        notlp: form.notlp,
-        jenisKelamin: form.jenisKelamin,
-        tglLahir: form.tglLahir,
-        fotoKTP,
-        selfieKTP,
-      });
-      
 
       const response = await axios.post(
         `${BASE_URL}/auth/register_masyarakat`,
@@ -166,7 +173,9 @@ const Register = () => {
         }
       );
 
+      console.log("Response:", response.data);
       alert("Registrasi berhasil!");
+
       await SecureStore.deleteItemAsync("formData");
       await SecureStore.deleteItemAsync("fotoKTP");
       await SecureStore.deleteItemAsync("selfieKTP");
@@ -174,6 +183,7 @@ const Register = () => {
     } catch (error: any) {
       console.log("Error:", error);
       console.log("Error response:", error.response?.data);
+      console.log("Status code:", error.response?.status);
       alert(
         "Gagal registrasi: " + (error.response?.data?.message || error.message)
       );
