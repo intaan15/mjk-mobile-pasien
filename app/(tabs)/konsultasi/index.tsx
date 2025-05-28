@@ -31,7 +31,9 @@ interface User {
 
 export default function HomeScreen() {
   const [userData, setUserData] = useState<User | null>(null);
-  const [dokterId, setDokterId] = useState<string | null>(null);
+  // const [dokterId, setDokterId] = useState<string | null>(null);
+  const [masyarakatId, setMasyarakatId] = useState<string | null>(null);
+
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState("Berlangsung");
   const [selectedDate, setSelectedDate] = useState(moment().format("DD/MM/YY"));
@@ -62,7 +64,7 @@ export default function HomeScreen() {
 
       setChatList(enrichedChatList);
     } catch (error) {
-      console.log("Gagal ambil chat list fe", error);
+      console.log("Gagal ambil chat list", error);
     }
   };
 
@@ -92,8 +94,12 @@ export default function HomeScreen() {
       }
 
       setUserData(response.data);
-      setDokterId(cleanedId); // <- simpan ke state agar bisa dipakai nanti
-      fetchChatList(cleanedId, token); // <- Panggil ambil chatlist
+      setMasyarakatId(cleanedId); // Ganti dari dokterId
+      fetchChatList(cleanedId, token);
+
+      // setUserData(response.data);
+      // setDokterId(cleanedId); // <- simpan ke state agar bisa dipakai nanti
+      // fetchChatList(cleanedId, token); // <- Panggil ambil chatlist
     } catch (error) {
       console.log("Gagal ambil data user", error);
     }
@@ -147,7 +153,7 @@ export default function HomeScreen() {
                 key={chat._id}
                 className="flex flex-col"
                 onPress={() => {
-                  const currentUserId = dokterId;
+                  const currentUserId = masyarakatId;
                   const otherParticipant = chat.participant;
 
                   if (currentUserId && otherParticipant?._id) {
@@ -183,15 +189,17 @@ export default function HomeScreen() {
                       <Text className="text-gray-700 mt-1">
                         {chat.lastMessage || "Belum ada pesan"}
                       </Text>
-                      {dokterId &&
+                      <Text>
+                      {masyarakatId &&
                         chat.unreadCount &&
-                        chat.unreadCount[dokterId] > 0 && (
+                        chat.unreadCount[masyarakatId] > 0 && (
                           <View className="bg-red-500 rounded-full px-2 py-1 ml-2">
                             <Text className="text-white text-xs">
-                              {chat.unreadCount[dokterId]}
+                              {chat.unreadCount[masyarakatId]}
                             </Text>
                           </View>
                         )}
+                        </Text>
                     </View>
                   </View>
                 </View>

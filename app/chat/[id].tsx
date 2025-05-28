@@ -22,6 +22,7 @@ import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import { BASE_URL } from "@env";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useLocalSearchParams } from "expo-router";
 
 const socket = io("https://mjk-backend-production.up.railway.app", {
   transports: ["websocket"], // <--- penting supaya pakai websocket langsung
@@ -33,55 +34,86 @@ export default function ChatScreen() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [previewImage, setPreviewImage] = useState(null);
+  const [userId, setUserId] = useState("");
+  const { receiverId } = useLocalSearchParams();
+  // const { id } = useLocalSearchParams();
+  // const receiverId = id?.toString(); // pastikan string
 
-  // Ambil data user dari backend
+  // ✅ Ambil data user dari backend
+  // Ambil userId dan username sekali di awal
+  const [receiverName, setReceiverName] = useState("");
+
+
+  
+  
+
+
   useEffect(() => {
-    const fetchUsername = async () => {
+    const fetchUser = async () => {
       try {
-        const userId = await SecureStore.getItemAsync("userId");
+        const rawUserId = await SecureStore.getItemAsync("userId");
         const token = await SecureStore.getItemAsync("userToken");
 
-        if (!userId || !token) {
-          console.log("Token atau ID tidak ditemukan.");
+        if (!rawUserId || !token) {
+          console.warn("Token atau ID tidak ditemukan.");
           router.push("/screens/signin");
           return;
         }
 
-        const cleanedId = userId.replace(/"/g, "");
+        const cleanedUserId = rawUserId.replace(/"/g, "");
+        setUserId(cleanedUserId);
+
         const response = await axios.get(
-          `${BASE_URL}/masyarakat/getbyid/${cleanedId}`,
+          `${BASE_URL}/dokter/getbyid/${cleanedUserId}`,
           {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
 
-        const user = response.data;
-        if (user && user.nama_masyarakat) {
-          setUsername(user.nama_masyarakat);
-        } else {
-          console.log("Nama user tidak ditemukan dalam response.");
-          // router.push("/screens/signin");
+        if (response.data?.nama_dokter) {
+          setUsername(response.data.nama_dokter);
         }
       } catch (error) {
-        console.log("Gagal fetch username:", error);
-        // router.push("/screens/signin");
+        console.log("Gagal fetch user data:", error);
       }
     };
 
-    fetchUsername();
+    fetchUser();
   }, []);
 
+  // Fetch chat history setelah userId dan receiverId siap
   useEffect(() => {
-    console.log("Current username:", username);
+    const fetchChatHistory = async () => {
+      try {
+        if (!userId || !receiverId) {
+          console.warn("UserId atau receiverId kosong, skip fetch.");
+          return;
+        }
+
+        const token = await SecureStore.getItemAsync("userToken");
+        const res = await axios.get(
+          `${BASE_URL}/chat/history/${userId}/${receiverId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setMessages(res.data);
+      } catch (error) {
+        console.log("Gagal ambil riwayat chat:", error);
+      }
+    };
+
+    fetchChatHistory();
+  }, [userId, receiverId]);
+
+  useEffect(() => {
+    console.log("[DEBUG] Current username:", username);
   }, [username]);
 
-  // Terima pesan dari socket
+  // ✅ Terima pesan dari socket
   useEffect(() => {
     socket.on("chat message", (msg) => {
-      console.log("Received message from socket:", msg);
+      console.log("[DEBUG] Received message via socket:", msg);
       setMessages((prev) => [...prev, msg]);
     });
 
@@ -90,20 +122,126 @@ export default function ChatScreen() {
     };
   }, []);
 
-  // Kirim pesan teks
-  const sendMessage = () => {
-    if (message.trim() && username) {
+  // ✅ Kirim pesan teks
+  const sendMessage = async () => {
+    if (message.trim() && username && userId && receiverId) {
       const msgData = {
         text: message,
         sender: username,
+        senderId: userId,
+        receiverId: receiverId,
         type: "text",
+        waktu: new Date().toISOString(),
       };
+
+      console.log("[DEBUG] Sending text message:", msgData);
       socket.emit("chat message", msgData);
       setMessage("");
+    } else {
+      console.warn("Gagal kirim pesan: Ada data kosong.");
     }
   };
 
-  // Kirim gambar dari galeri/kamera
+  // console.log("[DEBUG] Messages state after fetch:", messages);
+  console.log("[DEBUG] User ID:", userId);
+  console.log("[DEBUG] Receiver ID:", receiverId);
+
+  useEffect(() => {
+    const fetchReceiverName = async () => {
+      if (!receiverId) return;
+      try {
+        const token = await SecureStore.getItemAsync("userToken");
+        const res = await axios.get(
+          `${BASE_URL}/masyarakat/getbyid/${receiverId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (res.data?.nama_masyarakat) {
+          setReceiverName(res.data.nama_masyarakat);
+          console.log(
+            "[DEBUG] receiverName fetched:",
+            res.data.nama_masyarakat
+          );
+        } else {
+          console.log("[DEBUG] receiverName not found in response:", res.data);
+        }
+      } catch (error) {
+        console.log("Gagal fetch nama receiver:", error);
+      }
+    };
+
+    fetchReceiverName();
+  }, [receiverId]);
+  console.log("[DEBUG] Receiver ID:", receiverId);
+  console.log("[DEBUG] Receiver Name:", receiverName);
+
+  // ✅ Render pesan (teks / gambar)
+  // DENGAN NAMA 
+  // const renderItem = ({ item }) => {
+  //   const isSender = item.senderId === userId;
+
+  //   return (
+  //     <View
+  //       className={`rounded-[3rem] p-4 px-4 my-1 max-w-[80%] ${
+  //         isSender ? "bg-skyDark self-end" : "bg-[#C3E9FF] self-start"
+  //       }`}
+  //     >
+  //       <Text className={`font-bold ${isSender ? "text-white" : "text-black"}`}>
+  //         {isSender ? "Saya" : receiverName || item.sender || item.role}
+  //       </Text>
+
+  //       {item.type === "image" && item.image ? (
+  //         <TouchableOpacity onPress={() => setPreviewImage(item.image)}>
+  //           <Image
+  //             source={{ uri: item.image }}
+  //             className="w-24 h-32 mt-1 rounded-md"
+  //             resizeMode="cover"
+  //           />
+  //         </TouchableOpacity>
+  //       ) : (
+  //         <Text className={`${isSender ? "text-white" : "text-black"}`}>
+  //           {item.text}
+  //         </Text>
+  //       )}
+  //     </View>
+  //   );
+  // };
+  
+// TANPA NAMA 
+  const renderItem = ({ item }) => {
+    const isSender = item.senderId === userId;
+
+    return (
+      <View
+        className={`rounded-[3rem] p-4 px-4 my-1 max-w-[80%] ${
+          isSender ? "bg-skyDark self-end" : "bg-[#C3E9FF] self-start"
+        }`}
+      >
+        {/* Kalau pengirim adalah kamu, tampilkan "Saya" */}
+        {isSender && <Text className="font-bold text-white">Saya</Text>}
+
+        {item.type === "image" && item.image ? (
+          <TouchableOpacity onPress={() => setPreviewImage(item.image)}>
+            <Image
+              source={{ uri: item.image }}
+              className="w-24 h-32 mt-1 rounded-md"
+              resizeMode="cover"
+            />
+          </TouchableOpacity>
+        ) : (
+          <Text className={`${isSender ? "text-white" : "text-black"}`}>
+            {item.text}
+          </Text>
+        )}
+      </View>
+    );
+  };
+  
+
+
+  // ✅ Kirim gambar dari galeri/kamera
   const sendImage = async (fromCamera = false) => {
     try {
       let result;
@@ -123,46 +261,23 @@ export default function ChatScreen() {
 
       if (!result.canceled && result.assets?.length > 0) {
         const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
-        socket.emit("chat message", {
+        const imgMsg = {
           sender: username,
+          senderId: userId,
+          receiverId: receiverId,
           image: base64Image,
           type: "image",
-        });
+          waktu: new Date().toISOString(),
+        };
+
+        console.log("[DEBUG] Sending image message:", imgMsg);
+        socket.emit("chat message", imgMsg);
+      } else {
+        console.warn("Pengambilan gambar dibatalkan atau tidak valid.");
       }
     } catch (error) {
-      console.error("Gagal mengirim gambar:", error);
+      console.log("Gagal mengirim gambar:", error);
     }
-  };
-
-  // renderItem dipisah sebagai fungsi
-  const renderItem = ({ item }) => {
-    const isSender = item.sender === username;
-
-    return (
-      <View
-        className={`rounded-[3rem] p-4 px-4 my-1 max-w-[80%] ${
-          isSender ? "bg-skyDark self-end" : "bg-[#C3E9FF] self-start"
-        }`}
-      >
-        <Text className={`font-bold ${isSender ? "text-white" : "text-black"}`}>
-          {item.sender}
-        </Text>
-
-        {item.type === "image" && item.image ? (
-          <TouchableOpacity onPress={() => setPreviewImage(item.image)}>
-            <Image
-              source={{ uri: item.image }}
-              className="w-24 h-32 mt-1 rounded-md"
-              resizeMode="cover"
-            />
-          </TouchableOpacity>
-        ) : (
-          <Text className={`${isSender ? "text-white" : "text-black"}`}>
-            {item.text}
-          </Text>
-        )}
-      </View>
-    );
   };
 
   return (
@@ -175,7 +290,7 @@ export default function ChatScreen() {
               <MaterialIcons name="arrow-back-ios" size={24} color="#025F96" />
             </TouchableOpacity>
             <Text className="text-skyDark font-bold text-xl ml-2">
-              Zuditanit
+              {receiverName ? receiverName : "Loading..."}
             </Text>
           </View>
           <Image
