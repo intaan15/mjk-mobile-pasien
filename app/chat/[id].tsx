@@ -321,7 +321,7 @@ export default function ChatScreen() {
               {/* Chat Messages */}
               <FlatList
                 ref={flatListRef}
-                data={messages}
+                data={[...messages].reverse()}
                 keyExtractor={(item, index) => index.toString()}
                 renderItem={renderItem}
                 contentContainerStyle={{
@@ -332,7 +332,9 @@ export default function ChatScreen() {
                   flatListRef.current?.scrollToEnd({ animated: true })
                 }
                 keyboardShouldPersistTaps="handled"
+                inverted={true} // Membalik urutan pesan
                 className="px-4 flex-1"
+                
               />
 
               {/* Chat Input */}
