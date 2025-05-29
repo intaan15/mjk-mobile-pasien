@@ -30,51 +30,57 @@ const socket = io("https://mjk-backend-production.up.railway.app", {
 
 export default function ChatScreen() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [previewImage, setPreviewImage] = useState(null);
   const [userId, setUserId] = useState("");
   const { receiverId } = useLocalSearchParams();
-  const isSendReady = username && userId && receiverId && message.trim();
   // const { id } = useLocalSearchParams();
   // const receiverId = id?.toString(); // pastikan string
 
   // ✅ Ambil data user dari backend
   // Ambil userId dan username sekali di awal
   const [receiverName, setReceiverName] = useState("");
+  const [username, setUsername] = useState("");
+  const isSendReady = username && userId && receiverId && message.trim();
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const rawUserId = await SecureStore.getItemAsync("userId");
+        // Misal receiverId sudah ada di state atau props, pakai langsung:
+        if (!receiverId) {
+          console.warn("ReceiverId tidak tersedia.");
+          return;
+        }
+
+        // Kalau receiverId didapat dari SecureStore juga:
+        // const rawReceiverId = await SecureStore.getItemAsync("receiverId");
+
         const token = await SecureStore.getItemAsync("userToken");
+        // console.log("[DEBUG] ReceiverId:", receiverId);
+        // console.log("[DEBUG] Token:", token);
 
-        console.log("[DEBUG] Raw userId:", rawUserId);
-        console.log("[DEBUG] Token:", token);
-
-        if (!rawUserId || !token) {
-          console.warn("Token atau ID tidak ditemukan.");
+        if (!receiverId || !token) {
+          console.warn("Token atau receiverId tidak ditemukan.");
           router.push("/screens/signin");
           return;
         }
 
-        const cleanedUserId = rawUserId.replace(/"/g, "");
-        setUserId(cleanedUserId);
-        console.log("[DEBUG] Cleaned userId:", cleanedUserId);
+        const cleanedReceiverId = receiverId.replace(/"/g, ""); 
 
         const response = await axios.get(
-          `${BASE_URL}/dokter/getbyid/${cleanedUserId}`,
+          `${BASE_URL}/dokter/getbyid/${cleanedReceiverId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-
-        console.log("[DEBUG] Dokter response:", response.data);
+        // console.log("[DEBUG] Response dari backend:", response.data);
 
         if (response.data?.nama_dokter) {
           setUsername(response.data.nama_dokter);
           console.log("[DEBUG] Set username:", response.data.nama_dokter);
+        } else {
+          console.warn("Property nama_dokter tidak ada di response");
         }
       } catch (error) {
         console.log("Gagal fetch user data:", error);
@@ -82,8 +88,7 @@ export default function ChatScreen() {
     };
 
     fetchUser();
-  }, []);
-  
+  }, [receiverId]); // pasang dependency kalau receiverId berubah
 
   // Fetch chat history setelah userId dan receiverId siap
   useEffect(() => {
@@ -111,7 +116,7 @@ export default function ChatScreen() {
   }, [userId, receiverId]);
 
   useEffect(() => {
-    console.log("[DEBUG] Current username:", username);
+    // console.log("[DEBUG] Current username:", username);
   }, [username]);
 
   // ✅ Terima pesan dari socket
@@ -127,37 +132,10 @@ export default function ChatScreen() {
   }, []);
 
   // ✅ Kirim pesan teks
-  const sendMessage = async () => {
-    console.log("[DEBUG] Tombol Kirim ditekan");
-    console.log("username:", username);
-    console.log("userId:", userId);
-    console.log("receiverId:", receiverId);
-    console.log("message:", message);
-
-    if (message.trim() && username && userId && receiverId) {
-      const msgData = {
-        text: message,
-        sender: username,
-        senderId: userId,
-        receiverId: receiverId,
-        type: "text",
-        waktu: new Date().toISOString(),
-      };
-
-      console.log("[DEBUG] Sending text message:", msgData);
-      console.log("[DEBUG] Socket connected:", socket.connected);
-
-      socket.emit("chat message", msgData);
-      setMessage("");
-    } else {
-      console.warn("Gagal kirim pesan: Ada data kosong.");
-    }
-  };
-  
 
   // console.log("[DEBUG] Messages state after fetch:", messages);
-  console.log("[DEBUG] User ID:", userId);
-  console.log("[DEBUG] Receiver ID:", receiverId);
+  // console.log("[DEBUG] User ID:", userId);
+  // console.log("[DEBUG] Receiver ID:", receiverId);
 
   useEffect(() => {
     const fetchReceiverName = async () => {
@@ -173,12 +151,9 @@ export default function ChatScreen() {
 
         if (res.data?.nama_dokter) {
           setReceiverName(res.data.nama_dokter);
-          console.log(
-            "[DEBUG] receiverName fetched:",
-            res.data.nama_dokter
-          );
+          // console.log("[DEBUG] receiverName fetched:", res.data.nama_dokter);
         } else {
-          console.log("[DEBUG] receiverName not found in response:", res.data);
+          // console.log("[DEBUG] receiverName not found in response:", res.data);
         }
       } catch (error) {
         console.log("Gagal fetch nama receiver:", error);
@@ -187,10 +162,8 @@ export default function ChatScreen() {
 
     fetchReceiverName();
   }, [receiverId]);
-  console.log("[DEBUG] Receiver ID:", receiverId);
-  console.log("[DEBUG] Receiver Name:", receiverName);
-
-
+  // console.log("[DEBUG] Receiver ID:", receiverId);
+  // console.log("[DEBUG] Receiver Name:", receiverName);
 
   // ✅ Kirim gambar dari galeri/kamera
   const sendImage = async (fromCamera = false) => {
@@ -245,8 +218,33 @@ export default function ChatScreen() {
       socket.off("connect_error");
     };
   }, []);
-  
 
+  const sendMessage = async () => {
+    console.log("[DEBUG] Tombol Kirim ditekan");
+    console.log("username:", username);
+    console.log("userId:", userId);
+    console.log("receiverId:", receiverId);
+    console.log("message:", message);
+
+    if (message.trim() && username && userId && receiverId) {
+      const msgData = {
+        text: message,
+        sender: username,
+        senderId: userId,
+        receiverId: receiverId,
+        type: "text",
+        waktu: new Date().toISOString(),
+      };
+
+      console.log("[DEBUG] Sending text message:", msgData);
+      console.log("[DEBUG] Socket connected:", socket.connected);
+
+      socket.emit("chat message", msgData);
+      setMessage("");
+    } else {
+      console.warn("Gagal kirim pesan: Ada data kosong.");
+    }
+  };
   // TANPA NAMA
   const renderItem = ({ item }) => {
     const isSender = item.senderId === userId;
@@ -342,10 +340,7 @@ export default function ChatScreen() {
                   </View>
                   <TouchableOpacity
                     onPress={sendMessage}
-                    disabled={!isSendReady}
-                    className={`bg-blue-500 px-4 py-2 rounded-lg mr-1 ${
-                      !isSendReady ? "opacity-50" : ""
-                    }`}
+                    className="bg-blue-500 px-4 py-2 rounded-lg mr-1"
                   >
                     <Text className="text-white font-semibold">Kirim</Text>
                   </TouchableOpacity>
