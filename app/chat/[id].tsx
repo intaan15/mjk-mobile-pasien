@@ -328,9 +328,9 @@ export default function ChatScreen() {
                   paddingTop: 10,
                   paddingBottom: 10,
                 }}
-                onContentSizeChange={() =>
-                  flatListRef.current?.scrollToEnd({ animated: true })
-                }
+                // onContentSizeChange={() =>
+                //   flatListRef.current?.scrollToEnd({ animated: true })
+                // }
                 keyboardShouldPersistTaps="handled"
                 inverted={true} // Membalik urutan pesan
                 className="px-4 flex-1"
