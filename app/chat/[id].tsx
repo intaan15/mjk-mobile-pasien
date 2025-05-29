@@ -115,20 +115,21 @@ export default function ChatScreen() {
 
   // ✅ Terima pesan dari socket
   useEffect(() => {
-    socket.on("chat message", (msg) => {
+    const handleIncomingMessage = (msg) => {
       console.log("[DEBUG] Received message via socket:", msg);
       setMessages((prev) => [...prev, msg]);
-    });
+    };
+
+    socket.on("chat message", handleIncomingMessage);
 
     return () => {
-      socket.off("chat message");
+      socket.off("chat message", handleIncomingMessage);
     };
   }, []);
+  
 
   // ✅ Kirim pesan teks
   
-  
-
   // console.log("[DEBUG] Messages state after fetch:", messages);
   console.log("[DEBUG] User ID:", userId);
   console.log("[DEBUG] Receiver ID:", receiverId);
@@ -192,6 +193,7 @@ export default function ChatScreen() {
           receiverId: receiverId,
           image: base64Image,
           type: "image",
+          role: userRole,
           waktu: new Date().toISOString(),
         };
 
@@ -204,6 +206,14 @@ export default function ChatScreen() {
       console.log("Gagal mengirim gambar:", error);
     }
   };
+
+  useEffect(() => {
+    if (userId) {
+      console.log("[DEBUG] Emitting joinRoom with:", userId);
+      socket.emit("joinRoom", userId);
+    }
+  }, [userId]);
+  
 
   useEffect(() => {
     socket.on("connect", () => {
