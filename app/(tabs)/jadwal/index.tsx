@@ -109,92 +109,105 @@ export default function Jadwal() {
                   Belum ada jadwal konsultasi.
                 </Text>
               ) : (
-                jadwalList.map((jadwal, index) => (
-                  <View
-                    key={index}
-                    className="bg-white w-full h-40 rounded-3xl flex-col justify-center shadow-md"
-                  >
-                    <View className="flex-row">
-                      <View className="px-4">
-                        {jadwal.dokter_id?.foto_profil_dokter &&
-                        jadwal.dokter_id?.nama_dokter ? (
-                          <Image
-                            source={{
-                              uri: `https://mjk-backend-production.up.railway.app/uploads/${jadwal.dokter_id.foto_profil_dokter}`,
-                            }}
-                            className="h-20 w-20 rounded-full border border-gray-300"
-                            resizeMode="cover"
-                          />
-                        ) : (
-                          <View className="h-20 w-20 rounded-full border border-gray-300 items-center justify-center bg-gray-200">
-                            <Ionicons name="person" size={40} color="#0C4A6E" />
-                          </View>
-                        )}
-                      </View>
-                      <View className="w-3/4">
-                        <Text className="w-11/12 truncate font-bold text-base text-skyDark pb-1"
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-                        >
-                          {jadwal.dokter_id?.nama_dokter || "Nama Dokter"}
-                        </Text>
-                        <View className="h-[2px] bg-skyDark w-11/12" />
-                        <View className="flex-row pt-1 items-center">
-                          <FontAwesome name="star" size={20} color="#025F96" />
-                          <Text className="font-bold text-base text-skyDark pl-1">
-                            {jadwal.dokter_id?.rating_dokter}
-                          </Text>
+                [...jadwalList]
+                  .sort(
+                    (a, b) => new Date(b.tgl_konsul).getTime() - new Date(a.tgl_konsul).getTime()
+                  )
+                  .map((jadwal, index) => (
+                    <View
+                      key={index}
+                      className="bg-white w-full h-40 rounded-3xl flex-col justify-center shadow-md"
+                    >
+                      <View className="flex-row">
+                        <View className="px-4">
+                          {jadwal.dokter_id?.foto_profil_dokter &&
+                          jadwal.dokter_id?.nama_dokter ? (
+                            <Image
+                              source={{
+                                uri: `https://mjk-backend-production.up.railway.app/uploads/${jadwal.dokter_id.foto_profil_dokter}`,
+                              }}
+                              className="h-20 w-20 rounded-full border border-gray-300"
+                              resizeMode="cover"
+                            />
+                          ) : (
+                            <View className="h-20 w-20 rounded-full border border-gray-300 items-center justify-center bg-gray-200">
+                              <Ionicons
+                                name="person"
+                                size={40}
+                                color="#0C4A6E"
+                              />
+                            </View>
+                          )}
                         </View>
-                      </View>
-                    </View>
-                    <View className="flex-row justify-between px-4">
-                      <View className="flex-col pt-1">
-                        <Text className="font-bold text-sm text-skyDark">
-                          {getDayName(jadwal.tgl_konsul)},
-                        </Text>
-                        <Text className="font-bold text-sm text-skyDark">
-                          {new Date(jadwal.tgl_konsul).toLocaleDateString(
-                            "id-ID",
-                            {
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric",
-                            }
-                          )}
-                        </Text>
-                        <Text className="font-bold text-sm text-skyDark">
-                          Pukul {jadwal.jam_konsul}
-                        </Text>
-                      </View>
-                      <View className="justify-center w-1/3 flex-col">
-                        <View
-                          className={`p-2 flex-row gap-2 rounded-xl items-center justify-between ${
-                            jadwal.status_konsul === "diterima"
-                              ? "bg-green-600"
-                              : jadwal.status_konsul === "ditolak"
-                              ? "bg-red-600"
-                              : "bg-skyDark"
-                          }`}
-                        >
-                          {jadwal.status_konsul === "menunggu" && (
-                            <WaitIcon width={18} height={18} />
-                          )}
-                          {jadwal.status_konsul === "diterima" && (
-                            <AccIcon width={18} height={18} />
-                          )}
-                          {jadwal.status_konsul === "ditolak" && (
-                            <CancelIcon width={18} height={18} />
-                          )}
-                          <View className="w-3/4 justify-center items-center">
-                            <Text className="text-white font-bold text-sm capitalize">
-                              {jadwal.status_konsul}
+                        <View className="w-3/4">
+                          <Text
+                            className="w-11/12 truncate font-bold text-base text-skyDark pb-1"
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                          >
+                            {jadwal.dokter_id?.nama_dokter || "Nama Dokter"}
+                          </Text>
+                          <View className="h-[2px] bg-skyDark w-11/12" />
+                          <View className="flex-row pt-1 items-center">
+                            <FontAwesome
+                              name="star"
+                              size={20}
+                              color="#025F96"
+                            />
+                            <Text className="font-bold text-base text-skyDark pl-1">
+                              {jadwal.dokter_id?.rating_dokter}
                             </Text>
                           </View>
                         </View>
                       </View>
+                      <View className="flex-row justify-between px-4">
+                        <View className="flex-col pt-1">
+                          <Text className="font-bold text-sm text-skyDark">
+                            {getDayName(jadwal.tgl_konsul)},
+                          </Text>
+                          <Text className="font-bold text-sm text-skyDark">
+                            {new Date(jadwal.tgl_konsul).toLocaleDateString(
+                              "id-ID",
+                              {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              }
+                            )}
+                          </Text>
+                          <Text className="font-bold text-sm text-skyDark">
+                            Pukul {jadwal.jam_konsul}
+                          </Text>
+                        </View>
+                        <View className="justify-center w-1/3 flex-col">
+                          <View
+                            className={`p-2 flex-row gap-2 rounded-xl items-center justify-between ${
+                              jadwal.status_konsul === "diterima"
+                                ? "bg-green-600"
+                                : jadwal.status_konsul === "ditolak"
+                                ? "bg-red-600"
+                                : "bg-skyDark"
+                            }`}
+                          >
+                            {jadwal.status_konsul === "menunggu" && (
+                              <WaitIcon width={18} height={18} />
+                            )}
+                            {jadwal.status_konsul === "diterima" && (
+                              <AccIcon width={18} height={18} />
+                            )}
+                            {jadwal.status_konsul === "ditolak" && (
+                              <CancelIcon width={18} height={18} />
+                            )}
+                            <View className="w-3/4 justify-center items-center">
+                              <Text className="text-white font-bold text-sm capitalize">
+                                {jadwal.status_konsul}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      </View>
                     </View>
-                  </View>
-                ))
+                  ))
               )}
             </View>
           </ScrollView>
