@@ -64,8 +64,8 @@ export default function Panduanktp() {
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const uri = result.assets[0].uri;
       console.log("URI KTP ditemukan dari galeri:", uri);
-      await SecureStore.setItemAsync("fotoKTP", uri); // ✅ tetap sebagai fotoKTP
       setKtpUri(uri);
+      await SecureStore.setItemAsync("fotoKTP", uri); // ✅ tetap sebagai fotoKTP
       router.push("/screens/signup");
     } else {
       console.log("Gagal ambil gambar dari galeri");
@@ -84,14 +84,15 @@ export default function Panduanktp() {
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const uri = result.assets[0].uri;
       console.log("URI KTP ditemukan dari kamera:", uri);
-      await SecureStore.setItemAsync("fotoKTP", uri); // ✅ tetap sebagai fotoKTP
       setKtpUri(uri);
+      await SecureStore.setItemAsync("fotoKTP", uri); // ✅ tetap sebagai fotoKTP
       router.push("/screens/signup");
     } else {
       console.log("Gagal ambil gambar dari kamera");
     }
   };
 
+  
   return (
     <Background>
       <View className="">

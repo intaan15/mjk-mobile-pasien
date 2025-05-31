@@ -97,7 +97,6 @@ const Register = () => {
   }, []);
   
   
-
   const handleInputChange = (field, value) => {
     setForm((prev) => ({
       ...prev,
@@ -105,27 +104,22 @@ const Register = () => {
     }));
   };
 
+  
+
   const handleRegister = async () => {
     try {
-      const userId = await SecureStore.getItemAsync("userId");
+      // const userId = await SecureStore.getItemAsync("userId");
       const fotoKTP = await SecureStore.getItemAsync("fotoKTP");
       const selfieKTP = await SecureStore.getItemAsync("selfieKTP");
-      const token = await SecureStore.getItemAsync("userToken");
 
-      // Validasi semua field form
-      for (const [key, value] of Object.entries(form)) {
-        if (!value) {
-          Alert.alert("Gagal", `Field ${key} belum diisi.`);
-          return;
-        }
-      }
+      // console.log("userId:", userId);
+      console.log("fotoKTP:", fotoKTP);
+      console.log("selfieKTP:", selfieKTP);
 
-      if (!userId || !fotoKTP || !selfieKTP || !token) {
-        Alert.alert("Gagal", "Data user, foto KTP, atau token belum ada.");
+      if (!fotoKTP || !selfieKTP) {
+        Alert.alert("Gagal", "Semua data harus diisi.");
         return;
       }
-
-      console.log("Form data sebelum kirim:", { ...form, fotoKTP, selfieKTP });
 
       const getFileInfo = (uri) => {
         const filename = uri.split("/").pop();
@@ -142,25 +136,46 @@ const Register = () => {
 
       const formData = new FormData();
 
-      // Append data
-      for (const [key, value] of Object.entries(form)) {
-        const fieldKey = key + "_masyarakat";
-        formData.append(fieldKey, value);
-      }
+      // Data teks
+      formData.append("nama_masyarakat", form.nama);
+      formData.append("username_masyarakat", form.username);
+      formData.append("password_masyarakat", form.password);
+      formData.append("email_masyarakat", form.email);
+      formData.append("nik_masyarakat", form.nik);
+      formData.append("alamat_masyarakat", form.alamat);
+      formData.append("notlp_masyarakat", form.notlp);
+      formData.append("jeniskelamin_masyarakat", form.jenisKelamin);
+      formData.append("tgl_lahir_masyarakat", form.tglLahir);
 
-      // Append images
+      // File foto KTP
       const ktpInfo = getFileInfo(fotoKTP);
-      const selfieInfo = getFileInfo(selfieKTP);
       formData.append("foto_ktp_masyarakat", {
         uri: fotoKTP,
         type: ktpInfo.type,
         name: ktpInfo.name,
       } as any);
+
+      // File selfie KTP
+      const selfieInfo = getFileInfo(selfieKTP);
       formData.append("selfie_ktp_masyarakat", {
         uri: selfieKTP,
-        type: selfieInfo.type,
         name: selfieInfo.name,
+        type: selfieInfo.type,
       } as any);
+
+      // console.log("Form data sebelum kirim:", {
+      //   nama: form.nama,
+      //   username: form.username,
+      //   password: form.password,
+      //   email: form.email,
+      //   nik: form.nik,
+      //   alamat: form.alamat,
+      //   notlp: form.notlp,
+      //   jenisKelamin: form.jenisKelamin,
+      //   tglLahir: form.tglLahir,
+      //   fotoKTP,
+      //   selfieKTP,
+      // });
 
       const response = await axios.post(
         `${BASE_URL}/auth/register_masyarakat`,
@@ -168,25 +183,21 @@ const Register = () => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
           },
         }
       );
 
-      console.log("Response:", response.data);
       alert("Registrasi berhasil!");
-
       await SecureStore.deleteItemAsync("formData");
       await SecureStore.deleteItemAsync("fotoKTP");
       await SecureStore.deleteItemAsync("selfieKTP");
       router.replace("./signin");
-    } catch (error: any) {
+    } catch (error) {
       console.log("Error:", error);
-      console.log("Error response:", error.response?.data);
-      console.log("Status code:", error.response?.status);
-      alert(
-        "Gagal registrasi: " + (error.response?.data?.message || error.message)
-      );
+      // console.log("Error response:", error.response?.data);
+      // alert(
+      //   "Gagal registrasi: " + (error.response?.data?.message || error.message)
+      // );
     }
   };
   

@@ -36,13 +36,13 @@ export default function HomeScreen() {
 
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState("Berlangsung");
-  const [selectedDate, setSelectedDate] = useState(moment().format("DD/MM/YY"));
+  // const [selectedDate, setSelectedDate] = useState(moment().format("DD/MM/YY"));
   const [chatList, setChatList] = useState<any[]>([]);
   const fallbackImageUrl = "/assets/images/foto.jpeg"; // Atau URL default lainnya
 
-  const filteredChats = chatList.filter(
-    (chat) => moment(chat.lastMessageDate).format("DD/MM/YY") === selectedDate
-  );
+  // const filteredChats = chatList.filter(
+  //   (chat) => moment(chat.lastMessageDate).format("DD/MM/YY") === selectedDate
+  // );
   const fetchChatList = async (userId: string, token: string) => {
     try {
       const response = await axios.get(`${BASE_URL}/chatlist/${userId}`, {
@@ -148,7 +148,8 @@ export default function HomeScreen() {
             className="px-6 py-4"
             contentContainerStyle={{ paddingBottom: 80 }}
           >
-            {filteredChats.map((chat) => (
+            {/* {filteredChats.map((chat) => ( */}
+            {chatList.map((chat) => (
               <TouchableOpacity
                 key={chat._id}
                 className="flex flex-col"
@@ -199,7 +200,7 @@ export default function HomeScreen() {
                             </Text>
                           </View>
                         )}
-                        </Text>
+                      </Text>
                     </View>
                   </View>
                 </View>
