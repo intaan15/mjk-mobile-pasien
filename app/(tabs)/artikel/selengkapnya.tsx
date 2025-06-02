@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  StyleSheet
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -13,12 +14,15 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { images } from "../../../constants/images";
 import { BASE_URL } from "@env";
 import * as SecureStore from "expo-secure-store";
+import RenderHTML from "react-native-render-html";
+import { useWindowDimensions } from "react-native";
 
 export default function Selengkapnya() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const [artikel, setArtikel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { width } = useWindowDimensions();
 
   useEffect(() => {
     const fetchArtikelDetail = async () => {
@@ -71,7 +75,7 @@ export default function Selengkapnya() {
         {/* Header */}
         <View className="flex flex-row justify-between items-center mb-4 w-full px-5 pt-8">
           <View className="flex flex-row items-center w-9/12">
-            <TouchableOpacity onPress={() => router.back()}>
+            <TouchableOpacity onPress={() => router.replace("/(tabs)/artikel")}>
               <MaterialIcons name="arrow-back-ios" size={24} color="#025F96" />
             </TouchableOpacity>
             <Text
@@ -110,14 +114,78 @@ export default function Selengkapnya() {
                   resizeMode="cover"
                 />
                 <Text className="text-skyDark text-right text-sm font-medium pb-1">
-                  {new Date(artikel.tgl_terbit_artikel).toLocaleDateString()}
+                  {new Date(artikel.createdAt).toLocaleDateString()}
                 </Text>
                 <Text className="text-skyDark text-center font-bold text-xl pb-4">
                   {artikel.nama_artikel}
                 </Text>
-                <Text className="text-black text-base text-justify leading-relaxed">
-                  {artikel.detail_artikel}
-                </Text>
+                {/* <Text className="text-black text-base text-justify leading-relaxed"> */}
+                <RenderHTML
+                  contentWidth={width - 40}
+                  source={{ html: artikel.detail_artikel }}
+                  baseStyle={{
+                    color: "#000000",
+                    fontSize: 16,
+                    lineHeight: 24,
+                    textAlign: "justify",
+                  }}
+                  tagsStyles={{
+                    h1: {
+                      fontSize: 24,
+                      fontWeight: "bold",
+                      marginBottom: 15,
+                      color: "#025F96",
+                    },
+                    p: {
+                      marginBottom: 10,
+                      lineHeight: 24,
+                    },
+                    ul: {
+                      marginBottom: 10,
+                      paddingLeft: 20,
+                    },
+                    ol: {
+                      marginBottom: 10,
+                      paddingLeft: 20,
+                    },
+                    li: {
+                      marginBottom: 5,
+                      lineHeight: 22,
+                    },
+                    strong: {
+                      fontWeight: "bold",
+                    },
+                  }}
+                  listsPrefixesRenderers={{
+                    ul: (
+                      _htmlAttribs,
+                      _children,
+                      convertedCSSStyles,
+                      passProps
+                    ) => {
+                      return (
+                        <Text
+                          style={
+                            passProps.key === "P1"
+                              ? styles.bulletP
+                              : styles.bullet
+                          }
+                        >
+                          •{" "}
+                        </Text>
+                      );
+                    },
+                    ol: (
+                      _htmlAttribs,
+                      _children,
+                      convertedCSSStyles,
+                      passProps
+                    ) => {
+                      return <Text>{passProps.index + 1}. </Text>;
+                    },
+                  }}
+                />
+                {/* </Text> */}
               </View>
             </View>
           </ScrollView>
@@ -126,3 +194,15 @@ export default function Selengkapnya() {
     </Background>
   );
 }
+
+const styles = StyleSheet.create({
+  bullet: {
+    fontSize: 16,
+    color: '#000'
+  },
+  bulletP: {
+    fontSize: 16,
+    color: '#000',
+    fontWeight: 'bold'
+  }
+});
