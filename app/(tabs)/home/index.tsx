@@ -500,7 +500,7 @@ export default function index() {
                             </Text>
                             <Text className="font-medium text-sm text-skyDark">
                               {new Date(
-                                item.tgl_terbit_artikel
+                                item.createdAt
                               ).toLocaleDateString()}
                             </Text>
                           </View>

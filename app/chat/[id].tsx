@@ -25,7 +25,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { useLocalSearchParams } from "expo-router";
 
 const socket = io("https://mjk-backend-production.up.railway.app", {
-  transports: ["websocket"], 
+  transports: ["websocket"],
 });
 
 export default function ChatScreen() {
@@ -38,9 +38,9 @@ export default function ChatScreen() {
   const [userRole, setUserRole] = useState("");
   const [receiverName, setReceiverName] = useState("");
   const [username, setUsername] = useState("");
-  const isSendReady = username && userId && receiverId && message.trim() && userRole;
+  const isSendReady =
+    username && userId && receiverId && message.trim() && userRole;
   const flatListRef = useRef<FlatList>(null);
-
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -83,8 +83,6 @@ export default function ChatScreen() {
 
     fetchUser();
   }, []);
-  
-
 
   // Fetch chat history setelah userId dan receiverId siap
   useEffect(() => {
@@ -128,10 +126,9 @@ export default function ChatScreen() {
       socket.off("chat message", handleIncomingMessage);
     };
   }, []);
-  
 
   // ✅ Kirim pesan teks
-  
+
   // console.log("[DEBUG] Messages state after fetch:", messages);
   // console.log("[DEBUG] User ID:", userId);
   // console.log("[DEBUG] Receiver ID:", receiverId);
@@ -166,8 +163,6 @@ export default function ChatScreen() {
   }, [receiverId]);
   // console.log("[DEBUG] Receiver ID:", receiverId);
   // console.log("[DEBUG] Receiver Name:", receiverName);
-
-
 
   // ✅ Kirim gambar dari galeri/kamera
   const sendImage = async (fromCamera = false) => {
@@ -215,7 +210,6 @@ export default function ChatScreen() {
       socket.emit("joinRoom", userId);
     }
   }, [userId]);
-  
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -231,7 +225,7 @@ export default function ChatScreen() {
       socket.off("connect_error");
     };
   }, []);
-  
+
   const sendMessage = async () => {
     // console.log("[DEBUG] Tombol Kirim ditekan");
     // console.log("username:", username);
@@ -293,21 +287,27 @@ export default function ChatScreen() {
   return (
     <Background>
       <View style={{ flex: 1 }}>
-        {/* Header */}
+        {/* Header - Tambahkan timer */}
         <View className="flex-row justify-between items-center w-full px-5 bg-skyLight py-5 pt-10">
-          <View className="flex-row items-center">
+          <View className="flex-row items-center w-10/12">
             <TouchableOpacity onPress={() => router.back()}>
               <MaterialIcons name="arrow-back-ios" size={24} color="#025F96" />
             </TouchableOpacity>
-            <Text className="text-skyDark font-bold text-xl ml-2">
+            <Text
+              className="w-11/12 truncate text-skyDark font-bold text-xl ml-2"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {receiverName ? receiverName : "Loading..."}
             </Text>
           </View>
-          <Image
-            className="h-10 w-12"
-            source={require("../../assets/images/logo.png")}
-            resizeMode="contain"
-          />
+          <View className="flex-row items-center">
+            <Image
+              className="h-10 w-12"
+              source={require("../../assets/images/logo.png")}
+              resizeMode="contain"
+            />
+          </View>
         </View>
 
         {/* Main Chat Area */}
@@ -329,9 +329,8 @@ export default function ChatScreen() {
                   paddingBottom: 10,
                 }}
                 keyboardShouldPersistTaps="handled"
-                inverted={true} 
+                inverted={true}
                 className="px-4 flex-1"
-                
               />
 
               {/* Chat Input */}

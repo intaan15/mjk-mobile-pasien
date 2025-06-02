@@ -22,7 +22,6 @@ import { useFocusEffect } from "@react-navigation/native";
 import { BASE_URL } from "@env";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
-
 const { width } = Dimensions.get("window");
 
 interface User {
@@ -51,7 +50,7 @@ export default function HomeScreen() {
         },
       });
 
-      // console.log("RAW chatlist data:", response.data); // ⬅️ Tambahkan ini
+      console.log("RAW chatlist data:", response.data); // ⬅️ Tambahkan ini
 
       const enrichedChatList = response.data.map((chat: any) => {
         return {
@@ -110,7 +109,6 @@ export default function HomeScreen() {
       fetchUserData();
     }, [])
   );
-  
 
   return (
     <Background>
@@ -179,7 +177,11 @@ export default function HomeScreen() {
 
                   <View className="ml-4 flex-1">
                     <View className="flex flex-row justify-between">
-                      <Text className="font-semibold text-lg">
+                      <Text
+                        className="w-10/12 truncate font-semibold text-lg text-skyDark"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
                         {chat.nama_dokter || "Dokter"}
                       </Text>
                       <Text className="text-gray-500 text-sm">
@@ -187,19 +189,23 @@ export default function HomeScreen() {
                       </Text>
                     </View>
                     <View className="flex flex-row justify-between">
-                      <Text className="text-gray-700 mt-1">
+                      <Text
+                        className="truncate text-justify text-gray-700 mt-1"
+                        numberOfLines={2}
+                        ellipsizeMode="tail"
+                      >
                         {chat.lastMessage || "Belum ada pesan"}
                       </Text>
                       <Text>
-                      {masyarakatId &&
-                        chat.unreadCount &&
-                        chat.unreadCount[masyarakatId] > 0 && (
-                          <View className="bg-red-500 rounded-full px-2 py-1 ml-2">
-                            <Text className="text-white text-xs">
-                              {chat.unreadCount[masyarakatId]}
-                            </Text>
-                          </View>
-                        )}
+                        {masyarakatId &&
+                          chat.unreadCount &&
+                          chat.unreadCount[masyarakatId] > 0 && (
+                            <View className="bg-red-500 rounded-full px-2 py-1 ml-2">
+                              <Text className="text-white text-xs">
+                                {chat.unreadCount[masyarakatId]}
+                              </Text>
+                            </View>
+                          )}
                       </Text>
                     </View>
                   </View>
