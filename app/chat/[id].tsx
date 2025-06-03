@@ -88,6 +88,7 @@ export default function ChatScreen() {
   useEffect(() => {
     const fetchChatHistory = async () => {
       try {
+        const userId = await SecureStore.getItemAsync("userId");
         if (!userId || !receiverId) {
           console.warn("UserId atau receiverId kosong, skip fetch.");
           return;
@@ -223,6 +224,20 @@ export default function ChatScreen() {
     return () => {
       socket.off("connect");
       socket.off("connect_error");
+    };
+  }, []);
+
+  // DISBALE CHAT
+  useEffect(() => {
+    const handleErrorMessage = (error) => {
+      // Tampilkan alert atau toast di sini
+      alert(error.message); // atau pakai ToastAndroid, Snackbar, dll
+    };
+
+    socket.on("errorMessage", handleErrorMessage);
+
+    return () => {
+      socket.off("errorMessage", handleErrorMessage);
     };
   }, []);
 
