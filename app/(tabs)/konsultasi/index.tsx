@@ -42,6 +42,8 @@ export default function HomeScreen() {
   // const filteredChats = chatList.filter(
   //   (chat) => moment(chat.lastMessageDate).format("DD/MM/YY") === selectedDate
   // );
+
+  
   const fetchChatList = async (userId: string, token: string) => {
     try {
       const response = await axios.get(`${BASE_URL}/chatlist/${userId}`, {
@@ -50,7 +52,8 @@ export default function HomeScreen() {
         },
       });
 
-      console.log("RAW chatlist data:", response.data); // ⬅️ Tambahkan ini
+      console.log("RAW chatlist data:", response.data);
+
 
       const enrichedChatList = response.data.map((chat: any) => {
         return {
@@ -129,16 +132,7 @@ export default function HomeScreen() {
             resizeMode="contain"
           />
         </View>
-        <View className="flex flex-row mx-6 rounded-xl border-2 border-skyDark overflow-hidden">
-          {["Berlangsung", "Selesai"].map((tab) => (
-            <TabButton
-              key={tab}
-              label={tab}
-              isActive={selectedTab === tab}
-              onPress={() => setSelectedTab(tab)}
-            />
-          ))}
-        </View>
+        
 
         {/* Chat List */}
         <View className="flex-1">
@@ -168,6 +162,20 @@ export default function HomeScreen() {
                   }
                 }}
               >
+                <View className="flex flex-row justify-between">
+                  <Text className="p-2 rounded-xl font-bold self-end">
+                    Konsultasi Dengan
+                  </Text>
+                  <Text
+                    className={`p-2 rounded-xl self-end ${
+                      chat.status === "selesai"
+                        ? "bg-lime-200"
+                        : "bg-yellow-200"
+                    }`}
+                  >
+                    {chat.status === "selesai" ? "Selesai" : "Berlangsung"}
+                  </Text>
+                </View>
                 <View className="flex flex-row items-center">
                   <Image
                     source={{ uri: chat.foto_masyarakat || fallbackImageUrl }}
