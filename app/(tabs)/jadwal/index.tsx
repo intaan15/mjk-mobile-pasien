@@ -110,9 +110,11 @@ export default function Jadwal() {
                 </Text>
               ) : (
                 [...jadwalList]
-                  .sort(
-                    (a, b) => new Date(b.tgl_konsul).getTime() - new Date(a.tgl_konsul).getTime()
-                  )
+                  // .sort(
+                  //   (a, b) =>
+                  //     new Date(b.tgl_konsul).getTime() -
+                  //     new Date(a.tgl_konsul).getTime()
+                  // )
                   .map((jadwal, index) => (
                     <View
                       key={index}
@@ -184,6 +186,8 @@ export default function Jadwal() {
                             className={`p-2 flex-row gap-2 rounded-xl items-center justify-between ${
                               jadwal.status_konsul === "diterima"
                                 ? "bg-green-600"
+                                : jadwal.status_konsul === "selesai"
+                                ? "bg-green-600"
                                 : jadwal.status_konsul === "ditolak"
                                 ? "bg-red-600"
                                 : "bg-skyDark"
@@ -192,7 +196,13 @@ export default function Jadwal() {
                             {jadwal.status_konsul === "menunggu" && (
                               <WaitIcon width={18} height={18} />
                             )}
+                            {jadwal.status_konsul === "berlangsung" && (
+                              <WaitIcon width={18} height={18} />
+                            )}
                             {jadwal.status_konsul === "diterima" && (
+                              <AccIcon width={18} height={18} />
+                            )}
+                            {jadwal.status_konsul === "selesai" && (
                               <AccIcon width={18} height={18} />
                             )}
                             {jadwal.status_konsul === "ditolak" && (
