@@ -10,6 +10,7 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  Alert,
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
@@ -20,11 +21,11 @@ import * as ImagePicker from "expo-image-picker";
 import { io } from "socket.io-client";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
-import { BASE_URL } from "@env";
+import { BASE_URL, BASE_URL2 } from "@env";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useLocalSearchParams } from "expo-router";
 
-const socket = io("https://mjk-backend-production.up.railway.app", {
+const socket = io(`${BASE_URL2}`, {
   transports: ["websocket"],
 });
 
@@ -38,6 +39,9 @@ export default function ChatScreen() {
   const [userRole, setUserRole] = useState("");
   const [receiverName, setReceiverName] = useState("");
   const [username, setUsername] = useState("");
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingValue, setRatingValue] = useState(0);
+  const [jadwalId, setJadwalId] = useState(null);
   const isSendReady =
     username && userId && receiverId && message.trim() && userRole;
   const flatListRef = useRef<FlatList>(null);
@@ -67,12 +71,11 @@ export default function ChatScreen() {
         if (response.data?.nama_masyarakat) {
           setUsername(response.data.nama_masyarakat);
         } else {
-          console.warn("Property nama_dokter tidak ada di response");
+          console.warn("Property nama_masyarakat tidak ada di response");
         }
 
         if (response.data?.role) {
           setUserRole(response.data.role);
-          // console.log("[DEBUG] Set user role:", response.data.role);
         } else {
           console.warn("Property role tidak ada di response");
         }
@@ -84,7 +87,6 @@ export default function ChatScreen() {
     fetchUser();
   }, []);
 
-  // Fetch chat history setelah userId dan receiverId siap
   useEffect(() => {
     const fetchChatHistory = async () => {
       try {
@@ -111,11 +113,6 @@ export default function ChatScreen() {
   }, [userId, receiverId]);
 
   useEffect(() => {
-    // console.log("[DEBUG] Current username:", username);
-  }, [username]);
-
-  // ✅ Terima pesan dari socket
-  useEffect(() => {
     const handleIncomingMessage = (msg) => {
       console.log("[DEBUG] Received message via socket:", msg);
       setMessages((prev) => [...prev, msg]);
@@ -127,12 +124,6 @@ export default function ChatScreen() {
       socket.off("chat message", handleIncomingMessage);
     };
   }, []);
-
-  // ✅ Kirim pesan teks
-
-  // console.log("[DEBUG] Messages state after fetch:", messages);
-  // console.log("[DEBUG] User ID:", userId);
-  // console.log("[DEBUG] Receiver ID:", receiverId);
 
   useEffect(() => {
     const fetchReceiverName = async () => {
@@ -148,10 +139,6 @@ export default function ChatScreen() {
 
         if (res.data?.nama_dokter) {
           setReceiverName(res.data.nama_dokter);
-          // console.log(
-          //   "[DEBUG] receiverName fetched:",
-          //   res.data.nama_dokter
-          // );
         } else {
           console.log("[DEBUG] receiverName not found in response:", res.data);
         }
@@ -162,10 +149,7 @@ export default function ChatScreen() {
 
     fetchReceiverName();
   }, [receiverId]);
-  // console.log("[DEBUG] Receiver ID:", receiverId);
-  // console.log("[DEBUG] Receiver Name:", receiverName);
 
-  // ✅ Kirim gambar dari galeri/kamera
   const sendImage = async (fromCamera = false) => {
     try {
       let result;
@@ -207,7 +191,6 @@ export default function ChatScreen() {
 
   useEffect(() => {
     if (userId) {
-      // console.log("[DEBUG] Emitting joinRoom with:", userId);
       socket.emit("joinRoom", userId);
     }
   }, [userId]);
@@ -227,11 +210,9 @@ export default function ChatScreen() {
     };
   }, []);
 
-  // DISBALE CHAT
   useEffect(() => {
     const handleErrorMessage = (error) => {
-      // Tampilkan alert atau toast di sini
-      alert(error.message); // atau pakai ToastAndroid, Snackbar, dll
+      Alert.alert("Error", error.message);
     };
 
     socket.on("errorMessage", handleErrorMessage);
@@ -241,13 +222,47 @@ export default function ChatScreen() {
     };
   }, []);
 
+  // Handle consultation ended event
+  useEffect(() => {
+    const handleConsultationEnded = async (data) => {
+      console.log("[DEBUG] Consultation ended:", data);
+      setJadwalId(data.jadwalId);
+
+      try {
+        const token = await SecureStore.getItemAsync("userToken");
+        const res = await axios.get(
+          `${BASE_URL}/rating/getbyid/${data.jadwalId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (res.data.data.hasRating) {
+          Alert.alert(
+            "Info",
+            "Anda sudah memberikan rating untuk konsultasi ini."
+          );
+        } else {
+          setShowRatingModal(true);
+        }
+      } catch (error) {
+        console.log("Gagal memeriksa status rating:", error);
+        Alert.alert("Error", "Gagal memeriksa status rating.");
+      }
+    };
+
+    socket.on("consultationEnded", handleConsultationEnded);
+
+    return () => {
+      socket.off("consultationEnded", handleConsultationEnded);
+    };
+  }, []);
+
   const sendMessage = async () => {
-    // console.log("[DEBUG] Tombol Kirim ditekan");
-    // console.log("username:", username);
-    // console.log("userId:", userId);
-    // console.log("receiverId:", receiverId);
-    // console.log("userRole:", userRole);
-    // console.log("message:", message);
+    if (!socket.connected) {
+      Alert.alert("Error", "Tidak terhubung ke server. Coba lagi nanti.");
+      return;
+    }
 
     if (message.trim() && username && userId && receiverId) {
       const msgData = {
@@ -260,16 +275,47 @@ export default function ChatScreen() {
         waktu: new Date().toISOString(),
       };
 
-      // console.log("[DEBUG] Sending text message:", msgData);
-      // console.log("[DEBUG] Socket connected:", socket.connected);
-
       socket.emit("chat message", msgData);
       setMessage("");
     } else {
       console.warn("Gagal kirim pesan: Ada data kosong.");
     }
   };
-  // TANPA NAMA
+
+  const submitRating = async () => {
+    if (ratingValue < 1 || ratingValue > 5) {
+      Alert.alert("Error", "Rating harus antara 1-5.");
+      return;
+    }
+
+    try {
+      const token = await SecureStore.getItemAsync("userToken");
+      const res = await axios.post(
+        `${BASE_URL}/rating/create`,
+        {
+          jadwal: jadwalId,
+          dokter_id: receiverId,
+          rating: ratingValue,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (res.data.success) {
+        Alert.alert("Sukses", "Rating berhasil disimpan!");
+        setShowRatingModal(false);
+        setRatingValue(0);
+      }
+    } catch (error: any) {
+      console.log("Gagal mengirim rating:", error);
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Gagal mengirim rating."
+      );
+    }
+  };
+
   const renderItem = ({ item }) => {
     const isSender = item.senderId === userId;
 
@@ -279,9 +325,6 @@ export default function ChatScreen() {
           isSender ? "bg-skyDark self-end" : "bg-[#C3E9FF] self-start"
         }`}
       >
-        {/* Kalau pengirim adalah kamu, tampilkan "Saya" */}
-        {/* {isSender && <Text className="font-bold text-white">Saya</Text>} */}
-
         {item.type === "image" && item.image ? (
           <TouchableOpacity onPress={() => setPreviewImage(item.image)}>
             <Image
@@ -295,6 +338,12 @@ export default function ChatScreen() {
             {item.text}
           </Text>
         )}
+        <Text className="text-xs text-gray-500 mt-1">
+          {new Date(item.waktu).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </Text>
       </View>
     );
   };
@@ -302,7 +351,7 @@ export default function ChatScreen() {
   return (
     <Background>
       <View style={{ flex: 1 }}>
-        {/* Header - Tambahkan timer */}
+        {/* Header */}
         <View className="flex-row justify-between items-center w-full px-5 bg-skyLight py-5 pt-10">
           <View className="flex-row items-center w-10/12">
             <TouchableOpacity onPress={() => router.back()}>
@@ -333,11 +382,12 @@ export default function ChatScreen() {
         >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={{ flex: 1 }}>
-              {/* Chat Messages */}
               <FlatList
                 ref={flatListRef}
                 data={[...messages].reverse()}
-                keyExtractor={(item, index) => index.toString()}
+                keyExtractor={(item) =>
+                  item._id?.toString() || Math.random().toString()
+                }
                 renderItem={renderItem}
                 contentContainerStyle={{
                   paddingTop: 10,
@@ -348,7 +398,6 @@ export default function ChatScreen() {
                 className="px-4 flex-1"
               />
 
-              {/* Chat Input */}
               <View className="px-4 bg-skyDark py-4">
                 <View className="flex-row items-center">
                   <TouchableOpacity onPress={() => sendImage(false)}>
@@ -398,6 +447,49 @@ export default function ChatScreen() {
                 resizeMode="contain"
               />
             )}
+          </View>
+        </Modal>
+
+        {/* Rating Modal */}
+        <Modal
+          visible={showRatingModal}
+          transparent={true}
+          animationType="slide"
+        >
+          <View className="flex-1 bg-black bg-opacity-50 justify-center items-center">
+            <View className="bg-white p-6 rounded-lg w-[90%]">
+              <Text className="text-lg font-bold mb-4">
+                Berikan Rating untuk Konsultasi
+              </Text>
+              <View className="flex-row justify-center mb-4">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <TouchableOpacity
+                    key={star}
+                    onPress={() => setRatingValue(star)}
+                  >
+                    <Ionicons
+                      name={star <= ratingValue ? "star" : "star-outline"}
+                      size={32}
+                      color={star <= ratingValue ? "#FFD700" : "#A9A9A9"}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <View className="flex-row justify-between">
+                <TouchableOpacity
+                  onPress={() => setShowRatingModal(false)}
+                  className="bg-gray-400 px-4 py-2 rounded-lg"
+                >
+                  <Text className="text-white">Batal</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={submitRating}
+                  className="bg-blue-500 px-4 py-2 rounded-lg"
+                >
+                  <Text className="text-white">Kirim Rating</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
         </Modal>
       </View>
