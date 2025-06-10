@@ -10,7 +10,6 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
-  Alert,
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
@@ -39,12 +38,15 @@ export default function ChatScreen() {
   const [userRole, setUserRole] = useState("");
   const [receiverName, setReceiverName] = useState("");
   const [username, setUsername] = useState("");
-  const [showRatingModal, setShowRatingModal] = useState(false);
-  const [ratingValue, setRatingValue] = useState(0);
-  const [jadwalId, setJadwalId] = useState(null);
   const isSendReady =
     username && userId && receiverId && message.trim() && userRole;
   const flatListRef = useRef<FlatList>(null);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingValue, setRatingValue] = useState(0);
+  const [selectedJadwal, setSelectedJadwal] = useState<string | null>(null);
+  const [selectedDokter, setSelectedDokter] = useState<string | null>(null);
+  const rawParams = useLocalSearchParams();
+  const [hasRated, setHasRated] = useState({});
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -71,11 +73,12 @@ export default function ChatScreen() {
         if (response.data?.nama_masyarakat) {
           setUsername(response.data.nama_masyarakat);
         } else {
-          console.warn("Property nama_masyarakat tidak ada di response");
+          console.warn("Property nama_dokter tidak ada di response");
         }
 
         if (response.data?.role) {
           setUserRole(response.data.role);
+          // console.log("[DEBUG] Set user role:", response.data.role);
         } else {
           console.warn("Property role tidak ada di response");
         }
@@ -87,6 +90,7 @@ export default function ChatScreen() {
     fetchUser();
   }, []);
 
+  // Fetch chat history setelah userId dan receiverId siap
   useEffect(() => {
     const fetchChatHistory = async () => {
       try {
@@ -113,6 +117,11 @@ export default function ChatScreen() {
   }, [userId, receiverId]);
 
   useEffect(() => {
+    // console.log("[DEBUG] Current username:", username);
+  }, [username]);
+
+  // ✅ Terima pesan dari socket
+  useEffect(() => {
     const handleIncomingMessage = (msg) => {
       console.log("[DEBUG] Received message via socket:", msg);
       setMessages((prev) => [...prev, msg]);
@@ -124,6 +133,12 @@ export default function ChatScreen() {
       socket.off("chat message", handleIncomingMessage);
     };
   }, []);
+
+  // ✅ Kirim pesan teks
+
+  // console.log("[DEBUG] Messages state after fetch:", messages);
+  // console.log("[DEBUG] User ID:", userId);
+  // console.log("[DEBUG] Receiver ID:", receiverId);
 
   useEffect(() => {
     const fetchReceiverName = async () => {
@@ -139,6 +154,10 @@ export default function ChatScreen() {
 
         if (res.data?.nama_dokter) {
           setReceiverName(res.data.nama_dokter);
+          // console.log(
+          //   "[DEBUG] receiverName fetched:",
+          //   res.data.nama_dokter
+          // );
         } else {
           console.log("[DEBUG] receiverName not found in response:", res.data);
         }
@@ -149,7 +168,10 @@ export default function ChatScreen() {
 
     fetchReceiverName();
   }, [receiverId]);
+  // console.log("[DEBUG] Receiver ID:", receiverId);
+  // console.log("[DEBUG] Receiver Name:", receiverName);
 
+  // ✅ Kirim gambar dari galeri/kamera
   const sendImage = async (fromCamera = false) => {
     try {
       let result;
@@ -191,6 +213,7 @@ export default function ChatScreen() {
 
   useEffect(() => {
     if (userId) {
+      // console.log("[DEBUG] Emitting joinRoom with:", userId);
       socket.emit("joinRoom", userId);
     }
   }, [userId]);
@@ -210,9 +233,11 @@ export default function ChatScreen() {
     };
   }, []);
 
+  // DISBALE CHAT
   useEffect(() => {
     const handleErrorMessage = (error) => {
-      Alert.alert("Error", error.message);
+      // Tampilkan alert atau toast di sini
+      alert(error.message); // atau pakai ToastAndroid, Snackbar, dll
     };
 
     socket.on("errorMessage", handleErrorMessage);
@@ -222,47 +247,13 @@ export default function ChatScreen() {
     };
   }, []);
 
-  // Handle consultation ended event
-  useEffect(() => {
-    const handleConsultationEnded = async (data) => {
-      console.log("[DEBUG] Consultation ended:", data);
-      setJadwalId(data.jadwalId);
-
-      try {
-        const token = await SecureStore.getItemAsync("userToken");
-        const res = await axios.get(
-          `${BASE_URL}/rating/getbyid/${data.jadwalId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        if (res.data.data.hasRating) {
-          Alert.alert(
-            "Info",
-            "Anda sudah memberikan rating untuk konsultasi ini."
-          );
-        } else {
-          setShowRatingModal(true);
-        }
-      } catch (error) {
-        console.log("Gagal memeriksa status rating:", error);
-        Alert.alert("Error", "Gagal memeriksa status rating.");
-      }
-    };
-
-    socket.on("consultationEnded", handleConsultationEnded);
-
-    return () => {
-      socket.off("consultationEnded", handleConsultationEnded);
-    };
-  }, []);
-
   const sendMessage = async () => {
-    if (!socket.connected) {
-      Alert.alert("Error", "Tidak terhubung ke server. Coba lagi nanti.");
-      return;
-    }
+    // console.log("[DEBUG] Tombol Kirim ditekan");
+    // console.log("username:", username);
+    // console.log("userId:", userId);
+    // console.log("receiverId:", receiverId);
+    // console.log("userRole:", userRole);
+    // console.log("message:", message);
 
     if (message.trim() && username && userId && receiverId) {
       const msgData = {
@@ -275,6 +266,9 @@ export default function ChatScreen() {
         waktu: new Date().toISOString(),
       };
 
+      // console.log("[DEBUG] Sending text message:", msgData);
+      // console.log("[DEBUG] Socket connected:", socket.connected);
+
       socket.emit("chat message", msgData);
       setMessage("");
     } else {
@@ -282,40 +276,129 @@ export default function ChatScreen() {
     }
   };
 
-  const submitRating = async () => {
-    if (ratingValue < 1 || ratingValue > 5) {
-      Alert.alert("Error", "Rating harus antara 1-5.");
-      return;
-    }
+  useEffect(() => {
+  const jadwal_id = Array.isArray(rawParams.jadwal_id)
+    ? rawParams.jadwal_id[0]
+    : rawParams.jadwal_id;
 
+  const status = Array.isArray(rawParams.status)
+    ? rawParams.status[0]
+    : rawParams.status;
+
+  const dokter_id = Array.isArray(rawParams.dokter_id)
+    ? rawParams.dokter_id[0]
+    : rawParams.dokter_id;
+
+  console.log("[DEBUG] Rating Check - Parsed Params:", {
+    jadwal_id,
+    status,
+    dokter_id,
+    jadwal_id_type: typeof jadwal_id,
+    status_type: typeof status,
+    dokter_id_type: typeof dokter_id
+  });
+
+  const checkRating = async () => {
     try {
       const token = await SecureStore.getItemAsync("userToken");
-      const res = await axios.post(
-        `${BASE_URL}/rating/create`,
-        {
-          jadwal: jadwalId,
-          dokter_id: receiverId,
-          rating: ratingValue,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      console.log("[DEBUG] Checking conditions:", {
+        jadwal_id_exists: !!jadwal_id,
+        jadwal_id_value: jadwal_id,
+        status_value: status,
+        status_check: status === "selesai",
+        status_check_exact: status === 'selesai',
+        both_conditions: !!(jadwal_id && status === "selesai")
+      });
 
-      if (res.data.success) {
-        Alert.alert("Sukses", "Rating berhasil disimpan!");
-        setShowRatingModal(false);
-        setRatingValue(0);
+      if (jadwal_id && status === "selesai") {        
+        const response = await axios.get(
+          `${BASE_URL}/rating/getbyid/${jadwal_id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const hasRated = 
+          response.data?.data?.hasRating || 
+          response.data?.hasRating || 
+          response.data?.rating || 
+          (response.data?.data?.rating && response.data.data.rating > 0) ||
+          false;
+
+        if (!hasRated) {
+          setShowRatingModal(true);
+          setSelectedJadwal(jadwal_id);
+          setSelectedDokter(dokter_id);
+        } else {
+          console.log("[DEBUG] ❌ Modal not shown - User already rated");
+        }
+      } else {
+        console.log("[DEBUG] ❌ CONDITIONS NOT MET:", {
+          hasJadwalId: !!jadwal_id,
+          statusMatch: status === "selesai",
+          currentStatus: status
+        });
       }
-    } catch (error: any) {
-      console.log("Gagal mengirim rating:", error);
-      Alert.alert(
-        "Error",
-        error.response?.data?.message || "Gagal mengirim rating."
+    } catch (error:any) {
+      console.error(
+        "[DEBUG] ❌ API Error:",
+        error.response?.status,
+        error.response?.data || error.message
       );
+      
+      // ✅ Show modal if API error (for testing purposes)
+      console.log("[DEBUG] 🚨 API ERROR - Consider showing modal anyway for debug");
+      // setShowRatingModal(true); // Uncomment untuk testing jika API error
     }
   };
 
+  // ✅ Tambahkan delay untuk memastikan semua data sudah ready
+  const timer = setTimeout(() => {
+    checkRating();
+  }, 1000);
+
+  return () => clearTimeout(timer);
+}, [rawParams]);
+
+// ✅ Fix rating submission
+const handleSubmitRating = async () => {
+  try {
+    const token = await SecureStore.getItemAsync("userToken"); // ✅ Fix: userToken
+    
+    console.log("[DEBUG] Submitting rating:", {
+      jadwal: selectedJadwal,
+      dokter_id: selectedDokter,
+      rating: ratingValue
+    });
+
+    await axios.post(
+      `${BASE_URL}/rating/create`,
+      {
+        jadwal: selectedJadwal,
+        dokter_id: selectedDokter,
+        rating: ratingValue,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    alert("Terima kasih atas rating Anda!");
+    setShowRatingModal(false);
+    setRatingValue(0); // ✅ Reset rating
+  } catch (error:any) {
+    console.error(
+      "Gagal kirim rating:",
+      error.response?.data || error.message
+    );
+    alert(
+      error.response?.data?.message || "Gagal menyimpan rating"
+    );
+  }
+};
+
+  // TANPA NAMA
   const renderItem = ({ item }) => {
     const isSender = item.senderId === userId;
 
@@ -325,6 +408,9 @@ export default function ChatScreen() {
           isSender ? "bg-skyDark self-end" : "bg-[#C3E9FF] self-start"
         }`}
       >
+        {/* Kalau pengirim adalah kamu, tampilkan "Saya" */}
+        {/* {isSender && <Text className="font-bold text-white">Saya</Text>} */}
+
         {item.type === "image" && item.image ? (
           <TouchableOpacity onPress={() => setPreviewImage(item.image)}>
             <Image
@@ -338,12 +424,6 @@ export default function ChatScreen() {
             {item.text}
           </Text>
         )}
-        <Text className="text-xs text-gray-500 mt-1">
-          {new Date(item.waktu).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </Text>
       </View>
     );
   };
@@ -351,7 +431,7 @@ export default function ChatScreen() {
   return (
     <Background>
       <View style={{ flex: 1 }}>
-        {/* Header */}
+        {/* Header - Tambahkan timer */}
         <View className="flex-row justify-between items-center w-full px-5 bg-skyLight py-5 pt-10">
           <View className="flex-row items-center w-10/12">
             <TouchableOpacity onPress={() => router.back()}>
@@ -382,12 +462,11 @@ export default function ChatScreen() {
         >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={{ flex: 1 }}>
+              {/* Chat Messages */}
               <FlatList
                 ref={flatListRef}
                 data={[...messages].reverse()}
-                keyExtractor={(item) =>
-                  item._id?.toString() || Math.random().toString()
-                }
+                keyExtractor={(item, index) => index.toString()}
                 renderItem={renderItem}
                 contentContainerStyle={{
                   paddingTop: 10,
@@ -398,6 +477,7 @@ export default function ChatScreen() {
                 className="px-4 flex-1"
               />
 
+              {/* Chat Input */}
               <View className="px-4 bg-skyDark py-4">
                 <View className="flex-row items-center">
                   <TouchableOpacity onPress={() => sendImage(false)}>
@@ -450,45 +530,33 @@ export default function ChatScreen() {
           </View>
         </Modal>
 
-        {/* Rating Modal */}
-        <Modal
-          visible={showRatingModal}
-          transparent={true}
-          animationType="slide"
-        >
-          <View className="flex-1 bg-black bg-opacity-50 justify-center items-center">
-            <View className="bg-white p-6 rounded-lg w-[90%]">
-              <Text className="text-lg font-bold mb-4">
-                Berikan Rating untuk Konsultasi
+        <Modal visible={showRatingModal} transparent animationType="slide">
+          <View className="flex-1 justify-center items-center bg-black/50">
+            <View className="bg-Warm rounded-2xl p-5 w-4/5">
+              <Text className="text-lg text-skyDark font-bold mb-2.5">
+                Beri Rating Konsultasi
               </Text>
-              <View className="flex-row justify-center mb-4">
+              <View className="flex-row justify-center my-2.5">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <TouchableOpacity
                     key={star}
                     onPress={() => setRatingValue(star)}
                   >
-                    <Ionicons
-                      name={star <= ratingValue ? "star" : "star-outline"}
+                    <MaterialIcons
+                      name={star <= ratingValue ? "star" : "star-border"}
                       size={32}
-                      color={star <= ratingValue ? "#FFD700" : "#A9A9A9"}
+                      color={star <= ratingValue ? "#facc15" : "#9ca3af"}
+                      style={{ marginHorizontal: 5 }}
                     />
                   </TouchableOpacity>
                 ))}
               </View>
-              <View className="flex-row justify-between">
-                <TouchableOpacity
-                  onPress={() => setShowRatingModal(false)}
-                  className="bg-gray-400 px-4 py-2 rounded-lg"
-                >
-                  <Text className="text-white">Batal</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={submitRating}
-                  className="bg-blue-500 px-4 py-2 rounded-lg"
-                >
-                  <Text className="text-white">Kirim Rating</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                className="bg-skyDark p-2.5 rounded-[10px] items-center mt-2.5"
+                onPress={handleSubmitRating}
+              >
+                <Text style={{ color: "#fff", fontWeight: "bold" }}>Kirim</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </Modal>

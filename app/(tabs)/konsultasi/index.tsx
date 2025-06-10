@@ -43,7 +43,6 @@ export default function HomeScreen() {
   //   (chat) => moment(chat.lastMessageDate).format("DD/MM/YY") === selectedDate
   // );
 
-  
   const fetchChatList = async (userId: string, token: string) => {
     try {
       const response = await axios.get(`${BASE_URL}/chatlist/${userId}`, {
@@ -51,9 +50,6 @@ export default function HomeScreen() {
           Authorization: `Bearer ${token}`,
         },
       });
-
-      console.log("RAW chatlist data:", response.data);
-
 
       const enrichedChatList = response.data.map((chat: any) => {
         return {
@@ -132,7 +128,6 @@ export default function HomeScreen() {
             resizeMode="contain"
           />
         </View>
-        
 
         {/* Chat List */}
         <View className="flex-1">
@@ -142,6 +137,7 @@ export default function HomeScreen() {
           >
             {/* {filteredChats.map((chat) => ( */}
             {chatList.map((chat) => (
+              // ✅ Perbaikan pada TouchableOpacity di chat list
               <TouchableOpacity
                 key={chat._id}
                 className="flex flex-col"
@@ -150,11 +146,25 @@ export default function HomeScreen() {
                   const otherParticipant = chat.participant;
 
                   if (currentUserId && otherParticipant?._id) {
+                    console.log("[DEBUG] Navigation - Chat data:", {
+                      chat_id: chat._id,
+                      status: chat.status,
+                      dokter_id: otherParticipant._id,
+                      // Tambahkan log untuk debug
+                    });
+
                     router.push({
                       pathname: "/chat/[id]",
                       params: {
                         senderId: currentUserId,
                         receiverId: otherParticipant._id,
+                        // ✅ TAMBAHKAN PARAMETER YANG DIPERLUKAN:
+                        jadwal_id: chat._id, // Atau chat.jadwal_id jika ada
+                        status: chat.status, // Dari response API
+                        dokter_id: otherParticipant._id,
+                        // ✅ Tambahan data lain yang mungkin berguna:
+                        chat_id: chat._id,
+                        receiver_name: chat.nama_dokter,
                       },
                     });
                   } else {
