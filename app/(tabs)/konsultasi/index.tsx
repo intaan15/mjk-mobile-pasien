@@ -8,6 +8,7 @@ import {
   Animated,
   Easing,
   StyleSheet,
+  RefreshControl,
 } from "react-native";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "expo-router";
@@ -38,6 +39,8 @@ export default function HomeScreen() {
   // const [selectedDate, setSelectedDate] = useState(moment().format("DD/MM/YY"));
   const [chatList, setChatList] = useState<any[]>([]);
   const fallbackImageUrl = "/assets/images/foto.jpeg"; // Atau URL default lainnya
+  const [refreshing, setRefreshing] = useState(false);
+  
 
   // const filteredChats = chatList.filter(
   //   (chat) => moment(chat.lastMessageDate).format("DD/MM/YY") === selectedDate
@@ -65,6 +68,17 @@ export default function HomeScreen() {
       console.log("Gagal ambil chat list", error);
     }
   };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    const storedId = await SecureStore.getItemAsync("userId");
+    const token = await SecureStore.getItemAsync("userToken");
+    const cleanedId = storedId?.replace(/"/g, "");
+    if (cleanedId && token) {
+      await fetchChatList(cleanedId, token);
+    }
+    setRefreshing(false);
+  }, []);
 
   const fetchUserData = async () => {
     try {
@@ -109,6 +123,8 @@ export default function HomeScreen() {
     }, [])
   );
 
+  
+
   return (
     <Background>
       <View className="flex-1">
@@ -134,6 +150,16 @@ export default function HomeScreen() {
           <ScrollView
             className="px-6 py-4"
             contentContainerStyle={{ paddingBottom: 80 }}
+            refreshControl={
+                          <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={["#025F96"]} // Android
+                            tintColor="#025F96" // iOS
+                            title="Memuat ulang..." // iOS
+                            titleColor="#025F96" // iOS
+                          />
+                        }
           >
             {/* {filteredChats.map((chat) => ( */}
             {chatList.map((chat) => (

@@ -5,6 +5,7 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "expo-router";
@@ -32,40 +33,52 @@ export default function Jadwal() {
   const insets = useSafeAreaInsets();
   const [jadwalList, setJadwalList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchJadwal = async () => {
+    try {
+      const userId = await SecureStore.getItemAsync("userId");
+      const token = await SecureStore.getItemAsync("userToken");
+      if (!token) {
+        await SecureStore.deleteItemAsync("userToken");
+        await SecureStore.deleteItemAsync("userId");
+        router.replace("/screens/signin");
+      }
+      if (!userId && !token) return;
+
+      const res = await axios.get(`${BASE_URL}/jadwal/getall`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const filtered = res.data.filter((j: any) => {
+        return j.masyarakat_id && j.masyarakat_id._id === userId;
+      });
+
+      setJadwalList(filtered);
+    } catch (err: any) {
+      console.log("Gagal fetch jadwal:", err.message);
+    }
+  };
+
+  // Function untuk handle pull-to-refresh
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchJadwal();
+    setRefreshing(false);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      const fetchJadwal = async () => {
-        try {
-          const userId = await SecureStore.getItemAsync("userId");
-          const token = await SecureStore.getItemAsync("userToken");
-          if (!token) {
-            await SecureStore.deleteItemAsync("userToken");
-            await SecureStore.deleteItemAsync("userId");
-            router.replace("/screens/signin");
-          }
-          if (!userId && !token) return;
-
-          const res = await axios.get(`${BASE_URL}/jadwal/getall`, {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          });
-
-          const filtered = res.data.filter((j: any) => {
-            return j.masyarakat_id && j.masyarakat_id._id === userId;
-          });
-
-          setJadwalList(filtered);
-        } catch (err: any) {
-          console.log("Gagal fetch jadwal:", err.message);
-        } finally {
-          setLoading(false);
-        }
+      const loadJadwal = async () => {
+        setLoading(true);
+        await fetchJadwal();
+        setLoading(false);
       };
 
-      fetchJadwal();
+      loadJadwal();
     }, [])
   );
 
@@ -102,6 +115,16 @@ export default function Jadwal() {
               paddingBottom: insets.bottom + 120,
             }}
             showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#025F96"]} // Android
+                tintColor="#025F96" // iOS
+                title="Memuat ulang..." // iOS
+                titleColor="#025F96" // iOS
+              />
+            }
           >
             <View className="gap-5 pb-6 w-11/12">
               {jadwalList.length === 0 ? (

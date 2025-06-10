@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "expo-router";
@@ -23,35 +24,45 @@ export default function ArtikelList() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const [refreshing, setRefreshing] = useState(false);
+  
+
+  const fetchArtikels = useCallback(async () => {
+    try {
+      const token = await SecureStore.getItemAsync("userToken");
+      if (!token) {
+        await SecureStore.deleteItemAsync("userToken");
+        await SecureStore.deleteItemAsync("userId");
+        router.replace("/screens/signin");
+      }
+      const response = await fetch(`${BASE_URL}/artikel/getall`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      setArtikels(data);
+    } catch (error) {
+      console.log("Error fetching artikels:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
 
   useFocusEffect(
     useCallback(() => {
-      const fetchArtikels = async () => {
-        try {
-          const token = await SecureStore.getItemAsync("userToken");
-          if (!token) {
-            await SecureStore.deleteItemAsync("userToken");
-            await SecureStore.deleteItemAsync("userId");
-            router.replace("/screens/signin");
-          }
-          const response = await fetch(`${BASE_URL}/artikel/getall`, {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          const data = await response.json();
-          setArtikels(data);
-        } catch (error) {
-          console.log("Error fetching artikels:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
-
       fetchArtikels();
-    }, [])
+    }, [fetchArtikels])
   );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchArtikels();
+    setRefreshing(false);
+  }, [fetchArtikels]);
+
+  
 
   return (
     <Background>
@@ -99,6 +110,16 @@ export default function ArtikelList() {
               paddingBottom: insets.bottom + 200,
             }}
             showsVerticalScrollIndicator={false}
+            refreshControl={
+                          <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={["#025F96"]} // Android
+                            tintColor="#025F96" // iOS
+                            title="Memuat ulang..." // iOS
+                            titleColor="#025F96" // iOS
+                          />
+                        }
           >
             <View className="items-center w-11/12 gap-5">
               {artikels
