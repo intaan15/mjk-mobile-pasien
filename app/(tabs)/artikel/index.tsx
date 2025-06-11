@@ -1,3 +1,4 @@
+// views/ArtikelListView.tsx
 import {
   View,
   Text,
@@ -7,62 +8,27 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
-import React, { useState, useEffect, useCallback } from "react";
-import { useRouter } from "expo-router";
+import React from "react";
 import Background from "../../../components/background";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import TabButton from "../../../components/tabbutton";
 import { images } from "../../../constants/images";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useFocusEffect } from "@react-navigation/native";
-import { BASE_URL } from "@env";
-import * as SecureStore from "expo-secure-store";
+import { useArtikelViewModel } from "../../../components/viewmodels/artikel/useArtikel";
 
-export default function ArtikelList() {
-  const [artikels, setArtikels] = useState<any[]>([]);
-  const [selectedTab, setSelectedTab] = useState("Kesehatan");
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+export default function ArtikelListView() {
   const insets = useSafeAreaInsets();
-  const [refreshing, setRefreshing] = useState(false);
-  
-
-  const fetchArtikels = useCallback(async () => {
-    try {
-      const token = await SecureStore.getItemAsync("userToken");
-      if (!token) {
-        await SecureStore.deleteItemAsync("userToken");
-        await SecureStore.deleteItemAsync("userId");
-        router.replace("/screens/signin");
-      }
-      const response = await fetch(`${BASE_URL}/artikel/getall`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await response.json();
-      setArtikels(data);
-    } catch (error) {
-      console.log("Error fetching artikels:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchArtikels();
-    }, [fetchArtikels])
-  );
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchArtikels();
-    setRefreshing(false);
-  }, [fetchArtikels]);
-
-  
+  const {
+    artikels,
+    selectedTab,
+    loading,
+    refreshing,
+    setSelectedTab,
+    onRefresh,
+    navigateBack,
+    navigateToDetail,
+    getFilteredArtikels,
+  } = useArtikelViewModel();
 
   return (
     <Background>
@@ -70,7 +36,7 @@ export default function ArtikelList() {
         {/* Header */}
         <View className="flex flex-row justify-between items-center mb-4 w-full px-5 pt-8">
           <View className="flex flex-row items-center">
-            <TouchableOpacity onPress={() => router.back()}>
+            <TouchableOpacity onPress={navigateBack}>
               <MaterialIcons name="arrow-back-ios" size={24} color="#025F96" />
             </TouchableOpacity>
             <Text className="text-skyDark font-bold text-xl ml-2">Artikel</Text>
@@ -111,64 +77,55 @@ export default function ArtikelList() {
             }}
             showsVerticalScrollIndicator={false}
             refreshControl={
-                          <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            colors={["#025F96"]} // Android
-                            tintColor="#025F96" // iOS
-                            title="Memuat ulang..." // iOS
-                            titleColor="#025F96" // iOS
-                          />
-                        }
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#025F96"]} // Android
+                tintColor="#025F96" // iOS
+                title="Memuat ulang..." // iOS
+                titleColor="#025F96" // iOS
+              />
+            }
           >
             <View className="items-center w-11/12 gap-5">
-              {artikels
-                .filter((item) => item.kategori_artikel === selectedTab)
-                .map((item) => (
-                  <View
-                    key={item._id}
-                    className="bg-white rounded-2xl w-full h-40 shadow-md"
-                  >
-                    <Image
-                      className="rounded-2xl w-full h-24 p-1"
-                      source={{
-                        uri: `https://mjk-backend-production.up.railway.app/imagesdokter/${item.gambar_artikel}`,
-                      }}
-                      resizeMode="cover"
-                    />
-                    <View className="flex-row justify-between w-full">
-                      <View className="p-3 w-8/12">
-                        <Text className="truncate font-bold text-base text-skyDark"
+              {getFilteredArtikels().map((item) => (
+                <View
+                  key={item._id}
+                  className="bg-white rounded-2xl w-full h-40 shadow-md"
+                >
+                  <Image
+                    className="rounded-2xl w-full h-24 p-1"
+                    source={{
+                      uri: `https://mjk-backend-production.up.railway.app/imagesdokter/${item.gambar_artikel}`,
+                    }}
+                    resizeMode="cover"
+                  />
+                  <View className="flex-row justify-between w-full">
+                    <View className="p-3 w-8/12">
+                      <Text 
+                        className="truncate font-bold text-base text-skyDark"
                         numberOfLines={1}
-                        ellipsizeMode="tail">
-                          {item.nama_artikel}
+                        ellipsizeMode="tail"
+                      >
+                        {item.nama_artikel}
+                      </Text>
+                      <Text className="font-medium text-sm text-skyDark">
+                        {new Date(item.createdAt).toLocaleDateString()}
+                      </Text>
+                    </View>
+                    <View className="w-1/3 items-center justify-center">
+                      <TouchableOpacity
+                        className="bg-skyDark items-center justify-center py-2 px-4 rounded-md"
+                        onPress={() => navigateToDetail(item._id)}
+                      >
+                        <Text className="font-medium text-sm text-white">
+                          Selengkapnya
                         </Text>
-                        <Text className="font-medium text-sm text-skyDark">
-                          {new Date(
-                            item.createdAt
-                          ).toLocaleDateString()}
-                        </Text>
-                      </View>
-                      <View className="w-1/3 items-center justify-center">
-                        <TouchableOpacity
-                          className="bg-skyDark items-center justify-center py-2 px-4 rounded-md"
-                          onPress={() =>
-                            router.push({
-                              pathname: "/(tabs)/artikel/selengkapnya",
-                              params: {
-                                id: item._id,
-                              },
-                            })
-                          }
-                        >
-                          <Text className="font-medium text-sm text-white">
-                            Selengkapnya
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
+                      </TouchableOpacity>
                     </View>
                   </View>
-                ))}
+                </View>
+              ))}
             </View>
           </ScrollView>
         )}
