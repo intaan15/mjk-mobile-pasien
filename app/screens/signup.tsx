@@ -11,7 +11,7 @@ import {
   Keyboard,
   StatusBar,
   TouchableOpacity,
-  Alert
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import Background from "../../components/background";
@@ -27,7 +27,7 @@ const Register = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
 
-  const [form, setForm] = useState({
+  const initialFormState = {
     nama: "",
     username: "",
     password: "",
@@ -39,64 +39,67 @@ const Register = () => {
     tglLahir: "",
     fotoKTP: "",
     selfieKTP: "",
-  });
+  };
 
+  const [form, setForm] = useState(initialFormState);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTab, setSelectedTab] = useState("");
   const [ktpUri, setKtpUri] = useState("");
   const [selfieUri, setSelfieUri] = useState("");
 
+  // Fungsi untuk mereset semua state
+  const resetAllStates = () => {
+    setForm(initialFormState);
+    setSelectedDate(null);
+    setSelectedTab("");
+    setKtpUri("");
+    setSelfieUri("");
+    setShowDatePicker(false);
+  };
 
   // ** Restore form dari SecureStore saat komponen mount **
   useEffect(() => {
     const restoreFormData = async () => {
-      const savedForm = await SecureStore.getItemAsync("formData");
-      const savedKtp = await SecureStore.getItemAsync("fotoKTP");
-      const savedSelfie = await SecureStore.getItemAsync("selfieKTP");
+      try {
+        const savedForm = await SecureStore.getItemAsync("formData");
+        const savedKtp = await SecureStore.getItemAsync("fotoKTP");
+        const savedSelfie = await SecureStore.getItemAsync("selfieKTP");
 
-      if (savedForm) {
-        const parsedForm = JSON.parse(savedForm);
-        setForm(parsedForm);
+        if (savedForm) {
+          const parsedForm = JSON.parse(savedForm);
+          setForm(parsedForm);
 
-        // Sinkronkan selectedTab untuk jenis kelamin
-        if (parsedForm.jenisKelamin) {
-          setSelectedTab(parsedForm.jenisKelamin);
+          // Sinkronkan selectedTab untuk jenis kelamin
+          if (parsedForm.jenisKelamin) {
+            setSelectedTab(parsedForm.jenisKelamin);
+          }
+
+          // Sinkronkan tanggal lahir
+          if (parsedForm.tglLahir) {
+            const dateObj = new Date(parsedForm.tglLahir);
+            setSelectedDate(dateObj);
+          }
         }
-        if (parsedForm.tglLahir) {
-          const dateObj = new Date(parsedForm.tglLahir);
-          setSelectedDate(dateObj);
+
+        // Set URI untuk preview gambar
+        if (savedKtp) {
+          setKtpUri(savedKtp);
+          setForm((prev) => ({ ...prev, fotoKTP: savedKtp }));
         }
-        
+
+        if (savedSelfie) {
+          setSelfieUri(savedSelfie);
+          setForm((prev) => ({ ...prev, selfieKTP: savedSelfie }));
+        }
+      } catch (error) {
+        console.log("Error restoring form data:", error);
       }
-
-      if (savedKtp) setKtpUri(savedKtp);
-      if (savedSelfie) setSelfieUri(savedSelfie);
     };
 
     restoreFormData();
   }, []);
-  
-  useEffect(() => {
-    const fetchStoredImages = async () => {
-      const savedKtp = await SecureStore.getItemAsync("fotoKTP");
-      const savedSelfie = await SecureStore.getItemAsync("selfieKTP");
 
-      if (savedKtp) {
-        setKtpUri(savedKtp); // untuk preview
-        setForm((prev) => ({ ...prev, fotoKTP: savedKtp })); // ⬅️ ini penting
-      }
-
-      if (savedSelfie) {
-        setSelfieUri(savedSelfie); // untuk preview
-        setForm((prev) => ({ ...prev, selfieKTP: savedSelfie })); // ⬅️ ini juga
-      }
-    };
-
-    fetchStoredImages();
-  }, []);
-  
-  
   const handleInputChange = (field, value) => {
     setForm((prev) => ({
       ...prev,
@@ -104,20 +107,44 @@ const Register = () => {
     }));
   };
 
-  
-
   const handleRegister = async () => {
     try {
-      // const userId = await SecureStore.getItemAsync("userId");
       const fotoKTP = await SecureStore.getItemAsync("fotoKTP");
       const selfieKTP = await SecureStore.getItemAsync("selfieKTP");
 
-      // console.log("userId:", userId);
-      console.log("fotoKTP:", fotoKTP);
-      console.log("selfieKTP:", selfieKTP);
+      console.log("=== DEBUG INFO ===");
+      console.log("Form data:", form);
+      console.log("fotoKTP URI:", fotoKTP);
+      console.log("selfieKTP URI:", selfieKTP);
 
-      if (!fotoKTP || !selfieKTP) {
+      // Validasi form
+      if (
+        !form.nama ||
+        !form.username ||
+        !form.password ||
+        !form.email ||
+        !form.nik ||
+        !form.alamat ||
+        !form.notlp ||
+        !form.jenisKelamin ||
+        !form.tglLahir ||
+        !fotoKTP ||
+        !selfieKTP
+      ) {
         Alert.alert("Gagal", "Semua data harus diisi.");
+        return;
+      }
+
+      // Validasi khusus untuk NIK (harus 16 digit)
+      if (form.nik.length !== 16) {
+        Alert.alert("Gagal", "NIK harus 16 digit.");
+        return;
+      }
+
+      // Validasi email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(form.email)) {
+        Alert.alert("Gagal", "Format email tidak valid.");
         return;
       }
 
@@ -136,46 +163,70 @@ const Register = () => {
 
       const formData = new FormData();
 
-      // Data teks
-      formData.append("nama_masyarakat", form.nama);
-      formData.append("username_masyarakat", form.username);
+      // Data teks - pastikan tidak ada nilai undefined atau null
+      // Coba beberapa kemungkinan nama field yang berbeda
+      formData.append("nama_masyarakat", form.nama.trim());
+      formData.append("username_masyarakat", form.username.trim());
       formData.append("password_masyarakat", form.password);
-      formData.append("email_masyarakat", form.email);
-      formData.append("nik_masyarakat", form.nik);
-      formData.append("alamat_masyarakat", form.alamat);
-      formData.append("notlp_masyarakat", form.notlp);
+      formData.append("email_masyarakat", form.email.trim().toLowerCase());
+      formData.append("nik_masyarakat", form.nik.trim());
+      formData.append("alamat_masyarakat", form.alamat.trim());
+      formData.append("notlp_masyarakat", form.notlp.trim());
       formData.append("jeniskelamin_masyarakat", form.jenisKelamin);
       formData.append("tgl_lahir_masyarakat", form.tglLahir);
 
-      // File foto KTP
+      // Alternative field names (uncomment if needed)
+      // formData.append("nama", form.nama.trim());
+      // formData.append("username", form.username.trim());
+      // formData.append("password", form.password);
+      // formData.append("email", form.email.trim().toLowerCase());
+      // formData.append("nik", form.nik.trim());
+      // formData.append("alamat", form.alamat.trim());
+      // formData.append("no_telp", form.notlp.trim());
+      // formData.append("jenis_kelamin", form.jenisKelamin);
+      // formData.append("tanggal_lahir", form.tglLahir);
+
+      // File foto KTP - try different approaches
       const ktpInfo = getFileInfo(fotoKTP);
+
+      // Approach 1: Standard React Native format
       formData.append("foto_ktp_masyarakat", {
         uri: fotoKTP,
         type: ktpInfo.type,
-        name: ktpInfo.name,
+        name: ktpInfo.name || `ktp_${Date.now()}.jpg`,
       } as any);
+
+      // Approach 2: Alternative format (uncomment if approach 1 fails)
+      // const ktpBlob = await fetch(fotoKTP).then(r => r.blob());
+      // formData.append("foto_ktp_masyarakat", ktpBlob, ktpInfo.name || `ktp_${Date.now()}.jpg`);
 
       // File selfie KTP
       const selfieInfo = getFileInfo(selfieKTP);
       formData.append("selfie_ktp_masyarakat", {
         uri: selfieKTP,
-        name: selfieInfo.name,
+        name: selfieInfo.name || `selfie_${Date.now()}.jpg`,
         type: selfieInfo.type,
       } as any);
 
-      // console.log("Form data sebelum kirim:", {
-      //   nama: form.nama,
-      //   username: form.username,
-      //   password: form.password,
-      //   email: form.email,
-      //   nik: form.nik,
-      //   alamat: form.alamat,
-      //   notlp: form.notlp,
-      //   jenisKelamin: form.jenisKelamin,
-      //   tglLahir: form.tglLahir,
-      //   fotoKTP,
-      //   selfieKTP,
-      // });
+      // Alternative selfie format (uncomment if needed)
+      // const selfieBlob = await fetch(selfieKTP).then(r => r.blob());
+      // formData.append("selfie_ktp_masyarakat", selfieBlob, selfieInfo.name || `selfie_${Date.now()}.jpg`);
+
+      console.log("=== FORM DATA TO SEND ===");
+      // Log form data untuk debugging
+      const formDataObj = {};
+      formData._parts.forEach(([key, value]) => {
+        if (typeof value === "object" && value.uri) {
+          formDataObj[key] = {
+            uri: value.uri,
+            type: value.type,
+            name: value.name,
+          };
+        } else {
+          formDataObj[key] = value;
+        }
+      });
+      console.log("FormData contents:", formDataObj);
 
       const response = await axios.post(
         `${BASE_URL}/auth/register_masyarakat`,
@@ -184,23 +235,55 @@ const Register = () => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
+          timeout: 30000, // 30 second timeout
         }
       );
 
-      alert("Registrasi berhasil!");
-      await SecureStore.deleteItemAsync("formData");
-      await SecureStore.deleteItemAsync("fotoKTP");
-      await SecureStore.deleteItemAsync("selfieKTP");
-      router.replace("./signin");
+      console.log("Registration successful:", response.data);
+
+      // Jika registrasi berhasil
+      Alert.alert("Berhasil", "Registrasi berhasil!", [
+        {
+          text: "OK",
+          onPress: async () => {
+            // Hapus data dari SecureStore
+            await SecureStore.deleteItemAsync("formData");
+            await SecureStore.deleteItemAsync("fotoKTP");
+            await SecureStore.deleteItemAsync("selfieKTP");
+
+            // Reset semua state
+            resetAllStates();
+
+            // Navigate ke signin
+            router.replace("./signin");
+          },
+        },
+      ]);
     } catch (error) {
+      console.log("=== ERROR DETAILS ===");
       console.log("Error:", error);
-      // console.log("Error response:", error.response?.data);
-      // alert(
-      //   "Gagal registrasi: " + (error.response?.data?.message || error.message)
-      // );
+      console.log("Error response:", error.response?.data);
+      console.log("Error status:", error.response?.status);
+      console.log("Error headers:", error.response?.headers);
+
+      let errorMessage = "Terjadi kesalahan saat registrasi.";
+
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.status === 400) {
+        errorMessage =
+          "Data yang dikirim tidak valid. Periksa kembali form Anda.";
+      } else if (error.response?.status === 409) {
+        errorMessage = "Username atau email sudah terdaftar.";
+      } else if (error.code === "ECONNABORTED") {
+        errorMessage = "Koneksi timeout. Periksa koneksi internet Anda.";
+      }
+
+      Alert.alert("Gagal", errorMessage);
     }
   };
-  
 
   // Gender select handler
   const handleGenderSelect = (gender) => {
@@ -217,18 +300,15 @@ const Register = () => {
       handleInputChange("tglLahir", formattedDate);
     }
   };
+
   const saveFormAndNavigate = async (path) => {
     try {
       await SecureStore.setItemAsync("formData", JSON.stringify(form));
       router.push(path);
     } catch (error: any) {
-      console.log("Error:", error);
-      console.log("Error response:", error.response?.data);
-
+      console.log("Error saving form:", error);
     }
   };
-
-  
 
   return (
     <Background>
@@ -353,14 +433,20 @@ const Register = () => {
                   onPress={() => saveFormAndNavigate("./panduanktp")}
                   className="bg-transparent border-[#06B400] border-2 text-black px-4 py-3 rounded-xl"
                 >
-                  <Text className="text-[#06B400] ">Masukkan Foto KTP</Text>
+                  <Text className="text-[#06B400] ">
+                    {ktpUri ? "✓ Foto KTP Sudah Diambil" : "Masukkan Foto KTP"}
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={() => saveFormAndNavigate("./panduanselfie")}
                   className="bg-transparent border-[#06B400] border-2 text-black px-4 py-3 rounded-xl"
                 >
-                  <Text className="text-[#06B400] ">Selfie dengan KTP</Text>
+                  <Text className="text-[#06B400] ">
+                    {selfieUri
+                      ? "✓ Selfie KTP Sudah Diambil"
+                      : "Selfie dengan KTP"}
+                  </Text>
                 </TouchableOpacity>
               </View>
               <TouchableOpacity
