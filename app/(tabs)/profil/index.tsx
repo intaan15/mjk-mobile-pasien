@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
@@ -72,12 +73,20 @@ function App() {
   const [modalType, setModalType] = useState("");
   const [isModalVisible, setModalVisible] = useState(false);
   const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
+
 
   useFocusEffect(
     useCallback(() => {
       fetchUserData();
     }, [])
   );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchUserData();
+    setRefreshing(false);
+  }, []);
 
   const fetchUserData = async () => {
     try {
@@ -184,7 +193,18 @@ function App() {
   return (
     <Background>
       <View className="flex-1">
-        <ScrollView>
+        <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#025F96"]} // Android
+            tintColor="#025F96" // iOS
+            title="Memuat ulang jadwal..."
+            titleColor="#025F96"
+          />
+        }>
+          
           {/* Header Profil */}
           <View className="relative pt-12 bg-skyLight rounded-b-[50px] py-28">
             <View className="absolute inset-0 flex items-center justify-between flex-row px-12">
