@@ -71,7 +71,7 @@ export default function Settings() {
       >
         <TouchableOpacity
           className="flex flex-row items-center gap-2 pb-1"
-          onPress={() => openModal("pilihgambar")}
+          onPress={() => openModal("gantifotoprofil")}
         >
           <MaterialCommunityIcons
             name="image-edit-outline"

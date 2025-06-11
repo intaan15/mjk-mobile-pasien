@@ -24,7 +24,10 @@ import {
 } from "../../../components/picker/imagepicker";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { BASE_URL } from "@env";
+// import { BASE_URL } from "@env";
+// const BASE_URL = "https://stg-konsultasi-dok.mojokertokab.go.id/api";
+const BASE_URL = "http://10.52.170.158:3330/api";
+
 
 interface User {
   nama_masyarakat: string;
@@ -40,6 +43,20 @@ interface User {
   foto_profil_masyarakat: string | null;
 }
 
+// Fungsi helper untuk membuat URL gambar lengkap
+const getImageUrl = (imagePath: string | null | undefined): string | null => {
+  if (!imagePath) return null;
+
+  if (imagePath.startsWith("http")) {
+    return imagePath;
+  }
+  const baseUrlWithoutApi = BASE_URL.replace("/api", "");
+
+  const cleanPath = imagePath.startsWith("/")
+    ? imagePath.substring(1)
+    : imagePath;
+  return `${baseUrlWithoutApi}/${cleanPath}`;
+};
 export default function ProfileScreen() {
   return (
     <ImageProvider>
@@ -185,9 +202,25 @@ function App() {
             {userData.foto_profil_masyarakat ? (
               <Image
                 source={{
-                  uri: `https://mjk-backend-production.up.railway.app/imagesdokter/${userData.foto_profil_masyarakat}`,
+                  uri: getImageUrl(userData.foto_profil_masyarakat),
                 }}
                 className="w-32 h-32 rounded-full border-4 border-skyDark"
+                onError={(error) => {
+                  console.log(
+                    "Error loading profile image:",
+                    error.nativeEvent.error
+                  );
+                  console.log(
+                    "Image URL:",
+                    getImageUrl(userData.foto_profil_masyarakat)
+                  );
+                }}
+                onLoad={() => {
+                  console.log(
+                    "Image loaded successfully:",
+                    getImageUrl(userData.foto_profil_masyarakat)
+                  );
+                }}
               />
             ) : (
               <View className="w-32 h-32 rounded-full border-4 border-skyDark items-center justify-center bg-gray-200">
