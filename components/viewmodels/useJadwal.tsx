@@ -124,6 +124,20 @@ export const useJadwalViewModel = () => {
     });
   };
 
+  const getImageUrl = (imagePath: string | null | undefined): string | null => {
+    if (!imagePath) return null;
+
+    if (imagePath.startsWith("http")) {
+      return imagePath;
+    }
+    const baseUrlWithoutApi = BASE_URL.replace("/api", "");
+
+    const cleanPath = imagePath.startsWith("/")
+      ? imagePath.substring(1)
+      : imagePath;
+    return `${baseUrlWithoutApi}/${cleanPath}`;
+  };
+
   const getProfileImageUri = (fotoProfile: string): string => {
     return `https://mjk-backend-production.up.railway.app/uploads/${fotoProfile}`;
   };
@@ -157,5 +171,6 @@ export const useJadwalViewModel = () => {
     getStatusTextColor,
     formatDate,
     getProfileImageUri,
+    getImageUrl,
   };
 };

@@ -68,11 +68,11 @@ export default function HomeScreen() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("RAW chatlist data:", response.data);
+      // console.log("RAW chatlist data:", response.data);
 
       // PERBAIKAN: Gunakan getImageUrl yang sudah ada
       const enrichedChatList = response.data.map((chat: any) => {
-        console.log("Original foto_profil:", chat.participant?.foto_profil); // Debug log
+        // console.log("Original foto_profil:", chat.participant?.foto_profil); // Debug log
 
         return {
           ...chat,
@@ -83,13 +83,13 @@ export default function HomeScreen() {
         };
       });
 
-      console.log(
-        "Processed chatlist:",
-        enrichedChatList.map((chat) => ({
-          nama: chat.nama_dokter,
-          foto_url: chat.foto_profil_dokter,
-        }))
-      ); // Debug log
+      // console.log(
+      //   "Processed chatlist:",
+      //   enrichedChatList.map((chat) => ({
+      //     nama: chat.nama_dokter,
+      //     foto_url: chat.foto_profil_dokter,
+      //   }))
+      // ); // Debug log
 
       setChatList(enrichedChatList);
     } catch (error) {

@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
-import React from "react";
+import React, {useState} from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Background from "../../../components/background";
 import { images } from "../../../constants/images";
@@ -41,18 +41,33 @@ const StatusIcon = ({ status }: { status: string }) => {
 };
 
 const DoctorImage = ({ jadwal }: { jadwal: JadwalItem }) => {
-  const { getProfileImageUri } = useJadwalViewModel();
-  
-  if (jadwal.dokter_id?.foto_profil_dokter && jadwal.dokter_id?.nama_dokter) {
+  const { getImageUrl } = useJadwalViewModel();
+  const [imageError, setImageError] = useState(false);
+  const hasFotoProfile = jadwal.dokter_id?.foto_profil_dokter;
+  const hasNamaDokter = jadwal.dokter_id?.nama_dokter;
+
+  const hasValidImage = hasFotoProfile && hasNamaDokter && !imageError;
+
+  if (hasValidImage) {
+    const imageUrl = getImageUrl(jadwal.dokter_id.foto_profil_dokter);
+
     return (
       <Image
-        source={{ uri: getProfileImageUri(jadwal.dokter_id.foto_profil_dokter) }}
+        source={{ uri: imageUrl }}
         className="h-20 w-20 rounded-full border border-gray-300"
         resizeMode="cover"
+        onError={(error) => {
+          setImageError(true);
+        }}
+        onLoad={() => {
+          setImageError(false);
+        }}
+        onLoadStart={() => {
+        }}
       />
     );
   }
-  
+
   return (
     <View className="h-20 w-20 rounded-full border border-gray-300 items-center justify-center bg-gray-200">
       <Ionicons name="person" size={40} color="#0C4A6E" />
