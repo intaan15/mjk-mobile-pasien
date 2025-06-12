@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useCallback } from "react";
 import {
   View,
   Text,
@@ -6,12 +6,9 @@ import {
   TextInput,
   ScrollView,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
-import axios from "axios";
-import * as SecureStore from "expo-secure-store";
 import { images } from "../../../constants/images";
 import Background from "../../../components/background";
 import Settings from "../../../components/settings";
@@ -21,99 +18,37 @@ import ModalContent from "../../../components/modals/ModalContent";
 import ModalTemplate from "../../../components/modals/ModalTemplate";
 import {
   ImageProvider,
-  useImage,
 } from "../../../components/picker/imagepicker";
 import { useFocusEffect } from "@react-navigation/native";
-import { useRouter } from "expo-router";
-// import { BASE_URL } from "@env";
-// const BASE_URL = "https://stg-konsultasi-dok.mojokertokab.go.id/api";
-const BASE_URL = "http://10.52.170.158:3330/api";
+import { useProfileViewModel } from "../../../components/viewmodels/useProfil";
 
-
-interface User {
-  nama_masyarakat: string;
-  username_masyarakat: string;
-  email_masyarakat: string;
-  nik_masyarakat: string;
-  alamat_masyarakat: string;
-  notlp_masyarakat: string;
-  jeniskelamin_masyarakat: string;
-  tgl_lahir_masyarakat: string;
-  foto_ktp_masyarakat: string;
-  selfie_ktp_masyarakat: string;
-  foto_profil_masyarakat: string | null;
-}
-
-// Fungsi helper untuk membuat URL gambar lengkap
-const getImageUrl = (imagePath: string | null | undefined): string | null => {
-  if (!imagePath) return null;
-
-  if (imagePath.startsWith("http")) {
-    return imagePath;
-  }
-  const baseUrlWithoutApi = BASE_URL.replace("/api", "");
-
-  const cleanPath = imagePath.startsWith("/")
-    ? imagePath.substring(1)
-    : imagePath;
-  return `${baseUrlWithoutApi}/${cleanPath}`;
-};
-export default function ProfileScreen() {
-  return (
-    <ImageProvider>
-      <App />
-    </ImageProvider>
-  );
-}
-function App() {
-  const [userData, setUserData] = useState<User | null>(null);
-  const [passwordLama, setPasswordLama] = useState("");
-  const [passwordBaru, setPasswordBaru] = useState("");
-  const [konfirmasiPassword, setKonfirmasiPassword] = useState("");
-  const [modalType, setModalType] = useState("");
-  const [isModalVisible, setModalVisible] = useState(false);
-  const router = useRouter();
-  const [refreshing, setRefreshing] = useState(false);
-
+function ProfileApp() {
+  const {
+    userData,
+    passwordLama,
+    passwordBaru,
+    konfirmasiPassword,
+    modalType,
+    isModalVisible,
+    refreshing,
+    setPasswordLama,
+    setPasswordBaru,
+    setKonfirmasiPassword,
+    fetchUserData,
+    onRefresh,
+    handleGantiPassword,
+    openModal,
+    closeModal,
+    onUpdateSuccess,
+    getImageUrl,
+    formatTanggal,
+  } = useProfileViewModel();
 
   useFocusEffect(
     useCallback(() => {
       fetchUserData();
     }, [])
   );
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchUserData();
-    setRefreshing(false);
-  }, []);
-
-  const fetchUserData = async () => {
-    try {
-      const userId = await SecureStore.getItemAsync("userId");
-      const token = await SecureStore.getItemAsync("userToken");
-      if (!token) {
-        await SecureStore.deleteItemAsync("userToken");
-        await SecureStore.deleteItemAsync("userId");
-        router.replace("/screens/signin");
-      }
-      const cleanedUserId = userId?.replace(/"/g, "");
-      if (cleanedUserId) {
-        const response = await axios.get(
-          `${BASE_URL}/masyarakat/getbyid/${cleanedUserId}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setUserData(response.data);
-      }
-    } catch (error) {
-      console.log("Gagal mengambil data profil:", error);
-    }
-  };
 
   if (!userData) {
     return (
@@ -128,83 +63,21 @@ function App() {
     );
   }
 
-  const formatTanggal = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
-  };
-
-  const handleGantiPassword = async () => {
-    try {
-      const token = await SecureStore.getItemAsync("userToken");
-
-      if (!token) {
-        setModalType("kolompwkosong");
-        setModalVisible(true);
-        return;
-      }
-
-      const res = await axios.patch(
-        `${BASE_URL}/masyarakat/ubah-password`,
-        {
-          password_lama: passwordLama,
-          password_baru: passwordBaru,
-          konfirmasi_password_baru: konfirmasiPassword,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setModalType("ubahberhasil");
-      setModalVisible(true);
-      setPasswordLama("");
-      setPasswordBaru("");
-      setKonfirmasiPassword("");
-    } catch (error: any) {
-      const msg =
-        error.response?.data?.message ||
-        "Terjadi kesalahan saat mengubah password";
-
-      if (msg.includes("Password lama salah")) {
-        setModalType("pwlamasalah");
-      } else if (msg.includes("Konfirmasi password tidak cocok")) {
-        setModalType("pwtidakcocok");
-      } else if (msg.includes("Semua field harus diisi")) {
-        setModalType("kolompwkosong");
-      } else {
-        setModalType("kolompwkosong");
-      }
-      setModalVisible(true);
-    }
-  };
-
-  const openModal = (type: string) => {
-    setModalType(type);
-    setModalVisible(true);
-  };
-
   return (
     <Background>
       <View className="flex-1">
         <ScrollView
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#025F96"]} // Android
-            tintColor="#025F96" // iOS
-            title="Memuat ulang jadwal..."
-            titleColor="#025F96"
-          />
-        }>
-          
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#025F96"]} // Android
+              tintColor="#025F96" // iOS
+              title="Memuat ulang jadwal..."
+              titleColor="#025F96"
+            />
+          }
+        >
           {/* Header Profil */}
           <View className="relative pt-12 bg-skyLight rounded-b-[50px] py-28">
             <View className="absolute inset-0 flex items-center justify-between flex-row px-12">
@@ -265,6 +138,7 @@ function App() {
             >
               <FontAwesome5 name="edit" size={24} color="#025F96" />
             </TouchableOpacity>
+            
             <Text className="font-bold text-lg text-skyDark">Nama</Text>
             <Text className="text-gray-700">{userData.nama_masyarakat}</Text>
 
@@ -353,19 +227,25 @@ function App() {
           <Settings />
         </ScrollView>
       </View>
+      
       <ModalTemplate
         isVisible={isModalVisible}
-        onClose={() => setModalVisible(false)}
+        onClose={closeModal}
       >
         <ModalContent
           modalType={modalType}
-          onClose={() => setModalVisible(false)}
-          onUpdateSuccess={() => {
-            fetchUserData();
-            setModalVisible(false);
-          }}
+          onClose={closeModal}
+          onUpdateSuccess={onUpdateSuccess}
         />
       </ModalTemplate>
     </Background>
+  );
+}
+
+export default function ProfileScreen() {
+  return (
+    <ImageProvider>
+      <ProfileApp />
+    </ImageProvider>
   );
 }

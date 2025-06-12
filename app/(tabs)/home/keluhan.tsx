@@ -4,120 +4,36 @@ import {
   TextInput,
   Image,
   TouchableOpacity,
-  Alert,
 } from "react-native";
-import React, { useState, useEffect } from "react";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import React from "react";
+import { useLocalSearchParams } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Background from "../../../components/background";
 import { images } from "../../../constants/images";
-import axios from "axios";
-import * as SecureStore from "expo-secure-store";
-import { BASE_URL } from "@env";
+import { useKeluhanViewModel } from "../../../components/viewmodels/useHome";
 
 export default function Keluhan() {
-  const router = useRouter();
   const { spesialis, doctorName, doctor_Id, selectedTime, selectedDate } =
     useLocalSearchParams();
-  const [keluhanText, setKeluhanText] = useState("");
-  const [doctorId, setDoctorId] = useState<string | null>(null);
-  const [userId, setuserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchDoctor = async () => {
-      try {
-        const token = await SecureStore.getItemAsync("userToken");
-        if (!token) {
-          await SecureStore.deleteItemAsync("userToken");
-          await SecureStore.deleteItemAsync("userId");
-          router.replace("/screens/signin");
-        }
-        if (!token) return;
-        const res = await axios.get(`${BASE_URL}/dokter/getbyid/${doctor_Id}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setDoctorId(res.data._id);
-      } catch (err) {
-        Alert.alert("Error", "Gagal mengambil data dokter.");
-      }
-    };
-
-    fetchDoctor();
-  }, [doctor_Id]);
-
-  useEffect(() => {
-    const fetchUserId = async () => {
-      try {
-        const storedUserId = await SecureStore.getItemAsync("userId");
-        if (storedUserId) {
-          setuserId(storedUserId);
-        } else {
-          console.log("No userId found in SecureStore");
-        }
-      } catch (err) {
-        console.log("Gagal mengambil data pengguna.");
-      }
-    };
-
-    fetchUserId();
-  }, []);
-
-  const handleSubmit = async () => {
-    if (
-      !doctorId ||
-      !userId ||
-      !selectedTime ||
-      !selectedDate ||
-      !keluhanText
-    ) {
-      Alert.alert("Data tidak lengkap", "Pastikan semua data tersedia.");
-      return;
-    }
-
-    try {
-      const token = await SecureStore.getItemAsync("userToken");
-      const date = new Date(selectedDate as string);
-      const [hour, minute] = (selectedTime as string).split(":").map(Number);
-      const jamSelesaiDate = new Date(date);
-      jamSelesaiDate.setHours(hour);
-      jamSelesaiDate.setMinutes(minute + 30);
-
-      const payload = {
-        dokter_id: doctorId,
-        masyarakat_id: userId,
-        tgl_konsul: date.toISOString(),
-        jam_konsul: selectedTime,
-        keluhan_pasien: keluhanText,
-        jumlah_konsul: 1,
-        status_konsul: "menunggu",
-      };
-
-      await axios.post(`${BASE_URL}/jadwal/create`, payload, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      Alert.alert("Sukses", "Jadwal konsultasi berhasil dibuat!");
-      router.replace("/(tabs)/home");
-    } catch (error: any) {
-      console.log(error);
-      Alert.alert(
-        "Gagal",
-        error?.response?.data?.message || "Terjadi kesalahan."
-      );
-    }
-  };
+  const {
+    keluhanText,
+    setKeluhanText,
+    isLoading,
+    handleSubmit,
+    handleBack,
+  } = useKeluhanViewModel({
+    doctor_Id: doctor_Id as string,
+    selectedTime: selectedTime as string,
+    selectedDate: selectedDate as string,
+  });
 
   return (
     <Background>
       <View className="flex-1">
         <View className="flex flex-row justify-between items-center mb-4 w-full px-5 py-5 pt-10">
           <View className="flex flex-row items-center">
-            <TouchableOpacity onPress={() => router.back()}>
+            <TouchableOpacity onPress={handleBack}>
               <MaterialIcons name="arrow-back-ios" size={24} color="#025F96" />
             </TouchableOpacity>
             <Text className="text-skyDark font-bold text-xl ml-2">
@@ -148,11 +64,14 @@ export default function Keluhan() {
             />
             <View className="items-end pt-10">
               <TouchableOpacity
-                className="px-8 bg-skyDark rounded-lg text-center"
+                className={`px-8 rounded-lg text-center ${
+                  isLoading ? "bg-gray-400" : "bg-skyDark"
+                }`}
                 onPress={handleSubmit}
+                disabled={isLoading}
               >
                 <Text className="p-3 text-slate-100 font-bold text-sm">
-                  Kirim
+                  {isLoading ? "Mengirim..." : "Kirim"}
                 </Text>
               </TouchableOpacity>
             </View>
