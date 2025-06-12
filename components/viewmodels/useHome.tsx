@@ -289,7 +289,7 @@ export const useDoctorListViewModel = () => {
   const calculateAverageRating = (ratings: Rating[]): number => {
     if (ratings.length === 0) return 0;
     const sum = ratings.reduce((acc, rating) => acc + rating.rating, 0);
-    return Math.round((sum / ratings.length) * 10) / 10; // Round to 1 decimal place
+    return Math.round((sum / ratings.length) * 10) / 10;
   };
 
   // Fetch ratings for unfetched doctors
@@ -301,13 +301,12 @@ export const useDoctorListViewModel = () => {
     if (unfetchedDoctors.length === 0) return;
 
     setRatingsLoading(true);
-    setErrorMessage(null); // Clear previous errors
+    setErrorMessage(null); 
 
     try {
       const token = await SecureStore.getItemAsync("userToken");
       if (!token) {
         console.log("Token tidak ditemukan");
-        setErrorMessage("Kesalahan autentikasi. Silakan login kembali.");
         return;
       }
 
@@ -315,7 +314,7 @@ export const useDoctorListViewModel = () => {
 
       const ratingsPromises = unfetchedDoctors.map(async (doctor) => {
         try {
-          console.log(`Mengambil rating untuk dokter: ${doctor._id}`);
+          // console.log(`Mengambil rating untuk dokter: ${doctor._id}`);
           const response = await axios.get(
             `${BASE_URL}/rating/dokter/${doctor._id}`,
             {
@@ -326,11 +325,11 @@ export const useDoctorListViewModel = () => {
             }
           );
 
-          console.log(`Respons rating untuk ${doctor._id}:`, response.data);
+          // console.log(`Respons rating untuk ${doctor._id}:`, response.data);
 
           if (response.data.success && response.data.data) {
             const averageRating = calculateAverageRating(response.data.data);
-            console.log(`Rata-rata rating untuk ${doctor._id}: ${averageRating}`);
+            // console.log(`Rata-rata rating untuk ${doctor._id}: ${averageRating}`);
             return { doctorId: doctor._id, rating: averageRating };
           }
           return { doctorId: doctor._id, rating: doctor.rating_dokter || 0 };
@@ -348,7 +347,7 @@ export const useDoctorListViewModel = () => {
         ratingsMap[doctorId] = rating;
       });
 
-      console.log("Peta rating akhir:", ratingsMap);
+      // console.log("Peta rating akhir:", ratingsMap);
       setDoctorRatings(ratingsMap);
       setFetchedDoctorIds((prev) => new Set([...prev, ...unfetchedDoctors.map((d) => d._id)]));
     } catch (error: any) {
@@ -370,7 +369,7 @@ export const useDoctorListViewModel = () => {
   // Get display rating
   const getDisplayRating = useCallback((doctor: Doctor): number => {
     const apiRating = doctorRatings[doctor._id];
-    console.log(`Mendapatkan rating tampilan untuk ${doctor._id}: API=${apiRating}, Original=${doctor.rating_dokter}`);
+    // console.log(`Mendapatkan rating tampilan untuk ${doctor._id}: API=${apiRating}, Original=${doctor.rating_dokter}`);
     return apiRating !== undefined ? apiRating : doctor.rating_dokter || 0;
   }, [doctorRatings]);
 
