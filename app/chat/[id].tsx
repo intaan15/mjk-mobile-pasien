@@ -24,8 +24,8 @@ import { BASE_URL, BASE_URL2 } from "@env";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useLocalSearchParams } from "expo-router";
 
-const socket = io(`${BASE_URL2}`, {
-  transports: ["websocket"],
+const socket = io("http://10.52.170.162:3330", {
+  transports: ["websocket"], //
 });
 
 export default function ChatScreen() {
@@ -172,6 +172,7 @@ export default function ChatScreen() {
   // console.log("[DEBUG] Receiver Name:", receiverName);
 
   // ✅ Kirim gambar dari galeri/kamera
+  // ✅ Kirim gambar dari galeri/kamera - FIXED VERSION
   const sendImage = async (fromCamera = false) => {
     try {
       let result;
@@ -190,24 +191,55 @@ export default function ChatScreen() {
       }
 
       if (!result.canceled && result.assets?.length > 0) {
-        const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
+        // ✅ PERBAIKAN: Pastikan format base64 benar
+        const asset = result.assets[0];
+        let base64Image;
+
+        // Deteksi format gambar dari uri atau default ke jpeg
+        const imageFormat =
+          asset.uri?.split(".").pop()?.toLowerCase() || "jpeg";
+        const mimeType = imageFormat === "png" ? "image/png" : "image/jpeg";
+
+        // Pastikan base64 ada dan dalam format yang benar
+        if (asset.base64) {
+          base64Image = `data:${mimeType};base64,${asset.base64}`;
+        } else {
+          console.log("❌ Base64 data tidak tersedia");
+          alert("Gagal mengambil data gambar");
+          return;
+        }
+
         const imgMsg = {
           sender: username,
           senderId: userId,
           receiverId: receiverId,
-          image: base64Image,
+          image: base64Image, // Pastikan ini base64 lengkap dengan header
           type: "image",
           role: userRole,
           waktu: new Date().toISOString(),
+          // ✅ Tidak mengirim text untuk image
         };
 
-        console.log("[DEBUG] Sending image message:", imgMsg);
+        console.log("[DEBUG] 📷 Sending image message:", {
+          type: imgMsg.type,
+          hasImage: !!imgMsg.image,
+          imageLength: imgMsg.image?.length || 0,
+          imageHeader: imgMsg.image?.substring(0, 30) + "...",
+          sender: imgMsg.sender,
+          senderId: imgMsg.senderId,
+          receiverId: imgMsg.receiverId,
+        });
+
+        // ✅ Kirim ke socket
         socket.emit("chat message", imgMsg);
+
+        console.log("✅ Image message sent successfully");
       } else {
-        console.warn("Pengambilan gambar dibatalkan atau tidak valid.");
+        console.warn("⚠️ Pengambilan gambar dibatalkan atau tidak valid.");
       }
     } catch (error) {
-      console.log("Gagal mengirim gambar:", error);
+      console.error("❌ Gagal mengirim gambar:", error);
+      alert("Gagal mengirim gambar: " + error.message);
     }
   };
 
@@ -247,13 +279,14 @@ export default function ChatScreen() {
     };
   }, []);
 
+  // ✅ Kirim pesan teks - ALREADY GOOD
   const sendMessage = async () => {
-    // console.log("[DEBUG] Tombol Kirim ditekan");
-    // console.log("username:", username);
-    // console.log("userId:", userId);
-    // console.log("receiverId:", receiverId);
-    // console.log("userRole:", userRole);
-    // console.log("message:", message);
+    console.log("[DEBUG] 📝 Tombol Kirim ditekan");
+    console.log("- username:", username);
+    console.log("- userId:", userId);
+    console.log("- receiverId:", receiverId);
+    console.log("- userRole:", userRole);
+    console.log("- message:", message);
 
     if (message.trim() && username && userId && receiverId) {
       const msgData = {
@@ -266,139 +299,140 @@ export default function ChatScreen() {
         waktu: new Date().toISOString(),
       };
 
-      // console.log("[DEBUG] Sending text message:", msgData);
-      // console.log("[DEBUG] Socket connected:", socket.connected);
+      console.log("[DEBUG] 📤 Sending text message:", msgData);
+      console.log("[DEBUG] 🔌 Socket connected:", socket.connected);
 
       socket.emit("chat message", msgData);
       setMessage("");
     } else {
-      console.warn("Gagal kirim pesan: Ada data kosong.");
+      console.warn("⚠️ Gagal kirim pesan: Ada data kosong.");
     }
   };
 
   useEffect(() => {
-  const jadwal_id = Array.isArray(rawParams.jadwal_id)
-    ? rawParams.jadwal_id[0]
-    : rawParams.jadwal_id;
+    const jadwal_id = Array.isArray(rawParams.jadwal_id)
+      ? rawParams.jadwal_id[0]
+      : rawParams.jadwal_id;
 
-  const status = Array.isArray(rawParams.status)
-    ? rawParams.status[0]
-    : rawParams.status;
+    const status = Array.isArray(rawParams.status)
+      ? rawParams.status[0]
+      : rawParams.status;
 
-  const dokter_id = Array.isArray(rawParams.dokter_id)
-    ? rawParams.dokter_id[0]
-    : rawParams.dokter_id;
+    const dokter_id = Array.isArray(rawParams.dokter_id)
+      ? rawParams.dokter_id[0]
+      : rawParams.dokter_id;
 
-  console.log("[DEBUG] Rating Check - Parsed Params:", {
-    jadwal_id,
-    status,
-    dokter_id,
-    jadwal_id_type: typeof jadwal_id,
-    status_type: typeof status,
-    dokter_id_type: typeof dokter_id
-  });
-
-  const checkRating = async () => {
-    try {
-      const token = await SecureStore.getItemAsync("userToken");
-      console.log("[DEBUG] Checking conditions:", {
-        jadwal_id_exists: !!jadwal_id,
-        jadwal_id_value: jadwal_id,
-        status_value: status,
-        status_check: status === "selesai",
-        status_check_exact: status === 'selesai',
-        both_conditions: !!(jadwal_id && status === "selesai")
-      });
-
-      if (jadwal_id && status === "selesai") {        
-        const response = await axios.get(
-          `${BASE_URL}/rating/getbyid/${jadwal_id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const hasRated = 
-          response.data?.data?.hasRating || 
-          response.data?.hasRating || 
-          response.data?.rating || 
-          (response.data?.data?.rating && response.data.data.rating > 0) ||
-          false;
-
-        if (!hasRated) {
-          setShowRatingModal(true);
-          setSelectedJadwal(jadwal_id);
-          setSelectedDokter(dokter_id);
-        } else {
-          console.log("[DEBUG] ❌ Modal not shown - User already rated");
-        }
-      } else {
-        console.log("[DEBUG] ❌ CONDITIONS NOT MET:", {
-          hasJadwalId: !!jadwal_id,
-          statusMatch: status === "selesai",
-          currentStatus: status
-        });
-      }
-    } catch (error:any) {
-      console.error(
-        "[DEBUG] ❌ API Error:",
-        error.response?.status,
-        error.response?.data || error.message
-      );
-      
-      // ✅ Show modal if API error (for testing purposes)
-      console.log("[DEBUG] 🚨 API ERROR - Consider showing modal anyway for debug");
-      // setShowRatingModal(true); // Uncomment untuk testing jika API error
-    }
-  };
-
-  // ✅ Tambahkan delay untuk memastikan semua data sudah ready
-  const timer = setTimeout(() => {
-    checkRating();
-  }, 1000);
-
-  return () => clearTimeout(timer);
-}, [rawParams]);
-
-// ✅ Fix rating submission
-const handleSubmitRating = async () => {
-  try {
-    const token = await SecureStore.getItemAsync("userToken"); // ✅ Fix: userToken
-    
-    console.log("[DEBUG] Submitting rating:", {
-      jadwal: selectedJadwal,
-      dokter_id: selectedDokter,
-      rating: ratingValue
+    console.log("[DEBUG] Rating Check - Parsed Params:", {
+      jadwal_id,
+      status,
+      dokter_id,
+      jadwal_id_type: typeof jadwal_id,
+      status_type: typeof status,
+      dokter_id_type: typeof dokter_id,
     });
 
-    await axios.post(
-      `${BASE_URL}/rating/create`,
-      {
+    const checkRating = async () => {
+      try {
+        const token = await SecureStore.getItemAsync("userToken");
+        console.log("[DEBUG] Checking conditions:", {
+          jadwal_id_exists: !!jadwal_id,
+          jadwal_id_value: jadwal_id,
+          status_value: status,
+          status_check: status === "selesai",
+          status_check_exact: status === "selesai",
+          both_conditions: !!(jadwal_id && status === "selesai"),
+        });
+
+        if (jadwal_id && status === "selesai") {
+          const response = await axios.get(
+            `${BASE_URL}/rating/getbyid/${jadwal_id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          const hasRated =
+            response.data?.data?.hasRating ||
+            response.data?.hasRating ||
+            response.data?.rating ||
+            (response.data?.data?.rating && response.data.data.rating > 0) ||
+            false;
+
+          if (!hasRated) {
+            setShowRatingModal(true);
+            setSelectedJadwal(jadwal_id);
+            setSelectedDokter(dokter_id);
+          } else {
+            console.log("[DEBUG] ❌ Modal not shown - User already rated");
+          }
+        } else {
+          console.log("[DEBUG] ❌ CONDITIONS NOT MET:", {
+            hasJadwalId: !!jadwal_id,
+            statusMatch: status === "selesai",
+            currentStatus: status,
+          });
+        }
+      } catch (error: any) {
+        console.error(
+          "[DEBUG] ❌ API Error:",
+          error.response?.status,
+          error.response?.data || error.message
+        );
+
+        // ✅ Show modal if API error (for testing purposes)
+        console.log(
+          "[DEBUG] 🚨 API ERROR - Consider showing modal anyway for debug"
+        );
+        // setShowRatingModal(true); // Uncomment untuk testing jika API error
+      }
+    };
+
+    // ✅ Tambahkan delay untuk memastikan semua data sudah ready
+    const timer = setTimeout(() => {
+      checkRating();
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [rawParams]);
+
+  // ✅ Fix rating submission
+  const handleSubmitRating = async () => {
+    try {
+      const token = await SecureStore.getItemAsync("userToken"); // ✅ Fix: userToken
+
+      console.log("[DEBUG] Submitting rating:", {
         jadwal: selectedJadwal,
         dokter_id: selectedDokter,
         rating: ratingValue,
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+      });
 
-    alert("Terima kasih atas rating Anda!");
-    setShowRatingModal(false);
-    setRatingValue(0); // ✅ Reset rating
-  } catch (error:any) {
-    console.error(
-      "Gagal kirim rating:",
-      error.response?.data || error.message
-    );
-    alert(
-      error.response?.data?.message || "Gagal menyimpan rating"
-    );
-  }
-};
+      await axios.post(
+        `${BASE_URL}/rating/create`,
+        {
+          jadwal: selectedJadwal,
+          dokter_id: selectedDokter,
+          rating: ratingValue,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      alert("Terima kasih atas rating Anda!");
+      setShowRatingModal(false);
+      setRatingValue(0); // ✅ Reset rating
+    } catch (error: any) {
+      console.error(
+        "Gagal kirim rating:",
+        error.response?.data || error.message
+      );
+      alert(error.response?.data?.message || "Gagal menyimpan rating");
+    }
+  };
 
   // TANPA NAMA
+  // ✅ FINAL renderItem function
   const renderItem = ({ item }) => {
     const isSender = item.senderId === userId;
 
@@ -408,21 +442,55 @@ const handleSubmitRating = async () => {
           isSender ? "bg-skyDark self-end" : "bg-[#C3E9FF] self-start"
         }`}
       >
-        {/* Kalau pengirim adalah kamu, tampilkan "Saya" */}
-        {/* {isSender && <Text className="font-bold text-white">Saya</Text>} */}
-
         {item.type === "image" && item.image ? (
-          <TouchableOpacity onPress={() => setPreviewImage(item.image)}>
+          <TouchableOpacity
+            onPress={() => {
+              console.log("[DEBUG] 🖼️ Opening preview for image:", item.image);
+              setPreviewImage(item.image);
+            }}
+            onLongPress={() => {
+              console.log("[DEBUG] 📋 Image URI:", item.image);
+            }}
+          >
             <Image
-              source={{ uri: item.image }}
+              source={{
+                uri: item.image.startsWith("data:")
+                  ? item.image // Base64 image dengan header
+                  : item.image.startsWith("http")
+                  ? item.image // URL lengkap
+                  : `http://10.52.170.162:3330${item.image}`, // Path relatif
+              }}
               className="w-24 h-32 mt-1 rounded-md"
               resizeMode="cover"
+              onError={(error) => {
+                console.log("❌ Error loading image:", error.nativeEvent.error);
+                console.log("❌ Failed image URI:", item.image);
+              }}
+              onLoad={() => {
+                console.log("✅ Image loaded successfully");
+              }}
             />
           </TouchableOpacity>
-        ) : (
+        ) : item.type === "text" && item.text ? (
           <Text className={`${isSender ? "text-white" : "text-black"}`}>
             {item.text}
           </Text>
+        ) : (
+          <View>
+            <Text
+              className={`${isSender ? "text-white" : "text-black"} italic`}
+            >
+              [Pesan tidak dapat ditampilkan]
+            </Text>
+            <Text
+              className={`${
+                isSender ? "text-white" : "text-black"
+              } text-xs opacity-50`}
+            >
+              Type: {item.type} | HasText: {!!item.text} | HasImage:{" "}
+              {!!item.image}
+            </Text>
+          </View>
         )}
       </View>
     );
@@ -512,20 +580,71 @@ const handleSubmitRating = async () => {
         </KeyboardAvoidingView>
 
         {/* Preview Modal */}
-        <Modal visible={!!previewImage} transparent={true} animationType="fade">
-          <View className="flex-1 bg-black bg-opacity-80 justify-center items-center">
+        <Modal
+          visible={!!previewImage}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setPreviewImage(null)}
+        >
+          <View className="flex-1 bg-black/80 justify-center items-center">
+            {/* Close Button */}
             <TouchableOpacity
-              onPress={() => setPreviewImage(null)}
-              className="absolute top-10 right-4 z-10"
+              onPress={() => {
+                console.log("[DEBUG] 🚫 Closing preview modal");
+                setPreviewImage(null);
+              }}
+              className="absolute top-10 right-4 z-10 bg-black/50 rounded-full p-2"
             >
               <Ionicons name="close-circle" size={36} color="white" />
             </TouchableOpacity>
+
+            {/* Background Touchable */}
+            <TouchableOpacity
+              onPress={() => setPreviewImage(null)}
+              className="absolute inset-0 bg-transparent"
+              activeOpacity={1}
+            />
+
+            {/* Image Container */}
             {previewImage && (
-              <Image
-                source={{ uri: previewImage }}
-                className="w-[90%] h-[60%] rounded-lg"
-                resizeMode="contain"
-              />
+              <View className="justify-center items-center w-full h-full p-4">
+                <Image
+                  source={{
+                    uri: previewImage.startsWith("data:")
+                      ? previewImage
+                      : previewImage.startsWith("http")
+                      ? previewImage
+                      : `http://10.52.170.162:3330${previewImage}`,
+                  }}
+                  style={{
+                    width: "90%",
+                    height: "60%",
+                  }}
+                  resizeMode="contain"
+                  onLoadStart={() => {
+                    console.log("🔄 Image loading started...");
+                  }}
+                  onLoad={(event) => {
+                    console.log("✅ Preview image loaded successfully");
+                    console.log("Image dimensions:", event.nativeEvent.source);
+                  }}
+                  onError={(error) => {
+                    console.log(
+                      "❌ Preview image error:",
+                      error.nativeEvent.error
+                    );
+                    console.log("❌ Preview URI:", previewImage);
+                    console.log(
+                      "❌ Full URI being used:",
+                      previewImage.startsWith("data:")
+                        ? "Base64 Image"
+                        : previewImage.startsWith("http")
+                        ? previewImage
+                        : `http://10.52.170.162:3330${previewImage}`
+                    );
+                  }}
+                />
+              </View>
             )}
           </View>
         </Modal>
