@@ -1,4 +1,3 @@
-// screens/Jadwal.tsx
 import {
   View,
   Text,
