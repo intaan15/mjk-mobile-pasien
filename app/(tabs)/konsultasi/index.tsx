@@ -22,12 +22,28 @@ import axios from "axios";
 import { useFocusEffect } from "@react-navigation/native";
 import { BASE_URL } from "@env";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Ionicons } from "@expo/vector-icons";
+
 
 const { width } = Dimensions.get("window");
 
 interface User {
   nama_dokter: string;
 }
+
+const getImageUrl = (imagePath: string | null | undefined): string | null => {
+  if (!imagePath) return null;
+
+  if (imagePath.startsWith("http")) {
+    return imagePath;
+  }
+  const baseUrlWithoutApi = BASE_URL.replace("/api", "");
+
+  const cleanPath = imagePath.startsWith("/")
+    ? imagePath.substring(1)
+    : imagePath;
+  return `${baseUrlWithoutApi}/${cleanPath}`;
+};
 
 export default function HomeScreen() {
   const [userData, setUserData] = useState<User | null>(null);
@@ -49,23 +65,38 @@ export default function HomeScreen() {
   const fetchChatList = async (userId: string, token: string) => {
     try {
       const response = await axios.get(`${BASE_URL}/chatlist/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
+      console.log("RAW chatlist data:", response.data);
+
+      // PERBAIKAN: Gunakan getImageUrl yang sudah ada
       const enrichedChatList = response.data.map((chat: any) => {
+        console.log("Original foto_profil:", chat.participant?.foto_profil); // Debug log
+
         return {
           ...chat,
-          nama_dokter: chat.participant?.nama || "Dokter",
-          foto_dokter: chat.participant?.foto_profil || fallbackImageUrl,
+          nama_dokter: chat.participant?.nama || "Pasien",
+          foto_profil_dokter: getImageUrl(chat.participant?.foto_profil), // Gunakan getImageUrl
           id_dokter: chat.participant?._id || "",
+          lastMessageDate: chat.lastMessageDate || new Date().toISOString(),
         };
       });
+
+      console.log(
+        "Processed chatlist:",
+        enrichedChatList.map((chat) => ({
+          nama: chat.nama_dokter,
+          foto_url: chat.foto_profil_dokter,
+        }))
+      ); // Debug log
 
       setChatList(enrichedChatList);
     } catch (error) {
       console.log("Gagal ambil chat list", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -151,15 +182,15 @@ export default function HomeScreen() {
             className="px-6 py-4"
             contentContainerStyle={{ paddingBottom: 80 }}
             refreshControl={
-                          <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            colors={["#025F96"]} // Android
-                            tintColor="#025F96" // iOS
-                            title="Memuat ulang..." // iOS
-                            titleColor="#025F96" // iOS
-                          />
-                        }
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#025F96"]} // Android
+                tintColor="#025F96" // iOS
+                title="Memuat ulang..." // iOS
+                titleColor="#025F96" // iOS
+              />
+            }
           >
             {/* {filteredChats.map((chat) => ( */}
             {chatList.map((chat) => (
@@ -213,11 +244,21 @@ export default function HomeScreen() {
                   </Text>
                 </View>
                 <View className="flex flex-row items-center">
-                  <Image
-                    source={{ uri: chat.foto_masyarakat || fallbackImageUrl }}
-                    className="h-16 w-16 rounded-full border border-gray-300"
-                    resizeMode="cover"
-                  />
+                  <View className="h-16 w-16 rounded-full border border-gray-300 bg-gray-100 justify-center items-center">
+                    {chat.foto_profil_dokter ? (
+                      <Image
+                        source={{
+                          uri: getImageUrl(chat.foto_profil_dokter), // Pakai getImageUrl seperti di profil
+                        }}
+                        className="h-full w-full rounded-full"
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View className="h-16 w-16 rounded-full border border-gray-300 items-center justify-center bg-gray-200">
+                        <Ionicons name="person" size={32} color="#0C4A6E" />
+                      </View>
+                    )}
+                  </View>
 
                   <View className="ml-4 flex-1">
                     <View className="flex flex-row justify-between">
