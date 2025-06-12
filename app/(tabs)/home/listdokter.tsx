@@ -50,6 +50,8 @@ export default function DoctorListView() {
     getTitle,
     getLoadingText,
     getDisplayRating,
+    getImageUrl,
+
   } = useDoctorListViewModel();
 
   return (
@@ -105,13 +107,18 @@ export default function DoctorListView() {
                   >
                     <View className="px-4">
                       {doctor.foto_profil_dokter ? (
-                        <Image
-                          source={{
-                            uri: `https://mjk-backend-production.up.railway.app/uploads/${doctor.foto_profil_dokter}`,
-                          }}
-                          className="h-16 w-16 rounded-full border border-gray-300"
-                          resizeMode="cover"
-                        />
+                        (() => {
+                          const fotoUrl = getImageUrl(
+                            doctor.foto_profil_dokter
+                          );
+                          return (
+                            <Image
+                              source={{ uri: fotoUrl }}
+                              className="h-16 w-16 rounded-full border border-gray-300"
+                              resizeMode="cover"
+                            />
+                          );
+                        })()
                       ) : (
                         <View className="h-16 w-16 rounded-full border border-gray-300 items-center justify-center bg-gray-200">
                           <Ionicons name="person" size={32} color="#0C4A6E" />

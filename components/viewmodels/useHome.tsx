@@ -396,6 +396,19 @@ export const useDoctorListViewModel = () => {
       setLoading(false);
     }
   };
+  const getImageUrl = (imagePath: string | null | undefined): string | null => {
+    if (!imagePath) return null;
+
+    if (imagePath.startsWith("http")) {
+      return imagePath;
+    }
+    const baseUrlWithoutApi = BASE_URL.replace("/api", "");
+
+    const cleanPath = imagePath.startsWith("/")
+      ? imagePath.substring(1)
+      : imagePath;
+    return `${baseUrlWithoutApi}/${cleanPath}`;
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -442,6 +455,8 @@ export const useDoctorListViewModel = () => {
     getTitle,
     getLoadingText,
     getDisplayRating,
+    getImageUrl,
+    
   };
 };
 
@@ -776,5 +791,6 @@ export const useKeluhanViewModel = ({
     isLoading,
     handleSubmit,
     handleBack,
+    
   };
 };
