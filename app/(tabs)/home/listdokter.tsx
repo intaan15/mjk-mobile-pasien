@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import React, { useState, useEffect, useCallback } from "react";
+import React from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { FontAwesome } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -14,9 +14,6 @@ import Background from "../../../components/background";
 import { images } from "../../../constants/images";
 import { Ionicons } from "@expo/vector-icons";
 import { useDoctorListViewModel } from "../../../components/viewmodels/useHome";
-import * as SecureStore from "expo-secure-store";
-import axios from "axios";
-import { BASE_URL } from "@env";
 
 type Doctor = {
   _id: string;
@@ -44,105 +41,16 @@ export default function DoctorListView() {
   const {
     doctors,
     loading,
+    doctorRatings,
+    ratingsLoading,
+    fetchedDoctorIds,
+    errorMessage,
     handleDoctorPress,
     handleBackPress,
     getTitle,
     getLoadingText,
+    getDisplayRating,
   } = useDoctorListViewModel();
-
-  const [doctorRatings, setDoctorRatings] = useState<{ [key: string]: number }>({});
-  const [ratingsLoading, setRatingsLoading] = useState(false);
-  const [fetchedDoctorIds, setFetchedDoctorIds] = useState<Set<string>>(new Set()); // Track fetched doctor IDs
-  const [errorMessage, setErrorMessage] = useState<string | null>(null); // Store error messages
-
-  // Calculate average rating
-  const calculateAverageRating = (ratings: Rating[]): number => {
-    if (ratings.length === 0) return 0;
-    const sum = ratings.reduce((acc, rating) => acc + rating.rating, 0);
-    return Math.round((sum / ratings.length) * 10) / 10; // Round to 1 decimal place
-  };
-
-  // Fetch ratings for unfetched doctors
-  const fetchDoctorRatings = useCallback(async () => {
-    if (doctors.length === 0) return;
-
-    // Filter out doctors whose ratings have already been fetched
-    const unfetchedDoctors = doctors.filter((doctor) => !fetchedDoctorIds.has(doctor._id));
-    if (unfetchedDoctors.length === 0) return;
-
-    setRatingsLoading(true);
-    setErrorMessage(null); // Clear previous errors
-
-    try {
-      const token = await SecureStore.getItemAsync("userToken");
-      if (!token) {
-        console.log("Token not found");
-        setErrorMessage("Authentication error. Please log in again.");
-        return;
-      }
-
-      console.log("Fetching ratings for", unfetchedDoctors.length, "doctors");
-
-      const ratingsPromises = unfetchedDoctors.map(async (doctor) => {
-        try {
-          console.log(`Fetching rating for doctor: ${doctor._id}`);
-          const response = await axios.get(
-            `${BASE_URL}/rating/dokter/${doctor._id}`,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-
-          console.log(`Rating response for ${doctor._id}:`, response.data);
-
-          if (response.data.success && response.data.data) {
-            const averageRating = calculateAverageRating(response.data.data);
-            console.log(`Calculated average rating for ${doctor._id}: ${averageRating}`);
-            return { doctorId: doctor._id, rating: averageRating };
-          }
-          return { doctorId: doctor._id, rating: doctor.rating_dokter || 0 };
-        } catch (error: any) {
-          const errorMsg = error?.response?.data?.message || error.message;
-          console.log(`Error fetching rating for doctor ${doctor._id}:`, errorMsg);
-          return { doctorId: doctor._id, rating: doctor.rating_dokter || 0 };
-        }
-      });
-
-      const ratingsResults = await Promise.all(ratingsPromises);
-      const ratingsMap: { [key: string]: number } = { ...doctorRatings };
-
-      ratingsResults.forEach(({ doctorId, rating }) => {
-        ratingsMap[doctorId] = rating;
-      });
-
-      console.log("Final ratings map:", ratingsMap);
-      setDoctorRatings(ratingsMap);
-      setFetchedDoctorIds((prev) => new Set([...prev, ...unfetchedDoctors.map((d) => d._id)]));
-    } catch (error: any) {
-      const errorMsg = error?.response?.data?.message || error.message;
-      console.log("Error fetching doctor ratings:", errorMsg);
-      setErrorMessage("Failed to load ratings. Please try again later.");
-    } finally {
-      setRatingsLoading(false);
-    }
-  }, [doctors, fetchedDoctorIds, doctorRatings]);
-
-  // Trigger fetch when doctors or loading change
-  useEffect(() => {
-    if (doctors.length > 0 && !loading) {
-      fetchDoctorRatings();
-    }
-  }, [doctors, loading, fetchDoctorRatings]);
-
-  // Get display rating
-  const getDisplayRating = useCallback((doctor: Doctor): number => {
-    const apiRating = doctorRatings[doctor._id];
-    console.log(`Getting display rating for ${doctor._id}: API=${apiRating}, Original=${doctor.rating_dokter}`);
-    return apiRating !== undefined ? apiRating : doctor.rating_dokter || 0;
-  }, [doctorRatings]);
 
   return (
     <Background>
@@ -221,11 +129,16 @@ export default function DoctorListView() {
                       <View className="h-[2px] bg-skyDark w-11/12" />
                       <View className="flex-row pt-1 items-center">
                         <FontAwesome name="star" size={20} color="#025F96" />
-                        <Text className="font-bold text-base text-skyDark pl-1">
-                          {displayRating > 0 ? displayRating.toFixed(1) : "0"}
-                        </Text>
-                        {ratingsLoading && !fetchedDoctorIds.has(doctor._id) && (
-                          <Text className="text-xs text-gray-500 ml-2">Loading...</Text>
+                        {ratingsLoading && !fetchedDoctorIds.has(doctor._id) ? (
+                          <ActivityIndicator
+                            size="small"
+                            color="#025F96"
+                            className="ml-2"
+                          />
+                        ) : (
+                          <Text className="font-bold text-base text-skyDark pl-1">
+                            {getDisplayRating(doctor).toFixed(1)}
+                          </Text>
                         )}
                       </View>
                     </View>

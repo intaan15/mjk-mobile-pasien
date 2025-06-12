@@ -423,7 +423,7 @@ export default function ChatScreen() {
       setShowRatingModal(false);
       setRatingValue(0); // ✅ Reset rating
     } catch (error: any) {
-      console.error(
+      console.log(
         "Gagal kirim rating:",
         error.response?.data || error.message
       );

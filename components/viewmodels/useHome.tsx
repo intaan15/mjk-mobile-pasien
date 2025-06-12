@@ -31,9 +31,30 @@ export interface Jadwal {
   status_konsul: string;
 }
 
+export type Doctor = {
+  _id: string;
+  nama_dokter: string;
+  spesialis_dokter: string;
+  rating_dokter: number;
+  foto_profil_dokter?: string;
+};
+
+export type Rating = {
+  _id: string;
+  jadwal: string;
+  masyarakat_id: {
+    _id: string;
+    nama: string;
+  };
+  dokter_id: string;
+  rating: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export const useHomeViewModel = () => {
   const router = useRouter();
-    const [userData, setUserData] = useState<User | null>(null);
+  const [userData, setUserData] = useState<User | null>(null);
   const [artikels, setArtikels] = useState<Article[]>([]);
   const [displayedArticles, setDisplayedArticles] = useState<Article[]>([]);
   const [jadwalList, setJadwalList] = useState<Jadwal[]>([]);
@@ -42,6 +63,7 @@ export const useHomeViewModel = () => {
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const artikelPool = useRef<Article[]>([]);
   const currentIndex = useRef(0);
+
   const getDayName = (dateString: string): string => {
     const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
     const date = new Date(dateString);
@@ -243,25 +265,14 @@ export const useHomeViewModel = () => {
     userData,
     displayedArticles,
     loading,
-    
     slideAnim,
     fadeAnim,
-    
     upcomingJadwal: getUpcomingJadwal(),
     hasNoAppointments: hasNoUpcomingAppointments(),
-    
     getDayName,
     navigateToDoctor,
     navigateToArticle,
   };
-};
-
-type Doctor = {
-  _id: string;
-  nama_dokter: string;
-  spesialis_dokter: string;
-  rating_dokter: number;
-  foto_profil_dokter?: string;
 };
 
 export const useDoctorListViewModel = () => {
@@ -269,6 +280,99 @@ export const useDoctorListViewModel = () => {
   const { spesialis } = useLocalSearchParams();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [doctorRatings, setDoctorRatings] = useState<{ [key: string]: number }>({});
+  const [ratingsLoading, setRatingsLoading] = useState(false);
+  const [fetchedDoctorIds, setFetchedDoctorIds] = useState<Set<string>>(new Set());
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Calculate average rating
+  const calculateAverageRating = (ratings: Rating[]): number => {
+    if (ratings.length === 0) return 0;
+    const sum = ratings.reduce((acc, rating) => acc + rating.rating, 0);
+    return Math.round((sum / ratings.length) * 10) / 10; // Round to 1 decimal place
+  };
+
+  // Fetch ratings for unfetched doctors
+  const fetchDoctorRatings = useCallback(async () => {
+    if (doctors.length === 0) return;
+
+    // Filter out doctors whose ratings have already been fetched
+    const unfetchedDoctors = doctors.filter((doctor) => !fetchedDoctorIds.has(doctor._id));
+    if (unfetchedDoctors.length === 0) return;
+
+    setRatingsLoading(true);
+    setErrorMessage(null); // Clear previous errors
+
+    try {
+      const token = await SecureStore.getItemAsync("userToken");
+      if (!token) {
+        console.log("Token tidak ditemukan");
+        setErrorMessage("Kesalahan autentikasi. Silakan login kembali.");
+        return;
+      }
+
+      console.log("Mengambil rating untuk", unfetchedDoctors.length, "dokter");
+
+      const ratingsPromises = unfetchedDoctors.map(async (doctor) => {
+        try {
+          console.log(`Mengambil rating untuk dokter: ${doctor._id}`);
+          const response = await axios.get(
+            `${BASE_URL}/rating/dokter/${doctor._id}`,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          console.log(`Respons rating untuk ${doctor._id}:`, response.data);
+
+          if (response.data.success && response.data.data) {
+            const averageRating = calculateAverageRating(response.data.data);
+            console.log(`Rata-rata rating untuk ${doctor._id}: ${averageRating}`);
+            return { doctorId: doctor._id, rating: averageRating };
+          }
+          return { doctorId: doctor._id, rating: doctor.rating_dokter || 0 };
+        } catch (error: any) {
+          const errorMsg = error?.response?.data?.message || error.message;
+          console.log(`Gagal mengambil rating untuk dokter ${doctor._id}:`, errorMsg);
+          return { doctorId: doctor._id, rating: doctor.rating_dokter || 0 };
+        }
+      });
+
+      const ratingsResults = await Promise.all(ratingsPromises);
+      const ratingsMap: { [key: string]: number } = { ...doctorRatings };
+
+      ratingsResults.forEach(({ doctorId, rating }) => {
+        ratingsMap[doctorId] = rating;
+      });
+
+      console.log("Peta rating akhir:", ratingsMap);
+      setDoctorRatings(ratingsMap);
+      setFetchedDoctorIds((prev) => new Set([...prev, ...unfetchedDoctors.map((d) => d._id)]));
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.message || error.message;
+      console.log("Gagal mengambil rating dokter:", errorMsg);
+      setErrorMessage("Gagal memuat rating. Silakan coba lagi nanti.");
+    } finally {
+      setRatingsLoading(false);
+    }
+  }, [doctors, fetchedDoctorIds, doctorRatings]);
+
+  // Trigger fetch when doctors or loading change
+  useEffect(() => {
+    if (doctors.length > 0 && !loading) {
+      fetchDoctorRatings();
+    }
+  }, [doctors, loading, fetchDoctorRatings]);
+
+  // Get display rating
+  const getDisplayRating = useCallback((doctor: Doctor): number => {
+    const apiRating = doctorRatings[doctor._id];
+    console.log(`Mendapatkan rating tampilan untuk ${doctor._id}: API=${apiRating}, Original=${doctor.rating_dokter}`);
+    return apiRating !== undefined ? apiRating : doctor.rating_dokter || 0;
+  }, [doctorRatings]);
 
   const fetchDoctors = async () => {
     try {
@@ -330,10 +434,15 @@ export const useDoctorListViewModel = () => {
     doctors: filteredDoctors,
     loading,
     spesialis,
+    doctorRatings,
+    ratingsLoading,
+    fetchedDoctorIds,
+    errorMessage,
     handleDoctorPress,
     handleBackPress,
     getTitle,
     getLoadingText,
+    getDisplayRating,
   };
 };
 
