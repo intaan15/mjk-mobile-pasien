@@ -1,4 +1,3 @@
-// views/ArtikelListView.tsx
 import {
   View,
   Text,
@@ -14,7 +13,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import TabButton from "../../../components/tabbutton";
 import { images } from "../../../constants/images";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useArtikelViewModel } from "../../../components/viewmodels/artikel/useArtikel";
+import { useArtikelViewModel } from "../../../components/viewmodels/useArtikel";
 
 export default function ArtikelListView() {
   const insets = useSafeAreaInsets();

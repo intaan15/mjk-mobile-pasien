@@ -11,9 +11,7 @@ import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import DatePickerComponent from "../../components/picker/datepicker";
-// import { BASE_URL } from "@env";
-// const BASE_URL = "https://stg-konsultasi-dok.mojokertokab.go.id/api";
-const BASE_URL = "http://10.52.170.158:3330/api";
+import { BASE_URL } from "@env";
 
 interface ModalContentProps {
   modalType: string;
@@ -94,7 +92,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
 
         setUserData(response.data);
       } catch (error: any) {
-        console.log("Gagal mengambil data profil:", error);
+        console.log("Gagal mengambil data profil modal content:", error);
       }
     };
 
