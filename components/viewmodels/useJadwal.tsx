@@ -1,9 +1,22 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import { BASE_URL } from "@env";
+
+export type Rating = {
+  _id: string;
+  jadwal: string;
+  masyarakat_id: {
+    _id: string;
+    nama: string;
+  };
+  dokter_id: string;
+  rating: number;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export interface JadwalItem {
   _id: string;
@@ -11,12 +24,14 @@ export interface JadwalItem {
     _id: string;
   };
   dokter_id: {
+    _id: string;
     nama_dokter: string;
     foto_profil_dokter?: string;
-    rating_dokter: number;
+    rating_dokter?: number;
   };
   tgl_konsul: string;
   jam_konsul: string;
+  keluhan_pasien: string;
   status_konsul:
     | "menunggu"
     | "berlangsung"
@@ -29,6 +44,13 @@ export const useJadwalViewModel = () => {
   const router = useRouter();
   const [jadwalList, setJadwalList] = useState<JadwalItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [doctorRatings, setDoctorRatings] = useState<{ [key: string]: number }>(
+    {}
+  );
+  const [ratingsLoading, setRatingsLoading] = useState(false);
+  const [fetchedDoctorIds, setFetchedDoctorIds] = useState<Set<string>>(
+    new Set()
+  );
   const [refreshing, setRefreshing] = useState(false);
 
   const getDayName = (dateString: string): string => {
@@ -67,7 +89,22 @@ export const useJadwalViewModel = () => {
       });
 
       const filtered = res.data.filter((j: any) => {
-        return j.masyarakat_id && j.masyarakat_id._id === userId;
+        return (
+          j &&
+          j._id &&
+          j.masyarakat_id &&
+          j.masyarakat_id._id === userId &&
+          j.dokter_id &&
+          typeof j.dokter_id === "object" &&
+          j.dokter_id._id &&
+          j.dokter_id.nama_dokter &&
+          j.tgl_konsul &&
+          j.jam_konsul &&
+          j.status_konsul &&
+          ["menunggu", "berlangsung", "diterima", "selesai", "ditolak"].includes(
+            j.status_konsul
+          )
+        );
       });
 
       setJadwalList(filtered);
@@ -75,6 +112,87 @@ export const useJadwalViewModel = () => {
       console.log("Gagal fetch jadwal:", err.message);
     }
   };
+  // Calculate average rating
+  const calculateAverageRating = (ratings: Rating[]): number => {
+    if (ratings.length === 0) return 0;
+    const sum = ratings.reduce((acc, rating) => acc + rating.rating, 0);
+    return Math.round((sum / ratings.length) * 10) / 10;
+  };
+
+  const fetchDoctorRatings = useCallback(async () => {
+    if (jadwalList.length === 0) return;
+
+    const unfetchedDoctors = jadwalList
+      .filter((jadwal) => !fetchedDoctorIds.has(jadwal.dokter_id._id))
+      .map((jadwal) => jadwal.dokter_id);
+
+    if (unfetchedDoctors.length === 0) return;
+
+    setRatingsLoading(true);
+    try {
+      const token = await SecureStore.getItemAsync("userToken");
+      if (!token) {
+        console.log("Token tidak ditemukan");
+        return;
+      }
+
+      const ratingsPromises = unfetchedDoctors.map(async (dokter) => {
+        try {
+          const response = await axios.get(
+            `${BASE_URL}/rating/dokter/${dokter._id}`,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (response.data.success && response.data.data) {
+            const averageRating = calculateAverageRating(response.data.data);
+            return { doctorId: dokter._id, rating: averageRating };
+          }
+          return { doctorId: dokter._id, rating: dokter.rating_dokter || 0 };
+        } catch (error: any) {
+          console.log(
+            `Gagal mengambil rating untuk dokter ${dokter._id}:`,
+            error.message
+          );
+          return { doctorId: dokter._id, rating: dokter.rating_dokter || 0 };
+        }
+      });
+
+      const ratingsResults = await Promise.all(ratingsPromises);
+      const ratingsMap: { [key: string]: number } = { ...doctorRatings };
+
+      ratingsResults.forEach(({ doctorId, rating }) => {
+        ratingsMap[doctorId] = rating;
+      });
+
+      setDoctorRatings(ratingsMap);
+      setFetchedDoctorIds(
+        (prev) => new Set([...prev, ...unfetchedDoctors.map((d) => d._id)])
+      );
+    } catch (error: any) {
+      console.log("Gagal mengambil rating dokter:", error.message);
+    } finally {
+      setRatingsLoading(false);
+    }
+  }, [jadwalList, fetchedDoctorIds, doctorRatings]);
+
+  useEffect(() => {
+    if (jadwalList.length > 0 && !loading) {
+      fetchDoctorRatings();
+    }
+  }, [jadwalList, loading, fetchDoctorRatings]);
+
+  const getDisplayRating = useCallback(
+    (dokter: JadwalItem["dokter_id"]): number => {
+      const apiRating = doctorRatings[dokter._id];
+      return apiRating !== undefined ? apiRating : dokter.rating_dokter || 0;
+    },
+    [doctorRatings]
+  );
 
   const onRefresh = useCallback(async (): Promise<void> => {
     setRefreshing(true);
@@ -160,6 +278,7 @@ export const useJadwalViewModel = () => {
     jadwalList,
     loading,
     refreshing,
+    ratingsLoading,
 
     // Actions
     onRefresh,
@@ -167,7 +286,10 @@ export const useJadwalViewModel = () => {
 
     // Helpers
     getDayName,
+    getDisplayRating,
     getStatusBackgroundColor,
+    calculateAverageRating,
+    fetchDoctorRatings,
     getStatusTextColor,
     formatDate,
     getProfileImageUri,
