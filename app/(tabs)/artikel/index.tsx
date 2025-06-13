@@ -27,6 +27,7 @@ export default function ArtikelListView() {
     navigateBack,
     navigateToDetail,
     getFilteredArtikels,
+    getImageUrl
   } = useArtikelViewModel();
 
   return (
@@ -95,7 +96,7 @@ export default function ArtikelListView() {
                   <Image
                     className="rounded-2xl w-full h-24 p-1"
                     source={{
-                      uri: `https://mjk-backend-production.up.railway.app/imagesdokter/${item.gambar_artikel}`,
+                      uri: getImageUrl(item.gambar_artikel),
                     }}
                     resizeMode="cover"
                   />

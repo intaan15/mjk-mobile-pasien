@@ -77,6 +77,20 @@ export const useArtikelViewModel = () => {
     }, [fetchArtikels])
   );
 
+  const getImageUrl = (imagePath: string | null | undefined): string | null => {
+    if (!imagePath) return null;
+
+    if (imagePath.startsWith("http")) {
+      return imagePath;
+    }
+    const baseUrlWithoutApi = BASE_URL.replace("/api", "");
+
+    const cleanPath = imagePath.startsWith("/")
+      ? imagePath.substring(1)
+      : imagePath;
+    return `${baseUrlWithoutApi}/${cleanPath}`;
+  };
+
   return {
     // State
     artikels,
@@ -91,6 +105,7 @@ export const useArtikelViewModel = () => {
     navigateBack,
     navigateToDetail,
     getFilteredArtikels,
+    getImageUrl,
   };
 };
 
@@ -179,7 +194,17 @@ export class ArtikelDetailViewModel {
     return new Date(dateString).toLocaleDateString();
   }
 
-  getImageUrl(imageName: string): string {
-    return `https://mjk-backend-production.up.railway.app/imagesdokter/${imageName}`;
-  }
+  getImageUrl = (imagePath: string | null | undefined): string | null => {
+    if (!imagePath) return null;
+
+    if (imagePath.startsWith("http")) {
+      return imagePath;
+    }
+    const baseUrlWithoutApi = BASE_URL.replace("/api", "");
+
+    const cleanPath = imagePath.startsWith("/")
+      ? imagePath.substring(1)
+      : imagePath;
+    return `${baseUrlWithoutApi}/${cleanPath}`;
+  };
 }
