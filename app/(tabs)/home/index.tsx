@@ -128,6 +128,7 @@ export default function HomeView() {
     getDayName,
     navigateToDoctor,
     navigateToArticle,
+    getImageUrl
   } = useHomeViewModel();
 
   return (
@@ -293,16 +294,16 @@ export default function HomeView() {
                         className="bg-white rounded-2xl w-full h-40 shadow-md mb-5"
                       >
                         <Image
-                          className="rounded-t-2xl w-full h-24"
+                          className="rounded-2xl w-full h-24 p-1"
                           source={{
-                            uri: `https://mjk-backend-production.up.railway.app/imagesdokter/${item.gambar_artikel}`,
+                            uri: getImageUrl(item.gambar_artikel),
                           }}
                           resizeMode="cover"
                         />
                         <View className="flex-row justify-between p-3">
                           <View className="flex-1">
                             <Text
-                              className="truncate font-bold text-base text-skyDark"
+                              className="truncate w-11/12 font-bold text-base text-skyDark"
                               numberOfLines={1}
                               ellipsizeMode="tail"
                             >

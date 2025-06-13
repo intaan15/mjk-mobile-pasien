@@ -65,7 +65,15 @@ export const useHomeViewModel = () => {
   const currentIndex = useRef(0);
 
   const getDayName = (dateString: string): string => {
-    const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const days = [
+      "Minggu",
+      "Senin",
+      "Selasa",
+      "Rabu",
+      "Kamis",
+      "Jumat",
+      "Sabtu",
+    ];
     const date = new Date(dateString);
     return days[date.getDay()];
   };
@@ -75,7 +83,7 @@ export const useHomeViewModel = () => {
       const userId = await SecureStore.getItemAsync("userId");
       const token = await SecureStore.getItemAsync("userToken");
       const cleanedUserId = userId?.replace(/"/g, "");
-      
+
       if (cleanedUserId) {
         const response = await axios.get(
           `${BASE_URL}/masyarakat/getbyid/${cleanedUserId}`,
@@ -86,14 +94,14 @@ export const useHomeViewModel = () => {
             },
           }
         );
-        
+
         if (response.data.role !== "masyarakat") {
           await SecureStore.deleteItemAsync("userToken");
           await SecureStore.deleteItemAsync("userId");
           router.replace("/screens/signin");
           return;
         }
-        
+
         setUserData(response.data);
       }
     } catch (error) {
@@ -105,30 +113,42 @@ export const useHomeViewModel = () => {
     try {
       const token = await SecureStore.getItemAsync("userToken");
       if (!token) return;
-      
+
       const response = await fetch(`${BASE_URL}/artikel/getall`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
-      
+
       const data = await response.json();
       setArtikels(data);
-      
+
       const filtered = data.filter(
         (article: Article) =>
           article.kategori_artikel === "Kesehatan" ||
           article.kategori_artikel === "Obat"
       );
-      
+
       artikelPool.current = filtered;
       setDisplayedArticles(filtered.slice(0, 2));
     } catch (error) {
       console.log("Error fetching artikels:", error);
     }
   };
+  const getImageUrl = (imagePath: string | null | undefined): string | null => {
+    if (!imagePath) return null;
 
+    if (imagePath.startsWith("http")) {
+      return imagePath;
+    }
+    const baseUrlWithoutApi = BASE_URL.replace("/api", "");
+
+    const cleanPath = imagePath.startsWith("/")
+      ? imagePath.substring(1)
+      : imagePath;
+    return `${baseUrlWithoutApi}/${cleanPath}`;
+  };
   const fetchJadwal = async () => {
     try {
       const userId = await SecureStore.getItemAsync("userId");
@@ -169,7 +189,7 @@ export const useHomeViewModel = () => {
     ]).start(() => {
       slideAnim.setValue(-300);
       fadeAnim.setValue(0);
-      
+
       const pool = artikelPool.current;
       currentIndex.current = (currentIndex.current + 2) % pool.length;
       const nextArticles = pool.slice(
@@ -233,27 +253,35 @@ export const useHomeViewModel = () => {
   };
 
   const hasNoUpcomingAppointments = () => {
-    return jadwalList.filter((jadwal) => {
-      const today = new Date();
-      const jadwalDate = new Date(jadwal.tgl_konsul);
-      today.setHours(0, 0, 0, 0);
-      jadwalDate.setHours(0, 0, 0, 0);
+    return (
+      jadwalList.filter((jadwal) => {
+        const today = new Date();
+        const jadwalDate = new Date(jadwal.tgl_konsul);
+        today.setHours(0, 0, 0, 0);
+        jadwalDate.setHours(0, 0, 0, 0);
 
-      return jadwal.status_konsul === "diterima" && jadwalDate >= today;
-    }).length === 0;
+        return jadwal.status_konsul === "diterima" && jadwalDate >= today;
+      }).length === 0
+    );
   };
 
-  useFocusEffect(useCallback(() => {
-    fetchUserData();
-  }, []));
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserData();
+    }, [])
+  );
 
-  useFocusEffect(useCallback(() => {
-    fetchArtikels();
-  }, []));
+  useFocusEffect(
+    useCallback(() => {
+      fetchArtikels();
+    }, [])
+  );
 
-  useFocusEffect(useCallback(() => {
-    fetchJadwal();
-  }, []));
+  useFocusEffect(
+    useCallback(() => {
+      fetchJadwal();
+    }, [])
+  );
 
   useEffect(() => {
     if (artikelPool.current.length === 0) return;
@@ -272,6 +300,7 @@ export const useHomeViewModel = () => {
     getDayName,
     navigateToDoctor,
     navigateToArticle,
+    getImageUrl
   };
 };
 
@@ -280,9 +309,13 @@ export const useDoctorListViewModel = () => {
   const { spesialis } = useLocalSearchParams();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
-  const [doctorRatings, setDoctorRatings] = useState<{ [key: string]: number }>({});
+  const [doctorRatings, setDoctorRatings] = useState<{ [key: string]: number }>(
+    {}
+  );
   const [ratingsLoading, setRatingsLoading] = useState(false);
-  const [fetchedDoctorIds, setFetchedDoctorIds] = useState<Set<string>>(new Set());
+  const [fetchedDoctorIds, setFetchedDoctorIds] = useState<Set<string>>(
+    new Set()
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Calculate average rating
@@ -297,11 +330,13 @@ export const useDoctorListViewModel = () => {
     if (doctors.length === 0) return;
 
     // Filter out doctors whose ratings have already been fetched
-    const unfetchedDoctors = doctors.filter((doctor) => !fetchedDoctorIds.has(doctor._id));
+    const unfetchedDoctors = doctors.filter(
+      (doctor) => !fetchedDoctorIds.has(doctor._id)
+    );
     if (unfetchedDoctors.length === 0) return;
 
     setRatingsLoading(true);
-    setErrorMessage(null); 
+    setErrorMessage(null);
 
     try {
       const token = await SecureStore.getItemAsync("userToken");
@@ -335,7 +370,10 @@ export const useDoctorListViewModel = () => {
           return { doctorId: doctor._id, rating: doctor.rating_dokter || 0 };
         } catch (error: any) {
           const errorMsg = error?.response?.data?.message || error.message;
-          console.log(`Gagal mengambil rating untuk dokter ${doctor._id}:`, errorMsg);
+          console.log(
+            `Gagal mengambil rating untuk dokter ${doctor._id}:`,
+            errorMsg
+          );
           return { doctorId: doctor._id, rating: doctor.rating_dokter || 0 };
         }
       });
@@ -349,7 +387,9 @@ export const useDoctorListViewModel = () => {
 
       // console.log("Peta rating akhir:", ratingsMap);
       setDoctorRatings(ratingsMap);
-      setFetchedDoctorIds((prev) => new Set([...prev, ...unfetchedDoctors.map((d) => d._id)]));
+      setFetchedDoctorIds(
+        (prev) => new Set([...prev, ...unfetchedDoctors.map((d) => d._id)])
+      );
     } catch (error: any) {
       const errorMsg = error?.response?.data?.message || error.message;
       console.log("Gagal mengambil rating dokter:", errorMsg);
@@ -367,11 +407,14 @@ export const useDoctorListViewModel = () => {
   }, [doctors, loading, fetchDoctorRatings]);
 
   // Get display rating
-  const getDisplayRating = useCallback((doctor: Doctor): number => {
-    const apiRating = doctorRatings[doctor._id];
-    // console.log(`Mendapatkan rating tampilan untuk ${doctor._id}: API=${apiRating}, Original=${doctor.rating_dokter}`);
-    return apiRating !== undefined ? apiRating : doctor.rating_dokter || 0;
-  }, [doctorRatings]);
+  const getDisplayRating = useCallback(
+    (doctor: Doctor): number => {
+      const apiRating = doctorRatings[doctor._id];
+      // console.log(`Mendapatkan rating tampilan untuk ${doctor._id}: API=${apiRating}, Original=${doctor.rating_dokter}`);
+      return apiRating !== undefined ? apiRating : doctor.rating_dokter || 0;
+    },
+    [doctorRatings]
+  );
 
   const fetchDoctors = async () => {
     try {
@@ -456,7 +499,6 @@ export const useDoctorListViewModel = () => {
     getLoadingText,
     getDisplayRating,
     getImageUrl,
-    
   };
 };
 
@@ -472,7 +514,7 @@ export const useScheduleViewModel = () => {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [doctorId, setDoctorId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   const router = useRouter();
   const { doctorName, doctor_Id, spesialis } = useLocalSearchParams();
 
@@ -487,7 +529,7 @@ export const useScheduleViewModel = () => {
           router.replace("/screens/signin");
           return;
         }
-        
+
         const response = await axios.get(
           `${BASE_URL}/dokter/getbyid/${doctor_Id}`,
           {
@@ -497,7 +539,7 @@ export const useScheduleViewModel = () => {
             },
           }
         );
-        
+
         const doctor = response.data;
         if (doctor) {
           setDoctorId(doctor._id);
@@ -523,7 +565,7 @@ export const useScheduleViewModel = () => {
             console.log("Token tidak ditemukan");
             return;
           }
-          
+
           const response = await axios.get(
             `${BASE_URL}/dokter/getbyid/${doctorId}`,
             {
@@ -533,12 +575,12 @@ export const useScheduleViewModel = () => {
               },
             }
           );
-          
+
           const jadwal = response.data.jadwal;
           const selectedDateOnly = new Date(selectedDate)
             .toISOString()
             .split("T")[0];
-            
+
           const matchingJadwal = jadwal.find((item: any) => {
             const jadwalDateOnly = new Date(item.tanggal)
               .toISOString()
@@ -562,7 +604,7 @@ export const useScheduleViewModel = () => {
           setLoading(false);
         }
       };
-      
+
       fetchSchedule();
     }
   }, [selectedDate, doctorId]);
@@ -598,17 +640,17 @@ export const useScheduleViewModel = () => {
     try {
       const userId = await SecureStore.getItemAsync("userId");
       const token = await SecureStore.getItemAsync("userToken");
-      
+
       if (!userId) throw new Error("ID masyarakat tidak ditemukan");
       if (!token) {
         console.log("Token tidak ditemukan");
         return;
       }
-      
+
       const selectedJam = availableTimes.find(
         (item) => item.time === selectedTime
       );
-      
+
       if (!selectedJam) {
         Alert.alert("Peringatan", "Waktu tidak tersedia.");
         return;
@@ -667,7 +709,7 @@ export const useScheduleViewModel = () => {
     selectedTime,
     loading,
     doctorName,
-    
+
     // Actions
     handleDateChange,
     handleTimeSelect,
@@ -703,7 +745,7 @@ export const useKeluhanViewModel = ({
           router.replace("/screens/signin");
           return;
         }
-        
+
         const res = await axios.get(`${BASE_URL}/dokter/getbyid/${doctor_Id}`, {
           headers: {
             "Content-Type": "application/json",
@@ -737,7 +779,13 @@ export const useKeluhanViewModel = ({
   }, []);
 
   const handleSubmit = async () => {
-    if (!doctorId || !userId || !selectedTime || !selectedDate || !keluhanText) {
+    if (
+      !doctorId ||
+      !userId ||
+      !selectedTime ||
+      !selectedDate ||
+      !keluhanText
+    ) {
       Alert.alert("Data tidak lengkap", "Pastikan semua data tersedia.");
       return;
     }
@@ -767,7 +815,7 @@ export const useKeluhanViewModel = ({
           Authorization: `Bearer ${token}`,
         },
       });
-      
+
       Alert.alert("Sukses", "Jadwal konsultasi berhasil dibuat!");
       router.replace("/(tabs)/home");
     } catch (error: any) {
@@ -791,6 +839,5 @@ export const useKeluhanViewModel = ({
     isLoading,
     handleSubmit,
     handleBack,
-    
   };
 };
