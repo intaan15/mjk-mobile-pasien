@@ -259,7 +259,7 @@ const Register = () => {
           },
         },
       ]);
-    } catch (error) {
+    } catch (error: any) {
       console.log("=== ERROR DETAILS ===");
       console.log("Error:", error);
       console.log("Error response:", error.response?.data);

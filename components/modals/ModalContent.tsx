@@ -211,7 +211,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
       formData.append("image", {
         uri,
         name: fileName,
-        type: `images/${fileType}`,
+        type: `images-be/${fileType}`,
       } as any);
       formData.append("id", cleanedUserId);
 
