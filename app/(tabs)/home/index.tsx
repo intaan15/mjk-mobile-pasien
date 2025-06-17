@@ -31,6 +31,7 @@ import LambungIcon from "../../../assets/icons/lambung.svg";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import AccIcon from "../../../assets/icons/ctg.svg";
 import { useHomeViewModel } from "../../../components/viewmodels/useHome";
+import { BASE_URL2 } from "@env";
 
 const spesialisList = [
   { name: "Umum", Icon: UmumIcon },
@@ -202,7 +203,7 @@ export default function HomeView() {
                         jadwal.dokter_id?.nama_dokter ? (
                           <Image
                             source={{
-                              uri: `https://mjk-backend-production.up.railway.app/uploads/${jadwal.dokter_id.foto_profil_dokter}`,
+                              uri: `${BASE_URL2}${jadwal.dokter_id.foto_profil_dokter}`,
                             }}
                             className="h-20 w-20 rounded-full border border-gray-300"
                             resizeMode="cover"

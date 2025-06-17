@@ -24,7 +24,7 @@ import { BASE_URL, BASE_URL2 } from "@env";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useLocalSearchParams } from "expo-router";
 
-const socket = io("http://10.52.170.162:3330", {
+const socket = io(`${BASE_URL2}`, {
   transports: ["websocket"], //
 });
 
@@ -458,7 +458,7 @@ export default function ChatScreen() {
                   ? item.image // Base64 image dengan header
                   : item.image.startsWith("http")
                   ? item.image // URL lengkap
-                  : `http://10.52.170.162:3330${item.image}`, // Path relatif
+                  : `${BASE_URL2}${item.image}`, // Path relatif
               }}
               className="w-24 h-32 mt-1 rounded-md"
               resizeMode="cover"
@@ -614,7 +614,7 @@ export default function ChatScreen() {
                       ? previewImage
                       : previewImage.startsWith("http")
                       ? previewImage
-                      : `http://10.52.170.162:3330${previewImage}`,
+                      : `${BASE_URL2}${previewImage}`,
                   }}
                   style={{
                     width: "90%",
@@ -640,7 +640,7 @@ export default function ChatScreen() {
                         ? "Base64 Image"
                         : previewImage.startsWith("http")
                         ? previewImage
-                        : `http://10.52.170.162:3330${previewImage}`
+                        : `${BASE_URL2}${previewImage}`
                     );
                   }}
                 />

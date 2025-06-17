@@ -256,9 +256,10 @@ export const useJadwalViewModel = () => {
     return `${baseUrlWithoutApi}/${cleanPath}`;
   };
 
-  const getProfileImageUri = (fotoProfile: string): string => {
-    return `https://mjk-backend-production.up.railway.app/uploads/${fotoProfile}`;
-  };
+  // const getProfileImageUri = (fotoProfile: string): string => {
+  //   return
+  //   // return `https://mjk-backend-production.up.railway.app/uploads/${fotoProfile}`;
+  // };
 
   // Initialize data when component focus
   useFocusEffect(
@@ -292,7 +293,7 @@ export const useJadwalViewModel = () => {
     fetchDoctorRatings,
     getStatusTextColor,
     formatDate,
-    getProfileImageUri,
+    // getProfileImageUri,
     getImageUrl,
   };
 };

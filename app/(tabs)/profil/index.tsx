@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -44,9 +44,12 @@ function ProfileApp() {
     formatTanggal,
   } = useProfileViewModel();
 
+  const [imageLoadError, setImageLoadError] = useState(false);
+
   useFocusEffect(
     useCallback(() => {
       fetchUserData();
+      setImageLoadError(false);
     }, [])
   );
 
@@ -62,6 +65,16 @@ function ProfileApp() {
       </Background>
     );
   }
+
+  // Fungsi untuk menangani error loading image
+  const handleImageError = (error) => {
+    setImageLoadError(true);
+  };
+
+  // Fungsi untuk menangani sukses loading image
+  const handleImageLoad = () => {
+    setImageLoadError(false);
+  };
 
   return (
     <Background>
@@ -92,28 +105,14 @@ function ProfileApp() {
 
           {/* Foto Profil */}
           <View className="absolute top-28 left-1/2 -translate-x-1/2">
-            {userData.foto_profil_masyarakat ? (
+            {userData.foto_profil_masyarakat && !imageLoadError ? (
               <Image
                 source={{
                   uri: getImageUrl(userData.foto_profil_masyarakat),
                 }}
                 className="w-32 h-32 rounded-full border-4 border-skyDark"
-                onError={(error) => {
-                  console.log(
-                    "Error loading profile image:",
-                    error.nativeEvent.error
-                  );
-                  console.log(
-                    "Image URL:",
-                    getImageUrl(userData.foto_profil_masyarakat)
-                  );
-                }}
-                onLoad={() => {
-                  console.log(
-                    "Image loaded successfully:",
-                    getImageUrl(userData.foto_profil_masyarakat)
-                  );
-                }}
+                onError={handleImageError}
+                onLoad={handleImageLoad}
               />
             ) : (
               <View className="w-32 h-32 rounded-full border-4 border-skyDark items-center justify-center bg-gray-200">
