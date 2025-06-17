@@ -16,11 +16,69 @@ import { Ionicons } from "@expo/vector-icons";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import ModalContent from "../../../components/modals/ModalContent";
 import ModalTemplate from "../../../components/modals/ModalTemplate";
-import {
-  ImageProvider,
-} from "../../../components/picker/imagepicker";
+import { ImageProvider } from "../../../components/picker/imagepicker";
 import { useFocusEffect } from "@react-navigation/native";
 import { useProfileViewModel } from "../../../components/viewmodels/useProfil";
+
+// Komponen untuk indikator validasi password
+const PasswordValidationIndicator = ({
+  passwordValidation,
+  showPasswordValidation,
+}) => {
+  if (!showPasswordValidation) return null;
+
+  const validationItems = [
+    {
+      key: "minLength",
+      text: "Minimal 8 karakter",
+      valid: passwordValidation.minLength,
+    },
+    {
+      key: "hasLowercase",
+      text: "Huruf kecil (a-z)",
+      valid: passwordValidation.hasLowercase,
+    },
+    {
+      key: "hasUppercase",
+      text: "Huruf besar (A-Z)",
+      valid: passwordValidation.hasUppercase,
+    },
+    {
+      key: "hasNumber",
+      text: "Angka (0-9)",
+      valid: passwordValidation.hasNumber,
+    },
+    {
+      key: "hasSymbol",
+      text: "Simbol (@$!%*?&/#^()[]{})",
+      valid: passwordValidation.hasSymbol,
+    },
+  ];
+
+  return (
+    <View className="w-full mt-2 p-3 bg-gray-50 rounded-lg">
+      <Text className="text-sm font-semibold text-gray-600 mb-2">
+        Syarat Password:
+      </Text>
+      {validationItems.map((item) => (
+        <View key={item.key} className="flex-row items-center mb-1">
+          <Ionicons
+            name={item.valid ? "checkmark-circle" : "close-circle"}
+            size={16}
+            color={item.valid ? "#10B981" : "#EF4444"}
+          />
+          <Text
+            className={`ml-2 text-sm ${
+              item.valid ? "text-green-600" : "text-red-500"
+            }`}
+          >
+            {item.text}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+};
 
 function ProfileApp() {
   const {
@@ -31,9 +89,12 @@ function ProfileApp() {
     modalType,
     isModalVisible,
     refreshing,
+    passwordValidation,
+    showPasswordValidation,
     setPasswordLama,
     setPasswordBaru,
     setKonfirmasiPassword,
+    setShowPasswordValidation,
     fetchUserData,
     onRefresh,
     handleGantiPassword,
@@ -137,7 +198,7 @@ function ProfileApp() {
             >
               <FontAwesome5 name="edit" size={24} color="#025F96" />
             </TouchableOpacity>
-            
+
             <Text className="font-bold text-lg text-skyDark">Nama</Text>
             <Text className="text-gray-700">{userData.nama_masyarakat}</Text>
 
@@ -201,8 +262,13 @@ function ProfileApp() {
                 secureTextEntry
                 value={passwordBaru}
                 onChangeText={setPasswordBaru}
+                onFocus={() => setShowPasswordValidation(true)}
                 className="border-2 rounded-xl border-gray-400 p-2 w-full"
                 placeholderTextColor="#888"
+              />
+              <PasswordValidationIndicator
+                passwordValidation={passwordValidation}
+                showPasswordValidation={showPasswordValidation}
               />
               <Text className="w-full pl-1 text-base font-semibold text-skyDark pt-2">
                 Konfirmasi Kata Sandi Baru
@@ -226,11 +292,8 @@ function ProfileApp() {
           <Settings />
         </ScrollView>
       </View>
-      
-      <ModalTemplate
-        isVisible={isModalVisible}
-        onClose={closeModal}
-      >
+
+      <ModalTemplate isVisible={isModalVisible} onClose={closeModal}>
         <ModalContent
           modalType={modalType}
           onClose={closeModal}

@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { Alert } from "react-native";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";
@@ -18,6 +19,14 @@ interface User {
   foto_profil_masyarakat: string | null;
 }
 
+interface PasswordValidation {
+  minLength: boolean;
+  hasLowercase: boolean;
+  hasUppercase: boolean;
+  hasNumber: boolean;
+  hasSymbol: boolean;
+}
+
 export const useProfileViewModel = () => {
   const [userData, setUserData] = useState<User | null>(null);
   const [passwordLama, setPasswordLama] = useState("");
@@ -26,7 +35,38 @@ export const useProfileViewModel = () => {
   const [modalType, setModalType] = useState("");
   const [isModalVisible, setModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [passwordValidation, setPasswordValidation] =
+    useState<PasswordValidation>({
+      minLength: false,
+      hasLowercase: false,
+      hasUppercase: false,
+      hasNumber: false,
+      hasSymbol: false,
+    });
+  const [showPasswordValidation, setShowPasswordValidation] = useState(false);
+
   const router = useRouter();
+
+  // Fungsi validasi password
+  const validatePassword = (password: string) => {
+    const validation: PasswordValidation = {
+      minLength: password.length >= 8,
+      hasLowercase: /[a-z]/.test(password),
+      hasUppercase: /[A-Z]/.test(password),
+      hasNumber: /\d/.test(password),
+      hasSymbol: /[@$!%*?&/#^()[\]{}<>]/.test(password),
+    };
+
+    setPasswordValidation(validation);
+    return Object.values(validation).every(Boolean);
+  };
+
+  // Update password baru dengan validasi
+  const handlePasswordBaruChange = (value: string) => {
+    setPasswordBaru(value);
+    validatePassword(value);
+    setShowPasswordValidation(value.length > 0);
+  };
 
   // Fungsi helper untuk membuat URL gambar lengkap
   const getImageUrl = (imagePath: string | null | undefined): string | null => {
@@ -47,11 +87,14 @@ export const useProfileViewModel = () => {
     try {
       const userId = await SecureStore.getItemAsync("userId");
       const token = await SecureStore.getItemAsync("userToken");
+
       if (!token) {
         await SecureStore.deleteItemAsync("userToken");
         await SecureStore.deleteItemAsync("userId");
         router.replace("/screens/signin");
+        return;
       }
+
       const cleanedUserId = userId?.replace(/"/g, "");
       if (cleanedUserId) {
         const response = await axios.get(
@@ -66,7 +109,7 @@ export const useProfileViewModel = () => {
         setUserData(response.data);
       }
     } catch (error) {
-      console.log("Gagal mengambil data profil kiw:", error);
+      console.log("Gagal mengambil data profil:", error);
     }
   };
 
@@ -86,6 +129,29 @@ export const useProfileViewModel = () => {
   };
 
   const handleGantiPassword = async () => {
+    // Validasi input kosong
+    if (!passwordLama || !passwordBaru || !konfirmasiPassword) {
+      setModalType("kolompwkosong");
+      setModalVisible(true);
+      return;
+    }
+
+    // Validasi password baru
+    if (!validatePassword(passwordBaru)) {
+      Alert.alert(
+        "Password Tidak Valid",
+        "Password harus minimal 8 karakter, mengandung huruf besar, huruf kecil, angka, dan simbol (@$!%*?&/#^()[]{})"
+      );
+      return;
+    }
+
+    // Validasi konfirmasi password
+    if (passwordBaru !== konfirmasiPassword) {
+      setModalType("pwtidakcocok");
+      setModalVisible(true);
+      return;
+    }
+
     try {
       const token = await SecureStore.getItemAsync("userToken");
 
@@ -115,6 +181,14 @@ export const useProfileViewModel = () => {
       setPasswordLama("");
       setPasswordBaru("");
       setKonfirmasiPassword("");
+      setShowPasswordValidation(false);
+      setPasswordValidation({
+        minLength: false,
+        hasLowercase: false,
+        hasUppercase: false,
+        hasNumber: false,
+        hasSymbol: false,
+      });
     } catch (error: any) {
       const msg =
         error.response?.data?.message ||
@@ -156,11 +230,14 @@ export const useProfileViewModel = () => {
     modalType,
     isModalVisible,
     refreshing,
-    
+    passwordValidation,
+    showPasswordValidation,
+
     // Actions
     setPasswordLama,
-    setPasswordBaru,
+    setPasswordBaru: handlePasswordBaruChange,
     setKonfirmasiPassword,
+    setShowPasswordValidation,
     fetchUserData,
     onRefresh,
     handleGantiPassword,
@@ -169,5 +246,6 @@ export const useProfileViewModel = () => {
     onUpdateSuccess,
     getImageUrl,
     formatTanggal,
+    validatePassword,
   };
 };
