@@ -47,6 +47,14 @@ const Register = () => {
   const [selectedTab, setSelectedTab] = useState("");
   const [ktpUri, setKtpUri] = useState("");
   const [selfieUri, setSelfieUri] = useState("");
+  const [passwordValidation, setPasswordValidation] = useState({
+    minLength: false,
+    hasLowercase: false,
+    hasUppercase: false,
+    hasNumber: false,
+    hasSymbol: false,
+  });
+  const [showPasswordValidation, setShowPasswordValidation] = useState(false);
 
   // Fungsi untuk mereset semua state
   const resetAllStates = () => {
@@ -56,6 +64,28 @@ const Register = () => {
     setKtpUri("");
     setSelfieUri("");
     setShowDatePicker(false);
+    setPasswordValidation({
+      minLength: false,
+      hasLowercase: false,
+      hasUppercase: false,
+      hasNumber: false,
+      hasSymbol: false,
+    });
+    setShowPasswordValidation(false);
+  };
+
+  // Fungsi validasi password
+  const validatePassword = (password) => {
+    const validation = {
+      minLength: password.length >= 8,
+      hasLowercase: /[a-z]/.test(password),
+      hasUppercase: /[A-Z]/.test(password),
+      hasNumber: /\d/.test(password),
+      hasSymbol: /[@$!%*?&/#^()[\]{}<>]/.test(password),
+    };
+
+    setPasswordValidation(validation);
+    return Object.values(validation).every(Boolean);
   };
 
   // ** Restore form dari SecureStore saat komponen mount **
@@ -79,6 +109,11 @@ const Register = () => {
           if (parsedForm.tglLahir) {
             const dateObj = new Date(parsedForm.tglLahir);
             setSelectedDate(dateObj);
+          }
+
+          // Validasi password jika ada
+          if (parsedForm.password) {
+            validatePassword(parsedForm.password);
           }
         }
 
@@ -105,6 +140,12 @@ const Register = () => {
       ...prev,
       [field]: value,
     }));
+
+    // Validasi password secara real-time
+    if (field === "password") {
+      validatePassword(value);
+      setShowPasswordValidation(value.length > 0);
+    }
   };
 
   const handleRegister = async () => {
@@ -132,6 +173,17 @@ const Register = () => {
         !selfieKTP
       ) {
         Alert.alert("Gagal", "Semua data harus diisi.");
+        return;
+      }
+
+      // Validasi password sesuai dengan backend
+      const passwordRegex =
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&/#^()[\]{}<>]).{8,}$/;
+      if (!passwordRegex.test(form.password)) {
+        Alert.alert(
+          "Password Tidak Valid",
+          "Password harus minimal 8 karakter, mengandung huruf besar, huruf kecil, angka, dan simbol (@$!%*?&/#^()[]{})"
+        );
         return;
       }
 
@@ -310,6 +362,65 @@ const Register = () => {
     }
   };
 
+  // Komponen untuk menampilkan validasi password
+  const PasswordValidationIndicator = () => {
+    if (!showPasswordValidation) return null;
+
+    const validationItems = [
+      {
+        key: "minLength",
+        text: "Minimal 8 karakter",
+        valid: passwordValidation.minLength,
+      },
+      {
+        key: "hasLowercase",
+        text: "Huruf kecil (a-z)",
+        valid: passwordValidation.hasLowercase,
+      },
+      {
+        key: "hasUppercase",
+        text: "Huruf besar (A-Z)",
+        valid: passwordValidation.hasUppercase,
+      },
+      {
+        key: "hasNumber",
+        text: "Angka (0-9)",
+        valid: passwordValidation.hasNumber,
+      },
+      {
+        key: "hasSymbol",
+        text: "Simbol (@$!%*?&/#^()[]{})",
+        valid: passwordValidation.hasSymbol,
+      },
+    ];
+
+    return (
+      <View className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+        <Text className="text-sm font-medium text-gray-700 mb-2">
+          Syarat Password:
+        </Text>
+        {validationItems.map((item) => (
+          <View key={item.key} className="flex-row items-center mb-1">
+            <Text
+              className={`text-sm mr-2 ${
+                item.valid ? "text-green-600" : "text-red-500"
+              }`}
+            >
+              {item.valid ? "✓" : "✗"}
+            </Text>
+            <Text
+              className={`text-sm ${
+                item.valid ? "text-green-600" : "text-gray-600"
+              }`}
+            >
+              {item.text}
+            </Text>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
   return (
     <Background>
       <StatusBar backgroundColor="#f6f6f6" barStyle="dark-content" />
@@ -361,9 +472,12 @@ const Register = () => {
                   secureTextEntry
                   value={form.password}
                   onChangeText={(text) => handleInputChange("password", text)}
+                  onFocus={() => setShowPasswordValidation(true)}
                   className="bg-transparent border-2 border-gray-400 text-black px-4 py-3 rounded-xl"
                   placeholderTextColor="#ccc"
                 />
+                <PasswordValidationIndicator />
+
                 <Text>Email</Text>
                 <TextInput
                   placeholder="Masukkan Email"
