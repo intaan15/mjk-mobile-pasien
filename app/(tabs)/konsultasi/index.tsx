@@ -2,159 +2,47 @@ import {
   View,
   Text,
   Image,
-  Dimensions,
   ScrollView,
   TouchableOpacity,
-  Animated,
-  Easing,
-  StyleSheet,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "expo-router";
+import React from "react";
 import Background from "../../../components/background";
 import { images } from "../../../constants/images";
-import TabButton from "../../../components/tabbutton";
-import DatePickerComponent from "../../../components/picker/datepicker";
 import moment from "moment";
-import * as SecureStore from "expo-secure-store";
-import axios from "axios";
-import { useFocusEffect } from "@react-navigation/native";
-import { BASE_URL } from "@env";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Ionicons } from "@expo/vector-icons";
-
-
-const { width } = Dimensions.get("window");
-
-interface User {
-  nama_dokter: string;
-}
-
-const getImageUrl = (imagePath: string | null | undefined): string | null => {
-  if (!imagePath) return null;
-
-  if (imagePath.startsWith("http")) {
-    return imagePath;
-  }
-  const baseUrlWithoutApi = BASE_URL.replace("/api", "");
-
-  const cleanPath = imagePath.startsWith("/")
-    ? imagePath.substring(1)
-    : imagePath;
-  return `${baseUrlWithoutApi}/${cleanPath}`;
-};
+import { useChatListViewModel } from "../../../components/viewmodels/useKonsultasi";
 
 export default function HomeScreen() {
-  const [userData, setUserData] = useState<User | null>(null);
-  // const [dokterId, setDokterId] = useState<string | null>(null);
-  const [masyarakatId, setMasyarakatId] = useState<string | null>(null);
+  const {
+    // States
+    userData,
+    masyarakatId,
+    chatList,
+    refreshing,
+    loading,
+    
+    // Actions
+    onRefresh,
+    handleChatPress,
+    handleBack,
+    getImageUrl,
+  } = useChatListViewModel();
 
-  const router = useRouter();
-  const [selectedTab, setSelectedTab] = useState("Berlangsung");
-  // const [selectedDate, setSelectedDate] = useState(moment().format("DD/MM/YY"));
-  const [chatList, setChatList] = useState<any[]>([]);
-  const fallbackImageUrl = "/assets/images/foto.jpeg"; // Atau URL default lainnya
-  const [refreshing, setRefreshing] = useState(false);
-  
-
-  // const filteredChats = chatList.filter(
-  //   (chat) => moment(chat.lastMessageDate).format("DD/MM/YY") === selectedDate
-  // );
-
-  const fetchChatList = async (userId: string, token: string) => {
-    try {
-      const response = await axios.get(`${BASE_URL}/chatlist/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      // console.log("RAW chatlist data:", response.data);
-
-      // PERBAIKAN: Gunakan getImageUrl yang sudah ada
-      const enrichedChatList = response.data.map((chat: any) => {
-        // console.log("Original foto_profil:", chat.participant?.foto_profil); // Debug log
-
-        return {
-          ...chat,
-          nama_dokter: chat.participant?.nama || "Pasien",
-          foto_profil_dokter: getImageUrl(chat.participant?.foto_profil), // Gunakan getImageUrl
-          id_dokter: chat.participant?._id || "",
-          lastMessageDate: chat.lastMessageDate || new Date().toISOString(),
-        };
-      });
-
-      // console.log(
-      //   "Processed chatlist:",
-      //   enrichedChatList.map((chat) => ({
-      //     nama: chat.nama_dokter,
-      //     foto_url: chat.foto_profil_dokter,
-      //   }))
-      // ); // Debug log
-
-      setChatList(enrichedChatList);
-    } catch (error) {
-      console.log("Gagal ambil chat list", error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    const storedId = await SecureStore.getItemAsync("userId");
-    const token = await SecureStore.getItemAsync("userToken");
-    const cleanedId = storedId?.replace(/"/g, "");
-    if (cleanedId && token) {
-      await fetchChatList(cleanedId, token);
-    }
-    setRefreshing(false);
-  }, []);
-
-  const fetchUserData = async () => {
-    try {
-      const storedId = await SecureStore.getItemAsync("userId");
-      const token = await SecureStore.getItemAsync("userToken");
-      const cleanedId = storedId?.replace(/"/g, "");
-
-      if (!cleanedId || !token) return;
-
-      const response = await axios.get(
-        `${BASE_URL}/masyarakat/getbyid/${cleanedId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.data.role !== "masyarakat") {
-        await SecureStore.deleteItemAsync("userToken");
-        await SecureStore.deleteItemAsync("userId");
-        router.replace("/screens/signin");
-        return;
-      }
-
-      setUserData(response.data);
-      setMasyarakatId(cleanedId); // Ganti dari dokterId
-      fetchChatList(cleanedId, token);
-
-      // setUserData(response.data);
-      // setDokterId(cleanedId); // <- simpan ke state agar bisa dipakai nanti
-      // fetchChatList(cleanedId, token); // <- Panggil ambil chatlist
-    } catch (error) {
-      console.log("Gagal ambil data user", error);
-    }
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchUserData();
-    }, [])
-  );
-
-  
+  if (loading) {
+    return (
+      <Background>
+        <View className="flex h-full justify-center items-center">
+          <ActivityIndicator size="large" color="#025F96" />
+          <Text className="mt-2 text-skyDark font-semibold">
+            Memuat daftar chat...
+          </Text>
+        </View>
+      </Background>
+    );
+  }
 
   return (
     <Background>
@@ -162,7 +50,7 @@ export default function HomeScreen() {
         {/* Header */}
         <View className="flex flex-row justify-between items-center mb-4 w-full px-5 pt-8">
           <View className="flex flex-row items-center">
-            <TouchableOpacity onPress={() => router.back()}>
+            <TouchableOpacity onPress={handleBack}>
               <MaterialIcons name="arrow-back-ios" size={24} color="#025F96" />
             </TouchableOpacity>
             <Text className="text-skyDark font-bold text-xl ml-2">
@@ -192,112 +80,24 @@ export default function HomeScreen() {
               />
             }
           >
-            {/* {filteredChats.map((chat) => ( */}
-            {chatList.map((chat) => (
-              // ✅ Perbaikan pada TouchableOpacity di chat list
-              <TouchableOpacity
-                key={chat._id}
-                className="flex flex-col"
-                onPress={() => {
-                  const currentUserId = masyarakatId;
-                  const otherParticipant = chat.participant;
-
-                  if (currentUserId && otherParticipant?._id) {
-                    console.log("[DEBUG] Navigation - Chat data:", {
-                      chat_id: chat._id,
-                      status: chat.status,
-                      dokter_id: otherParticipant._id,
-                      // Tambahkan log untuk debug
-                    });
-
-                    router.push({
-                      pathname: "/chat/[id]",
-                      params: {
-                        senderId: currentUserId,
-                        receiverId: otherParticipant._id,
-                        // ✅ TAMBAHKAN PARAMETER YANG DIPERLUKAN:
-                        jadwal_id: chat._id, // Atau chat.jadwal_id jika ada
-                        status: chat.status, // Dari response API
-                        dokter_id: otherParticipant._id,
-                        // ✅ Tambahan data lain yang mungkin berguna:
-                        chat_id: chat._id,
-                        receiver_name: chat.nama_dokter,
-                      },
-                    });
-                  } else {
-                    console.warn("Data participant tidak lengkap:", chat);
-                  }
-                }}
-              >
-                <View className="flex flex-row justify-between">
-                  <Text className="p-2 rounded-xl font-bold self-end">
-                    Konsultasi Dengan
-                  </Text>
-                  <Text
-                    className={`p-2 rounded-xl self-end ${
-                      chat.status === "selesai"
-                        ? "bg-lime-200"
-                        : "bg-yellow-200"
-                    }`}
-                  >
-                    {chat.status === "selesai" ? "Selesai" : "Berlangsung"}
-                  </Text>
-                </View>
-                <View className="flex flex-row items-center">
-                  <View className="h-16 w-16 rounded-full border border-gray-300 bg-gray-100 justify-center items-center">
-                    {chat.foto_profil_dokter ? (
-                      <Image
-                        source={{
-                          uri: getImageUrl(chat.foto_profil_dokter), // Pakai getImageUrl seperti di profil
-                        }}
-                        className="h-full w-full rounded-full"
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <View className="h-16 w-16 rounded-full border border-gray-300 items-center justify-center bg-gray-200">
-                        <Ionicons name="person" size={32} color="#0C4A6E" />
-                      </View>
-                    )}
-                  </View>
-
-                  <View className="ml-4 flex-1">
-                    <View className="flex flex-row justify-between">
-                      <Text
-                        className="w-10/12 truncate font-semibold text-lg text-skyDark"
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-                      >
-                        {chat.nama_dokter || "Dokter"}
-                      </Text>
-                      <Text className="text-gray-500 text-sm">
-                        {moment(chat.lastMessageDate).format("DD/MM/YY")}
-                      </Text>
-                    </View>
-                    <View className="flex flex-row justify-between">
-                      <Text
-                        className="truncate text-justify text-gray-700 mt-1"
-                        numberOfLines={2}
-                        ellipsizeMode="tail"
-                      >
-                        {chat.lastMessage || "Belum ada pesan"}
-                      </Text>
-                      <Text>
-                        {masyarakatId &&
-                          chat.unreadCount &&
-                          chat.unreadCount[masyarakatId] > 0 && (
-                            <View className="bg-red-500 rounded-full px-2 py-1 ml-2">
-                              <Text className="text-white text-xs">
-                                {chat.unreadCount[masyarakatId]}
-                              </Text>
-                            </View>
-                          )}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-                <View className="w-full h-[2px] bg-skyDark my-2" />
-              </TouchableOpacity>
-            ))}
+            {chatList.length === 0 ? (
+              <View className="flex items-center justify-center py-20">
+                <Ionicons name="chatbubbles-outline" size={64} color="#9CA3AF" />
+                <Text className="text-gray-500 text-lg mt-4 text-center">
+                  Belum ada riwayat konsultasi
+                </Text>
+              </View>
+            ) : (
+              chatList.map((chat) => (
+                <ChatListItem
+                  key={chat._id}
+                  chat={chat}
+                  masyarakatId={masyarakatId}
+                  onPress={() => handleChatPress(chat)}
+                  getImageUrl={getImageUrl}
+                />
+              ))
+            )}
           </ScrollView>
         </View>
       </View>
@@ -305,12 +105,107 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    overflow: "hidden",
-    flexDirection: "row",
-  },
-  text: {
-    color: "#025F96",
-  },
-});
+const ChatListItem = ({ chat, masyarakatId, onPress, getImageUrl }) => {
+  return (
+    <TouchableOpacity className="flex flex-col" onPress={onPress}>
+      <View className="flex flex-row justify-between">
+        <Text className="p-2 rounded-xl font-bold self-end">
+          Konsultasi Dengan
+        </Text>
+        <Text
+          className={`p-2 rounded-xl self-end ${
+            chat.status === "selesai"
+              ? "bg-lime-200"
+              : "bg-yellow-200"
+          }`}
+        >
+          {chat.status === "selesai" ? "Selesai" : "Berlangsung"}
+        </Text>
+      </View>
+      
+      <View className="flex flex-row items-center">
+        <ProfileImage 
+          foto_profil={chat.foto_profil_dokter} 
+          getImageUrl={getImageUrl} 
+        />
+
+        <View className="ml-4 flex-1">
+          <View className="flex flex-row justify-between">
+            <Text
+              className="w-10/12 truncate font-semibold text-lg text-skyDark"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {chat.nama_dokter || "Dokter"}
+            </Text>
+            <Text className="text-gray-500 text-sm">
+              {moment(chat.lastMessageDate).format("DD/MM/YY")}
+            </Text>
+          </View>
+          
+          <View className="flex flex-row justify-between">
+            <Text
+              className="truncate text-justify text-gray-700 mt-1"
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {chat.lastMessage || "Belum ada pesan"}
+            </Text>
+            <UnreadBadge 
+              masyarakatId={masyarakatId} 
+              unreadCount={chat.unreadCount} 
+            />
+          </View>
+        </View>
+      </View>
+      
+      <View className="w-full h-[2px] bg-skyDark my-2" />
+    </TouchableOpacity>
+  );
+};
+
+const ProfileImage = ({ foto_profil, getImageUrl }) => {
+  const [imageLoadError, setImageLoadError] = React.useState(false);
+
+  const handleImageError = (error) => {
+    console.log("Error loading chat profile image:", error.nativeEvent.error);
+    setImageLoadError(true);
+  };
+
+  const handleImageLoad = () => {
+    setImageLoadError(false);
+  };
+
+  return (
+    <View className="h-16 w-16 rounded-full border border-gray-300 bg-gray-100 justify-center items-center">
+      {foto_profil && !imageLoadError ? (
+        <Image
+          source={{ uri: getImageUrl(foto_profil) }}
+          className="h-full w-full rounded-full"
+          resizeMode="cover"
+          onError={handleImageError}
+          onLoad={handleImageLoad}
+        />
+      ) : (
+        <View className="h-16 w-16 rounded-full border border-gray-300 items-center justify-center bg-gray-200">
+          <Ionicons name="person" size={32} color="#0C4A6E" />
+        </View>
+      )}
+    </View>
+  );
+};
+
+// Separate component for unread message badge
+const UnreadBadge = ({ masyarakatId, unreadCount }) => {
+  if (!masyarakatId || !unreadCount || unreadCount[masyarakatId] <= 0) {
+    return null;
+  }
+
+  return (
+    <View className="bg-red-500 rounded-full px-2 py-1 ml-2">
+      <Text className="text-white text-xs">
+        {unreadCount[masyarakatId]}
+      </Text>
+    </View>
+  );
+};
