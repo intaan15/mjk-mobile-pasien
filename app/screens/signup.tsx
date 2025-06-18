@@ -20,8 +20,10 @@ import * as SecureStore from "expo-secure-store";
 import * as ImagePicker from "expo-image-picker";
 import DatePickerComponent from "../../components/picker/datepicker";
 import TabButton from "../../components/tabbutton";
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import { BASE_URL } from "@env";
+
 
 const Register = () => {
   const router = useRouter();
@@ -395,22 +397,20 @@ const Register = () => {
     ];
 
     return (
-      <View className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-        <Text className="text-sm font-medium text-gray-700 mb-2">
+      <View className="w-full mt-2 p-3 rounded-lg">
+        <Text className="text-sm font-bold text-skyDark mb-2">
           Syarat Password:
         </Text>
         {validationItems.map((item) => (
           <View key={item.key} className="flex-row items-center mb-1">
+            <Ionicons
+              name={item.valid ? "checkmark-circle" : "close-circle"}
+              size={16}
+              color={item.valid ? "#10B981" : "#EF4444"}
+            />
             <Text
-              className={`text-sm mr-2 ${
-                item.valid ? "text-green-600" : "text-red-500"
-              }`}
-            >
-              {item.valid ? "✓" : "✗"}
-            </Text>
-            <Text
-              className={`text-sm ${
-                item.valid ? "text-green-600" : "text-gray-600"
+              className={`ml-2 text-sm ${
+                item.valid ? "text-skyDark" : "text-skyDark"
               }`}
             >
               {item.text}

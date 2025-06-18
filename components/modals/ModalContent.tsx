@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import axios from "axios";
 import DatePickerComponent from "../../components/picker/datepicker";
 import { BASE_URL } from "@env";
+import { Alert } from "react-native";
 
 interface ModalContentProps {
   modalType: string;
@@ -99,7 +100,34 @@ const ModalContent: React.FC<ModalContentProps> = ({
     fetchUser();
   }, []);
 
+  
   const handleSubmit = async () => {
+    
+    const phoneRegex = /^[0-9]{10,15}$/;
+
+    if (!nama || !username || !email || !noTlp || !alamat || !jenisKelamin) {
+      Alert.alert(
+        "Semua kolom harus diisi",
+        "Pastikan semua kolom telah diisi sebelum melanjutkan."
+      );
+      return; 
+    }
+    if (!phoneRegex.test(noTlp)) {
+      Alert.alert(
+        "Nomor Telepon Tidak Valid",
+        "Nomor telepon harus berupa 10-15 digit angka tanpa spasi atau simbol."
+      );
+      return; 
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+      Alert.alert(
+        "Email tidak valid",
+        "Silakan masukkan email dengan format yang benar, contoh: nama@email.com"
+      );
+      return;
+    }
     try {
       const masyarakatId = await SecureStore.getItemAsync("userId");
       const cleanedMasyarakatId = masyarakatId?.replace(/"/g, "");
