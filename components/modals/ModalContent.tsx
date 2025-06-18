@@ -262,7 +262,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
 
       if (error.response?.status === 401) {
         // Token expired atau tidak valid
-        alert("Sesi Anda telah berakhir. Silakan login ulang.");
+        alert("Sesi Anda telah berakhir. Silakan login ulangg.");
 
         // Hapus token yang expired
         await SecureStore.deleteItemAsync("token");
