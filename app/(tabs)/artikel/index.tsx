@@ -34,7 +34,7 @@ export default function ArtikelListView() {
     <Background>
       <View className="flex">
         {/* Header */}
-        <View className="flex flex-row justify-between items-center mb-4 w-full px-5 pt-8">
+        <View className="flex flex-row justify-between items-center mb-4 w-full px-5 pt-10">
           <View className="flex flex-row items-center">
             <TouchableOpacity onPress={navigateBack}>
               <MaterialIcons name="arrow-back-ios" size={24} color="#025F96" />

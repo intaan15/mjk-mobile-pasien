@@ -48,7 +48,7 @@ export default function HomeScreen() {
     <Background>
       <View className="flex-1">
         {/* Header */}
-        <View className="flex flex-row justify-between items-center mb-4 w-full px-5 pt-8">
+        <View className="flex flex-row justify-between items-center mb-4 w-full px-5 pt-10">
           <View className="flex flex-row items-center">
             <TouchableOpacity onPress={handleBack}>
               <MaterialIcons name="arrow-back-ios" size={24} color="#025F96" />
