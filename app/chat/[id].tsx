@@ -54,13 +54,10 @@ export default function ChatScreen() {
 
   const getJakartaTime = () => {
     const now = new Date();
-    // Konversi ke Jakarta timezone (UTC+7)
-    const jakartaTime = new Date(
-      now.toLocaleString("en-US", {
-        timeZone: "Asia/Jakarta",
-      })
-    );
-    return jakartaTime;
+    // Jakarta = UTC+7, jadi tambahkan 7 jam (7 * 60 * 60 * 1000 ms)
+    const jakartaOffset = 7 * 60 * 60 * 1000;
+    const jakartaTime = new Date(now.getTime() + jakartaOffset);
+    return jakartaTime.toISOString();
   };
 
   useEffect(() => {
