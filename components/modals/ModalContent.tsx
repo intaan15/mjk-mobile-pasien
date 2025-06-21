@@ -13,6 +13,8 @@ import axios from "axios";
 import DatePickerComponent from "../../components/picker/datepicker";
 import { BASE_URL } from "@env";
 import { Alert } from "react-native";
+import * as FileSystem from 'expo-file-system';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 interface ModalContentProps {
   modalType: string;
@@ -100,9 +102,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
     fetchUser();
   }, []);
 
-  
   const handleSubmit = async () => {
-    
     const phoneRegex = /^[0-9]{10,15}$/;
 
     if (!nama || !username || !email || !noTlp || !alamat || !jenisKelamin) {
@@ -110,14 +110,14 @@ const ModalContent: React.FC<ModalContentProps> = ({
         "Semua kolom harus diisi",
         "Pastikan semua kolom telah diisi sebelum melanjutkan."
       );
-      return; 
+      return;
     }
     if (!phoneRegex.test(noTlp)) {
       Alert.alert(
         "Nomor Telepon Tidak Valid",
         "Nomor telepon harus berupa 10-15 digit angka tanpa spasi atau simbol."
       );
-      return; 
+      return;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -204,17 +204,22 @@ const ModalContent: React.FC<ModalContentProps> = ({
   const profileImage = imageContext?.profileImage;
   const setImage = imageContext?.setImage;
 
+  // Import yang diperlukan (tambahkan di bagian atas file)
+  
+
   const uploadImageToServer = async () => {
     if (!profileImage?.uri) {
       alert("Silakan pilih gambar terlebih dahulu.");
       return;
     }
 
-    const uri = profileImage.uri;
-    const fileName = uri.split("/").pop();
-    const fileType = fileName?.split(".").pop();
-
     try {
+      // Compress image first
+      const compressedUri = await compressImage(profileImage.uri);
+
+      const fileName = compressedUri.split("/").pop();
+      const fileType = fileName?.split(".").pop();
+
       // Ambil data user
       const userId = await SecureStore.getItemAsync("userId");
       const token = await SecureStore.getItemAsync("userToken");
@@ -235,11 +240,27 @@ const ModalContent: React.FC<ModalContentProps> = ({
       console.log("UserId:", cleanedUserId);
       console.log("Token ada:", cleanedToken);
 
+      // Check file size after compression
+      const fileInfo = await FileSystem.getInfoAsync(compressedUri);
+      const fileSizeInMB = fileInfo.size / (1024 * 1024);
+      const maxSizeInMB = 5;
+
+      console.log(`File size after compression: ${fileSizeInMB.toFixed(2)} MB`);
+
+      if (fileSizeInMB > maxSizeInMB) {
+        alert(
+          `Ukuran file (${fileSizeInMB.toFixed(
+            2
+          )} MB) masih terlalu besar. Maksimal ${maxSizeInMB} MB.`
+        );
+        return;
+      }
+
       const formData = new FormData();
       formData.append("image", {
-        uri,
+        uri: compressedUri,
         name: fileName,
-        type: `images/${fileType}`,
+        type: `image/${fileType}`, // Fixed: should be 'image' not 'images'
       } as any);
       formData.append("id", cleanedUserId);
 
@@ -262,17 +283,17 @@ const ModalContent: React.FC<ModalContentProps> = ({
 
       if (error.response?.status === 401) {
         // Token expired atau tidak valid
-        alert("Sesi Anda telah berakhir. Silakan login ulangg.");
+        alert("Sesi Anda telah berakhir. Silakan login ulang.");
 
         // Hapus token yang expired
-        await SecureStore.deleteItemAsync("token");
+        await SecureStore.deleteItemAsync("userToken");
         await SecureStore.deleteItemAsync("userId");
 
         // Redirect ke login (sesuaikan dengan navigation structure Anda)
         // navigation.navigate('Login');
       } else if (error.response?.status === 413) {
         alert(
-          "Ukuran file terlalu besar. Silakan pilih gambar yang lebih kecil."
+          "Ukuran file terlalu besar. Silakan pilih gambar yang lebih kecil (maksimal 5MB)."
         );
       } else {
         const errorMessage =
@@ -281,6 +302,26 @@ const ModalContent: React.FC<ModalContentProps> = ({
           "Gagal upload gambar";
         alert(`Upload gagal: ${errorMessage}`);
       }
+    }
+  };
+
+  // Function to compress image
+  const compressImage = async (uri) => {
+    try {
+      const manipulatedImage = await ImageManipulator.manipulateAsync(
+        uri,
+        [
+          { resize: { width: 800 } }, // Resize to max width 800px
+        ],
+        {
+          compress: 0.7, // Compress to 70% quality
+          format: ImageManipulator.SaveFormat.JPEG,
+        }
+      );
+      return manipulatedImage.uri;
+    } catch (error) {
+      console.log("Error compressing image:", error);
+      return uri; // Return original URI if compression fails
     }
   };
 
@@ -293,17 +334,20 @@ const ModalContent: React.FC<ModalContentProps> = ({
     try {
       const userId = await SecureStore.getItemAsync("userId");
       const token = await SecureStore.getItemAsync("userToken");
+      const cleanedUserId = userId?.replace(/"/g, "");
+      const cleanedToken = token?.replace(/"/g, "");
 
-      if (!userId || !token) {
+      if (!cleanedUserId || !cleanedToken) {
+        alert("User ID atau token tidak ditemukan. Silakan login ulang.");
         return;
       }
 
       const response = await axios.delete(
-        `${BASE_URL}/masyarakat/delete/${userId}`,
+        `${BASE_URL}/masyarakat/delete/${cleanedUserId}`,
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${cleanedToken}`,
           },
         }
       );
@@ -312,13 +356,26 @@ const ModalContent: React.FC<ModalContentProps> = ({
         await SecureStore.deleteItemAsync("userToken");
         await SecureStore.deleteItemAsync("userId");
         onClose?.();
-        alert("akun anda berhasil dihapus");
+        alert("Akun Anda berhasil dihapus");
         router.replace("/screens/signin");
       } else {
-        console.log("Terjadi kesalahan saat menghapus akun.");
+        alert("Terjadi kesalahan saat menghapus akun.");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log("Error deleting account:", error);
+
+      if (error.response?.status === 401) {
+        alert("Sesi Anda telah berakhir. Silakan login ulang.");
+        await SecureStore.deleteItemAsync("userToken");
+        await SecureStore.deleteItemAsync("userId");
+        router.replace("/screens/signin");
+      } else {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "Terjadi kesalahan saat menghapus akun";
+        alert(`Gagal menghapus akun: ${errorMessage}`);
+      }
     }
   };
 
@@ -377,7 +434,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
       }
     }
   };
-  
+
   switch (modalType) {
     // PROFIL
     case "gantifotoprofil":

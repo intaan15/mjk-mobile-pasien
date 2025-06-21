@@ -44,7 +44,7 @@ export const useChatListViewModel = () => {
       const enrichedChatList = response.data.map((chat: any) => {
         return {
           ...chat,
-          nama_dokter: chat.participant?.nama || "Pasien",
+          nama_dokter: chat.participant?.nama || "Dokter",
           foto_profil_dokter: getImageUrl(chat.participant?.foto_profil),
           id_dokter: chat.participant?._id || "",
           lastMessageDate: chat.lastMessageDate || new Date().toISOString(),

@@ -12,6 +12,7 @@ import {
   StatusBar,
   TouchableOpacity,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { useRouter } from "expo-router";
 import Background from "../../components/background";
@@ -23,7 +24,6 @@ import TabButton from "../../components/tabbutton";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import { BASE_URL } from "@env";
-
 
 const Register = () => {
   const router = useRouter();
@@ -58,6 +58,9 @@ const Register = () => {
   });
   const [showPasswordValidation, setShowPasswordValidation] = useState(false);
 
+  // State untuk pull-to-refresh
+  const [refreshing, setRefreshing] = useState(false);
+
   // Fungsi untuk mereset semua state
   const resetAllStates = () => {
     setForm(initialFormState);
@@ -74,6 +77,57 @@ const Register = () => {
       hasSymbol: false,
     });
     setShowPasswordValidation(false);
+  };
+
+  // Fungsi untuk menghapus semua data dari SecureStore
+  const clearSecureStoreData = async () => {
+    try {
+      await SecureStore.deleteItemAsync("formData");
+      await SecureStore.deleteItemAsync("fotoKTP");
+      await SecureStore.deleteItemAsync("selfieKTP");
+      console.log("SecureStore data cleared successfully");
+    } catch (error) {
+      console.log("Error clearing SecureStore data:", error);
+    }
+  };
+
+  // Fungsi pull-to-refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+
+    // Tampilkan konfirmasi sebelum menghapus data
+    Alert.alert(
+      "Hapus Data Form",
+      "Apakah Anda yakin ingin menghapus semua data yang telah diisi?",
+      [
+        {
+          text: "Batal",
+          style: "cancel",
+          onPress: () => setRefreshing(false),
+        },
+        {
+          text: "Hapus",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // Hapus data dari SecureStore
+              await clearSecureStoreData();
+
+              // Reset semua state
+              resetAllStates();
+
+              // Berikan feedback kepada user
+              Alert.alert("Berhasil", "Semua data form telah dihapus!");
+            } catch (error) {
+              console.log("Error during refresh:", error);
+              Alert.alert("Error", "Terjadi kesalahan saat menghapus data");
+            } finally {
+              setRefreshing(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   // Fungsi validasi password
@@ -218,7 +272,6 @@ const Register = () => {
       const formData = new FormData();
 
       // Data teks - pastikan tidak ada nilai undefined atau null
-      // Coba beberapa kemungkinan nama field yang berbeda
       formData.append("nama_masyarakat", form.nama.trim());
       formData.append("username_masyarakat", form.username.trim());
       formData.append("password_masyarakat", form.password);
@@ -229,30 +282,13 @@ const Register = () => {
       formData.append("jeniskelamin_masyarakat", form.jenisKelamin);
       formData.append("tgl_lahir_masyarakat", form.tglLahir);
 
-      // Alternative field names (uncomment if needed)
-      // formData.append("nama", form.nama.trim());
-      // formData.append("username", form.username.trim());
-      // formData.append("password", form.password);
-      // formData.append("email", form.email.trim().toLowerCase());
-      // formData.append("nik", form.nik.trim());
-      // formData.append("alamat", form.alamat.trim());
-      // formData.append("no_telp", form.notlp.trim());
-      // formData.append("jenis_kelamin", form.jenisKelamin);
-      // formData.append("tanggal_lahir", form.tglLahir);
-
-      // File foto KTP - try different approaches
+      // File foto KTP
       const ktpInfo = getFileInfo(fotoKTP);
-
-      // Approach 1: Standard React Native format
       formData.append("foto_ktp_masyarakat", {
         uri: fotoKTP,
         type: ktpInfo.type,
         name: ktpInfo.name || `ktp_${Date.now()}.jpg`,
       } as any);
-
-      // Approach 2: Alternative format (uncomment if approach 1 fails)
-      // const ktpBlob = await fetch(fotoKTP).then(r => r.blob());
-      // formData.append("foto_ktp_masyarakat", ktpBlob, ktpInfo.name || `ktp_${Date.now()}.jpg`);
 
       // File selfie KTP
       const selfieInfo = getFileInfo(selfieKTP);
@@ -262,12 +298,7 @@ const Register = () => {
         type: selfieInfo.type,
       } as any);
 
-      // Alternative selfie format (uncomment if needed)
-      // const selfieBlob = await fetch(selfieKTP).then(r => r.blob());
-      // formData.append("selfie_ktp_masyarakat", selfieBlob, selfieInfo.name || `selfie_${Date.now()}.jpg`);
-
       console.log("=== FORM DATA TO SEND ===");
-      // Log form data untuk debugging
       const formDataObj = {};
       formData._parts.forEach(([key, value]) => {
         if (typeof value === "object" && value.uri) {
@@ -289,7 +320,7 @@ const Register = () => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-          timeout: 30000, // 30 second timeout
+          timeout: 30000,
         }
       );
 
@@ -301,9 +332,7 @@ const Register = () => {
           text: "OK",
           onPress: async () => {
             // Hapus data dari SecureStore
-            await SecureStore.deleteItemAsync("formData");
-            await SecureStore.deleteItemAsync("fotoKTP");
-            await SecureStore.deleteItemAsync("selfieKTP");
+            await clearSecureStoreData();
 
             // Reset semua state
             resetAllStates();
@@ -437,8 +466,34 @@ const Register = () => {
               paddingVertical: 20,
             }}
             keyboardShouldPersistTaps="handled"
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#025F96"]} // Android
+                tintColor="#025F96" // iOS
+                title="Tarik untuk menghapus data form" // iOS
+                titleColor="#025F96" // iOS
+              />
+            }
           >
-            <View className="items-center pt-24 pb-6">
+            {/* Header dengan informasi pull-to-refresh */}
+            <View className="w-full max-w-sm mb-4 px-4">
+              <View className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <View className="flex-row items-center">
+                  <Ionicons
+                    name="information-circle"
+                    size={20}
+                    color="#025F96"
+                  />
+                  <Text className="ml-2 text-sm text-blue-800 flex-1">
+                    Tarik ke bawah untuk menghapus semua data form
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <View className="items-center pt-12 pb-6">
               <Image
                 className="w-44 h-48"
                 source={require("../../assets/images/logo.png")}
