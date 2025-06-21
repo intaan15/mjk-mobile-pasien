@@ -24,13 +24,13 @@ import { BASE_URL, BASE_URL2 } from "@env";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useLocalSearchParams } from "expo-router";
 
-const socket = io("http://10.52.170.201:3330", {
-  transports: ["websocket"], //
-});
-
-// const socket = io(`${BASE_URL2}`, {
+// const socket = io("http://192.168.2.210:3330", {
 //   transports: ["websocket"], //
 // });
+
+const socket = io(`${BASE_URL2}`, {
+  transports: ["websocket"], //
+});
 
 export default function ChatScreen() {
   const router = useRouter();
@@ -51,6 +51,14 @@ export default function ChatScreen() {
   const [selectedDokter, setSelectedDokter] = useState<string | null>(null);
   const rawParams = useLocalSearchParams();
   const [hasRated, setHasRated] = useState({});
+
+  const getJakartaTime = () => {
+    const now = new Date();
+    // Jakarta = UTC+7, jadi tambahkan 7 jam (7 * 60 * 60 * 1000 ms)
+    const jakartaOffset = 7 * 60 * 60 * 1000;
+    const jakartaTime = new Date(now.getTime() + jakartaOffset);
+    return jakartaTime.toISOString();
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -220,7 +228,8 @@ export default function ChatScreen() {
           image: base64Image, // Pastikan ini base64 lengkap dengan header
           type: "image",
           role: userRole,
-          waktu: new Date().toISOString(),
+          // waktu: new Date().toISOString(),
+          waktu: getJakartaTime(),
           // ✅ Tidak mengirim text untuk image
         };
 
@@ -300,7 +309,8 @@ export default function ChatScreen() {
         receiverId: receiverId,
         type: "text",
         role: userRole,
-        waktu: new Date().toISOString(),
+        // waktu: new Date().toISOString(),
+        waktu: getJakartaTime(),
       };
 
       console.log("[DEBUG] 📤 Sending text message:", msgData);
@@ -462,8 +472,8 @@ export default function ChatScreen() {
                   ? item.image // Base64 image dengan header
                   : item.image.startsWith("http")
                   ? item.image // URL lengkap
-                  : `http://10.52.170.201:3330${item.image}`, // Path relatif
-                  // : `${BASE_URL2}${item.image}`, // Path relatif
+                  // : `http://192.168.2.210:3330${item.image}`, // Path relatif
+                  : `${BASE_URL2}${item.image}`, // Path relatif
 
               }}
               className="w-24 h-32 mt-1 rounded-md"
@@ -620,8 +630,8 @@ export default function ChatScreen() {
                       ? previewImage
                       : previewImage.startsWith("http")
                       ? previewImage
-                      : `http://10.52.170.201:3330${previewImage}`,
-                      // : `${BASE_URL2}${previewImage}`,
+                      // : `http://192.168.2.210:3330${previewImage}`,
+                      : `${BASE_URL2}${previewImage}`,
                   }}
                   style={{
                     width: "90%",
@@ -647,8 +657,8 @@ export default function ChatScreen() {
                         ? "Base64 Image"
                         : previewImage.startsWith("http")
                         ? previewImage
-                        : `http://10.52.170.201:3330${previewImage}`
-                        // : `${BASE_URL2}${previewImage}`
+                        // : `http://192.168.2.210:3330${previewImage}`
+                        : `${BASE_URL2}${previewImage}`
                     );
                   }}
                 />
