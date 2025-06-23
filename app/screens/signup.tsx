@@ -24,6 +24,9 @@ import TabButton from "../../components/tabbutton";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import { BASE_URL } from "@env";
+import * as FileSystem from "expo-file-system";
+import * as ImageManipulator from "expo-image-manipulator";
+
 
 const Register = () => {
   const router = useRouter();
@@ -204,6 +207,28 @@ const Register = () => {
     }
   };
 
+  
+
+
+  const compressImage = async (uri) => {
+    try {
+      const manipulatedImage = await ImageManipulator.manipulateAsync(
+        uri,
+        [
+          { resize: { width: 800 } }, // Resize to max width 800px
+        ],
+        {
+          compress: 0.7, // Compress to 70% quality
+          format: ImageManipulator.SaveFormat.JPEG,
+        }
+      );
+      return manipulatedImage.uri;
+    } catch (error) {
+      console.log("Error compressing image:", error);
+      return uri; // Return original URI if compression fails
+    }
+  };
+
   const handleRegister = async () => {
     try {
       const fotoKTP = await SecureStore.getItemAsync("fotoKTP");
@@ -256,6 +281,46 @@ const Register = () => {
         return;
       }
 
+      // FIXED: Compress images before creating FormData
+      console.log("Compressing images...");
+      const compressedFotoKTP = await compressImage(fotoKTP);
+      const compressedSelfieKTP = await compressImage(selfieKTP);
+
+      // FIXED: Check file sizes after compression
+      const ktpFileInfo = await FileSystem.getInfoAsync(compressedFotoKTP);
+      const selfieFileInfo = await FileSystem.getInfoAsync(compressedSelfieKTP);
+
+      const ktpSizeInMB = ktpFileInfo.size / (1024 * 1024);
+      const selfieSizeInMB = selfieFileInfo.size / (1024 * 1024);
+      const maxSizeInMB = 50; // Set reasonable limit (5MB per file)
+
+      console.log(
+        `KTP file size after compression: ${ktpSizeInMB.toFixed(2)} MB`
+      );
+      console.log(
+        `Selfie file size after compression: ${selfieSizeInMB.toFixed(2)} MB`
+      );
+
+      if (ktpSizeInMB > maxSizeInMB) {
+        Alert.alert(
+          "File Terlalu Besar",
+          `Ukuran foto KTP (${ktpSizeInMB.toFixed(
+            2
+          )} MB) terlalu besar. Maksimal ${maxSizeInMB} MB.`
+        );
+        return;
+      }
+
+      if (selfieSizeInMB > maxSizeInMB) {
+        Alert.alert(
+          "File Terlalu Besar",
+          `Ukuran foto selfie (${selfieSizeInMB.toFixed(
+            2
+          )} MB) terlalu besar. Maksimal ${maxSizeInMB} MB.`
+        );
+        return;
+      }
+
       const getFileInfo = (uri) => {
         const filename = uri.split("/").pop();
         const match = /\.(\w+)$/.exec(filename ?? "");
@@ -282,18 +347,17 @@ const Register = () => {
       formData.append("jeniskelamin_masyarakat", form.jenisKelamin);
       formData.append("tgl_lahir_masyarakat", form.tglLahir);
 
-      // File foto KTP
-      const ktpInfo = getFileInfo(fotoKTP);
+      // FIXED: Use compressed images
+      const ktpInfo = getFileInfo(compressedFotoKTP);
       formData.append("foto_ktp_masyarakat", {
-        uri: fotoKTP,
+        uri: compressedFotoKTP,
         type: ktpInfo.type,
         name: ktpInfo.name || `ktp_${Date.now()}.jpg`,
       } as any);
 
-      // File selfie KTP
-      const selfieInfo = getFileInfo(selfieKTP);
+      const selfieInfo = getFileInfo(compressedSelfieKTP);
       formData.append("selfie_ktp_masyarakat", {
-        uri: selfieKTP,
+        uri: compressedSelfieKTP,
         name: selfieInfo.name || `selfie_${Date.now()}.jpg`,
         type: selfieInfo.type,
       } as any);
@@ -313,6 +377,7 @@ const Register = () => {
       });
       console.log("FormData contents:", formDataObj);
 
+      // FIXED: Increased timeout and added upload progress
       const response = await axios.post(
         `${BASE_URL}/auth/register_masyarakat`,
         formData,
@@ -320,7 +385,15 @@ const Register = () => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-          timeout: 30000,
+          timeout: 60000, // Increased to 60 seconds
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            console.log(`Upload progress: ${percentCompleted}%`);
+            // Optional: Update progress state here
+            // setUploadProgress(percentCompleted);
+          },
         }
       );
 
@@ -360,6 +433,9 @@ const Register = () => {
           "Data yang dikirim tidak valid. Periksa kembali form Anda.";
       } else if (error.response?.status === 409) {
         errorMessage = "Username atau email sudah terdaftar.";
+      } else if (error.response?.status === 413) {
+        errorMessage =
+          "Ukuran file terlalu besar. Coba gunakan foto yang lebih kecil.";
       } else if (error.code === "ECONNABORTED") {
         errorMessage = "Koneksi timeout. Periksa koneksi internet Anda.";
       }

@@ -243,14 +243,14 @@ const ModalContent: React.FC<ModalContentProps> = ({
       // Check file size after compression
       const fileInfo = await FileSystem.getInfoAsync(compressedUri);
       const fileSizeInMB = fileInfo.size / (1024 * 1024);
-      const maxSizeInMB = 5;
+      const maxSizeInMB = 50;
 
-      console.log(`File size after compression: ${fileSizeInMB.toFixed(2)} MB`);
+      console.log(`File size after compression: ${fileSizeInMB.toFixed(50)} MB`);
 
       if (fileSizeInMB > maxSizeInMB) {
         alert(
           `Ukuran file (${fileSizeInMB.toFixed(
-            2
+            50
           )} MB) masih terlalu besar. Maksimal ${maxSizeInMB} MB.`
         );
         return;
