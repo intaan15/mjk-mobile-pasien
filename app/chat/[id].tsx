@@ -295,7 +295,7 @@ export default function ChatScreen() {
         console.warn("⚠️ Pengambilan gambar dibatalkan atau tidak valid.");
       }
     } catch (error) {
-      console.error("❌ Gagal mengirim gambar:", error);
+      console.log("❌ Gagal mengirim gambar:", error);
       alert("Gagal mengirim gambar: " + (error as Error).message);
     }
   };
@@ -410,7 +410,7 @@ export default function ChatScreen() {
           });
         }
       } catch (error: any) {
-        console.error(
+        console.log(
           "[DEBUG] ❌ API Error:",
           error.response?.status,
           error.response?.data || error.message
