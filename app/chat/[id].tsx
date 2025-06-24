@@ -469,12 +469,10 @@ export default function ChatScreen() {
             <Image
               source={{
                 uri: item.image.startsWith("data:")
-                  ? item.image // Base64 image dengan header
+                  ? item.image
                   : item.image.startsWith("http")
-                  ? item.image // URL lengkap
-                  // : `http://192.168.2.210:3330${item.image}`, // Path relatif
+                  ? item.image
                   : `${BASE_URL2}${item.image}`, // Path relatif
-
               }}
               className="w-24 h-32 mt-1 rounded-md"
               resizeMode="cover"
@@ -515,7 +513,7 @@ export default function ChatScreen() {
   return (
     <Background>
       <View style={{ flex: 1 }}>
-        {/* Header - Tambahkan timer */}
+        {/* Header */}
         <View className="flex-row justify-between items-center w-full px-5 bg-skyLight py-5 pt-10">
           <View className="flex-row items-center w-10/12">
             <TouchableOpacity onPress={() => router.back()}>
@@ -529,70 +527,81 @@ export default function ChatScreen() {
               {receiverName ? receiverName : "Loading..."}
             </Text>
           </View>
-          <View className="flex-row items-center">
-            <Image
-              className="h-10 w-12"
-              source={require("../../assets/images/logo.png")}
-              resizeMode="contain"
-            />
-          </View>
+          <Image
+            className="h-10 w-12"
+            source={require("../../assets/images/logo.png")}
+            resizeMode="contain"
+          />
         </View>
 
-        {/* Main Chat Area */}
+        {/* Main Chat Area dengan KeyboardAvoidingView yang benar */}
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0} // Set ke 0
         >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={{ flex: 1 }}>
-              {/* Chat Messages */}
-              <FlatList
-                ref={flatListRef}
-                data={[...messages].reverse()}
-                keyExtractor={(item, index) => index.toString()}
-                renderItem={renderItem}
-                contentContainerStyle={{
-                  paddingTop: 10,
-                  paddingBottom: 10,
-                }}
-                keyboardShouldPersistTaps="handled"
-                inverted={true}
-                className="px-4 flex-1"
-              />
+          {/* Chat Messages */}
+          <View style={{ flex: 1 }}>
+            <FlatList
+              ref={flatListRef}
+              data={[...messages].reverse()}
+              keyExtractor={(item, index) =>
+                `message-${index}-${item.waktu || getJakartaTime()}`
+              }
+              renderItem={renderItem}
+              contentContainerStyle={{
+                padding: 16,
+                flexGrow: 1,
+                justifyContent: "flex-end",
+              }}
+              style={{ flex: 1 }}
+              showsVerticalScrollIndicator={true}
+              keyboardShouldPersistTaps="handled"
+              inverted={true}
+              maintainVisibleContentPosition={{
+                minIndexForVisible: 0,
+                autoscrollToTopThreshold: 10,
+              }}
+              removeClippedSubviews={false}
+              initialNumToRender={20}
+              maxToRenderPerBatch={10}
+              windowSize={10}
+              getItemLayout={null}
+            />
+          </View>
 
-              {/* Chat Input */}
-              <View className="px-4 bg-skyDark py-4">
-                <View className="flex-row items-center">
-                  <TouchableOpacity onPress={() => sendImage(false)}>
-                    <Ionicons name="image-outline" size={28} color="gray" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => sendImage(true)}
-                    className="ml-2"
-                  >
-                    <Ionicons name="camera-outline" size={28} color="gray" />
-                  </TouchableOpacity>
-                  <View className="flex-1 ml-2 mr-2">
-                    <TextInput
-                      className="border border-gray-400 bg-[#C3E9FF] rounded-3xl p-2"
-                      value={message}
-                      onChangeText={setMessage}
-                      placeholder="Tulis pesan..."
-                      multiline
-                      textAlignVertical="top"
-                    />
-                  </View>
-                  <TouchableOpacity
-                    onPress={sendMessage}
-                    className="bg-blue-500 px-4 py-2 rounded-lg mr-1"
-                  >
-                    <Text className="text-white font-semibold">Kirim</Text>
-                  </TouchableOpacity>
-                </View>
+          {/* Chat Input - Sekarang di dalam KeyboardAvoidingView */}
+          <View className="px-4 bg-skyDark py-4" style={{ minHeight: 70 }}>
+            <View className="flex-row items-center">
+              <TouchableOpacity onPress={() => sendImage(false)}>
+                <Ionicons name="image-outline" size={28} color="gray" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => sendImage(true)}
+                className="ml-2"
+              >
+                <Ionicons name="camera-outline" size={28} color="gray" />
+              </TouchableOpacity>
+              <View className="flex-1 ml-2 mr-2">
+                <TextInput
+                  className="border border-gray-400 bg-[#C3E9FF] rounded-3xl p-2 min-h-[40px]"
+                  value={message}
+                  onChangeText={setMessage}
+                  placeholder="Tulis pesan..."
+                  multiline
+                  textAlignVertical="center"
+                  maxHeight={100}
+                  scrollEnabled={true}
+                />
               </View>
+              <TouchableOpacity
+                onPress={sendMessage}
+                className="bg-blue-500 px-4 py-2 rounded-lg mr-1"
+              >
+                <Text className="text-white font-semibold">Kirim</Text>
+              </TouchableOpacity>
             </View>
-          </TouchableWithoutFeedback>
+          </View>
         </KeyboardAvoidingView>
 
         {/* Preview Modal */}
@@ -630,7 +639,6 @@ export default function ChatScreen() {
                       ? previewImage
                       : previewImage.startsWith("http")
                       ? previewImage
-                      // : `http://192.168.2.210:3330${previewImage}`,
                       : `${BASE_URL2}${previewImage}`,
                   }}
                   style={{
@@ -657,44 +665,12 @@ export default function ChatScreen() {
                         ? "Base64 Image"
                         : previewImage.startsWith("http")
                         ? previewImage
-                        // : `http://192.168.2.210:3330${previewImage}`
                         : `${BASE_URL2}${previewImage}`
                     );
                   }}
                 />
               </View>
             )}
-          </View>
-        </Modal>
-
-        <Modal visible={showRatingModal} transparent animationType="slide">
-          <View className="flex-1 justify-center items-center bg-black/50">
-            <View className="bg-Warm rounded-2xl p-5 w-4/5">
-              <Text className="text-lg text-skyDark font-bold mb-2.5">
-                Beri Rating Konsultasi
-              </Text>
-              <View className="flex-row justify-center my-2.5">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <TouchableOpacity
-                    key={star}
-                    onPress={() => setRatingValue(star)}
-                  >
-                    <MaterialIcons
-                      name={star <= ratingValue ? "star" : "star-border"}
-                      size={32}
-                      color={star <= ratingValue ? "#facc15" : "#9ca3af"}
-                      style={{ marginHorizontal: 5 }}
-                    />
-                  </TouchableOpacity>
-                ))}
-              </View>
-              <TouchableOpacity
-                className="bg-skyDark p-2.5 rounded-[10px] items-center mt-2.5"
-                onPress={handleSubmitRating}
-              >
-                <Text style={{ color: "#fff", fontWeight: "bold" }}>Kirim</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         </Modal>
       </View>

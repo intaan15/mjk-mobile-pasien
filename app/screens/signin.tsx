@@ -141,7 +141,7 @@ export default function SignIn() {
                 />
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3"
+                  className="absolute right-3 top-[9px]"
                 >
                   <Ionicons
                     name={showPassword ? "eye-off" : "eye"}
