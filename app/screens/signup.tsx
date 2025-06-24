@@ -47,6 +47,7 @@ const Register = () => {
   };
 
   const [form, setForm] = useState(initialFormState);
+  const [showPassword, setShowPassword] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTab, setSelectedTab] = useState("");
@@ -598,15 +599,28 @@ const Register = () => {
                   placeholderTextColor="#ccc"
                 />
                 <Text>Kata Sandi</Text>
-                <TextInput
-                  placeholder="Masukkan Kata Sandi"
-                  secureTextEntry
-                  value={form.password}
-                  onChangeText={(text) => handleInputChange("password", text)}
-                  onFocus={() => setShowPasswordValidation(true)}
-                  className="bg-transparent border-2 border-gray-400 text-black px-4 py-3 rounded-xl"
-                  placeholderTextColor="#ccc"
-                />
+                <View className="relative">
+                  <TextInput
+                    placeholder="Masukkan Kata Sandi"
+                    secureTextEntry={!showPassword}
+                    value={form.password}
+                    onChangeText={(text) => handleInputChange("password", text)}
+                    onFocus={() => setShowPasswordValidation(true)}
+                    className="bg-transparent border-2 border-gray-400 text-black px-4 py-3 pr-12 rounded-xl"
+                    placeholderTextColor="#ccc"
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2"
+                  >
+                    <Ionicons
+                      name={showPassword ? "eye-off" : "eye"}
+                      size={24}
+                      color="#999"
+                    />
+                  </TouchableOpacity>
+                </View>
+
                 <PasswordValidationIndicator />
 
                 <Text>Email</Text>

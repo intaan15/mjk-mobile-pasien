@@ -11,8 +11,10 @@ import {
   Keyboard,
   StatusBar,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import Background from "../../components/background";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
@@ -23,6 +25,8 @@ import { BASE_URL } from "@env";
 export default function SignIn() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState("");
@@ -34,14 +38,13 @@ export default function SignIn() {
       return;
     }
 
+    setIsLoading(true);
+
     try {
-      const response = await axios.post(
-        `${BASE_URL}/auth/login_masyarakat`,
-        {
-          identifier_masyarakat: identifier,
-          password_masyarakat: password,
-        }
-      );
+      const response = await axios.post(`${BASE_URL}/auth/login_masyarakat`, {
+        identifier_masyarakat: identifier,
+        password_masyarakat: password,
+      });
 
       const { token, userId } = response.data;
       await SecureStore.setItemAsync("userToken", token);
@@ -80,8 +83,9 @@ export default function SignIn() {
       }
 
       setModalVisible(true);
+    } finally {
+      setIsLoading(false);
     }
-    
   };
 
   return (
@@ -126,20 +130,46 @@ export default function SignIn() {
               />
 
               <Text className="mb-2 text-base text-black">Kata Sandi</Text>
-              <TextInput
-                placeholder="Masukkan Kata Sandi"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-                placeholderTextColor="#999"
-                className="border-2 border-gray-300 p-3 rounded-xl mb-6 text-black"
-              />
+              <View className="relative">
+                <TextInput
+                  placeholder="Masukkan Kata Sandi"
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholderTextColor="#999"
+                  className="border-2 border-gray-300 p-3 pr-12 rounded-xl mb-6 text-black"
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3"
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-off" : "eye"}
+                    size={24}
+                    color="#999"
+                  />
+                </TouchableOpacity>
+              </View>
 
               <TouchableOpacity
-                className="bg-[#025F96] py-3 rounded-xl items-center mb-4 w-64 self-center"
+                className={`py-3 rounded-xl items-center mb-4 w-64 self-center flex-row justify-center ${
+                  isLoading ? "bg-[#0459708a]" : "bg-[#025F96]"
+                }`}
                 onPress={handleLogin}
+                disabled={isLoading}
               >
-                <Text className="text-white text-lg">Masuk</Text>
+                {isLoading ? (
+                  <>
+                    <ActivityIndicator
+                      size="small"
+                      color="#ffffff"
+                      style={{ marginRight: 8 }}
+                    />
+                    <Text className="text-white text-lg">Loading...</Text>
+                  </>
+                ) : (
+                  <Text className="text-white text-lg">Masuk</Text>
+                )}
               </TouchableOpacity>
 
               <View className="flex-row justify-center">
@@ -154,11 +184,11 @@ export default function SignIn() {
       </KeyboardAvoidingView>
       <ModalTemplate
         isVisible={modalVisible}
-        onClose={() => setModalVisible(false)} // Menutup modal
+        onClose={() => setModalVisible(false)}
       >
         <ModalContent
           modalType={modalType}
-          onClose={() => setModalVisible(false)} // Menutup modal dari dalam content
+          onClose={() => setModalVisible(false)}
         />
       </ModalTemplate>
     </Background>
