@@ -460,9 +460,7 @@ export default function ChatScreen() {
     }
   };
 
-  // Fungsi renderItem yang diperbarui untuk menangani separator tanggal dan pesan
   const renderItem = ({ item, index }: { item: any; index: number }) => {
-    // Jika ini adalah separator tanggal - tampilkan dengan style yang tepat
     if (item.type === "dateSeparator") {
       return (
         <View className="items-center mb-5">
@@ -475,9 +473,7 @@ export default function ChatScreen() {
       );
     }
 
-    // Jika ini adalah pesan biasa
     const isSender = item.senderId === userId;
-
     return (
       <View className={`mb-2 ${isSender ? "items-end" : "items-start"}`}>
         <View
@@ -567,14 +563,11 @@ export default function ChatScreen() {
     );
   };
 
-  // Menyiapkan data untuk FlatList dengan separator tanggal
   const prepareMessagesWithDates = () => {
     const groupedMessages = groupMessagesByDate(messages);
     const flatData: any[] = [];
 
-    // Reverse the groups untuk inverted list
     groupedMessages.reverse().forEach((group, groupIndex) => {
-      // Tambahkan pesan terlebih dahulu (dari baru ke lama untuk inverted)
       group.messages
         .slice()
         .reverse()
@@ -587,7 +580,6 @@ export default function ChatScreen() {
           });
         });
 
-      // Kemudian tambahkan separator tanggal di akhir (akan tampil di atas karena inverted)
       flatData.push({
         type: "dateSeparator",
         date: group.date,
