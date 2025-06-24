@@ -5,6 +5,7 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import React from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -51,6 +52,8 @@ export default function DoctorListView() {
     getLoadingText,
     getDisplayRating,
     getImageUrl,
+    onRefresh,
+    refreshing,
 
   } = useDoctorListViewModel();
 
@@ -94,7 +97,17 @@ export default function DoctorListView() {
               paddingBottom: insets.bottom + 120,
             }}
             showsVerticalScrollIndicator={false}
-          >
+                                refreshControl={
+                                  <RefreshControl
+                                    refreshing={refreshing}
+                                    onRefresh={onRefresh}
+                                    colors={["#025F96"]}
+                                    tintColor="#025F96"
+                                    title="Memuat ulang..."
+                                    titleColor="#025F96"
+                                  />
+                                }>
+          
             <View className="gap-5 pb-6 w-4/5">
               {doctors.map((doctor, index) => {
                 const displayRating = getDisplayRating(doctor);
@@ -113,7 +126,7 @@ export default function DoctorListView() {
                           );
                           return (
                             <Image
-                              source={{ uri: fotoUrl }}
+                              source={{ uri: fotoUrl ?? "" }} 
                               className="h-16 w-16 rounded-full border border-gray-300"
                               resizeMode="cover"
                             />

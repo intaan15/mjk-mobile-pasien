@@ -109,69 +109,46 @@ export const useArtikelViewModel = () => {
   };
 };
 
-export interface ArtikelDetail {
+interface ArtikelDetail {
   id: string;
   nama_artikel: string;
   detail_artikel: string;
   gambar_artikel: string;
   createdAt: string;
+  // tambahkan field lain sesuai kebutuhan
 }
 
-export interface ArtikelDetailState {
+interface ArtikelDetailState {
   artikel: ArtikelDetail | null;
   loading: boolean;
   error: string | null;
+  refreshing: boolean;
 }
 
-export class ArtikelDetailViewModel {
-  private router = useRouter();
-  private artikelId: string;
+// Ganti dengan BASE_URL Anda
 
-  constructor(artikelId: string) {
-    this.artikelId = artikelId;
-  }
+export function useArtikelDetail(artikelId: string) {
+  const router = useRouter();
+  const [artikel, setArtikel] = useState<ArtikelDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useArtikelDetail(): ArtikelDetailState & {
-    navigateBack: () => void;
-    navigateToArtikel: () => void;
-  } {
-    const [artikel, setArtikel] = useState<ArtikelDetail | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-      this.fetchArtikelDetail(setArtikel, setLoading, setError);
-    }, [this.artikelId]);
-
-    return {
-      artikel,
-      loading,
-      error,
-      navigateBack: () => this.router.back(),
-      navigateToArtikel: () => this.router.replace("/(tabs)/artikel"),
-    };
-  }
-
-  private async fetchArtikelDetail(
-    setArtikel: (artikel: ArtikelDetail | null) => void,
-    setLoading: (loading: boolean) => void,
-    setError: (error: string | null) => void
-  ) {
+  const fetchArtikelDetail = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
       const token = await SecureStore.getItemAsync("userToken");
-
       if (!token) {
         await SecureStore.deleteItemAsync("userToken");
         await SecureStore.deleteItemAsync("userId");
-        this.router.replace("/screens/signin");
+        router.replace("/screens/signin");
         return;
       }
 
       const response = await axios.get(
-        `${BASE_URL}/artikel/getbyid/${this.artikelId}`,
+        `${BASE_URL}/artikel/getbyid/${artikelId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -188,23 +165,63 @@ export class ArtikelDetailViewModel {
     } finally {
       setLoading(false);
     }
-  }
+  }, [artikelId, router]);
 
-  formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString();
-  }
-
-  getImageUrl = (imagePath: string | null | undefined): string | null => {
-    if (!imagePath) return null;
-
-    if (imagePath.startsWith("http")) {
-      return imagePath;
+  useEffect(() => {
+    if (artikelId) {
+      fetchArtikelDetail();
     }
-    const baseUrlWithoutApi = BASE_URL.replace("/api", "");
+  }, [fetchArtikelDetail, artikelId]);
 
-    const cleanPath = imagePath.startsWith("/")
-      ? imagePath.substring(1)
-      : imagePath;
-    return `${baseUrlWithoutApi}/${cleanPath}`;
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchArtikelDetail();
+    setRefreshing(false);
+  }, [fetchArtikelDetail]);
+
+  const formatDate = useCallback((dateString: string): string => {
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  }, []);
+
+  const getImageUrl = useCallback(
+    (imagePath: string | null | undefined): string | null => {
+      if (!imagePath) return null;
+
+      if (imagePath.startsWith("http")) {
+        return imagePath;
+      }
+
+      const baseUrlWithoutApi = BASE_URL.replace("/api", "");
+      const cleanPath = imagePath.startsWith("/")
+        ? imagePath.substring(1)
+        : imagePath;
+
+      return `${baseUrlWithoutApi}/${cleanPath}`;
+    },
+    []
+  );
+
+  const navigateBack = useCallback(() => {
+    router.back();
+  }, [router]);
+
+  const navigateToArtikel = useCallback(() => {
+    router.replace("/(tabs)/artikel");
+  }, [router]);
+
+  return {
+    artikel,
+    loading,
+    error,
+    refreshing,
+    onRefresh,
+    navigateBack,
+    navigateToArtikel,
+    formatDate,
+    getImageUrl,
   };
 }

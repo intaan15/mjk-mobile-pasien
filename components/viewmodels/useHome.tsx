@@ -59,6 +59,7 @@ export const useHomeViewModel = () => {
   const [displayedArticles, setDisplayedArticles] = useState<Article[]>([]);
   const [jadwalList, setJadwalList] = useState<Jadwal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const slideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const artikelPool = useRef<Article[]>([]);
@@ -108,6 +109,8 @@ export const useHomeViewModel = () => {
       router.replace("/screens/signin");
     }
   };
+
+  
 
   const fetchArtikels = async () => {
     try {
@@ -265,6 +268,14 @@ export const useHomeViewModel = () => {
     );
   };
 
+  const onRefresh = useCallback(async (): Promise<void> => {
+    setRefreshing(true);
+    await fetchArtikels();
+    await fetchJadwal();
+    await fetchUserData();
+    setRefreshing(false);
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       fetchUserData();
@@ -300,7 +311,9 @@ export const useHomeViewModel = () => {
     getDayName,
     navigateToDoctor,
     navigateToArticle,
-    getImageUrl
+    getImageUrl,
+    onRefresh,
+    refreshing,
   };
 };
 
@@ -317,6 +330,7 @@ export const useDoctorListViewModel = () => {
     new Set()
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Calculate average rating
   const calculateAverageRating = (ratings: Rating[]): number => {
@@ -453,6 +467,14 @@ export const useDoctorListViewModel = () => {
     return `${baseUrlWithoutApi}/${cleanPath}`;
   };
 
+  const onRefresh = useCallback(async (): Promise<void> => {
+    setRefreshing(true);
+    await fetchDoctors();
+    await fetchDoctorRatings();
+    await fetchDoctors();
+    setRefreshing(false);
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       fetchDoctors();
@@ -499,6 +521,8 @@ export const useDoctorListViewModel = () => {
     getLoadingText,
     getDisplayRating,
     getImageUrl,
+    onRefresh,
+    refreshing,
   };
 };
 
@@ -514,100 +538,118 @@ export const useScheduleViewModel = () => {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [doctorId, setDoctorId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const router = useRouter();
   const { doctorName, doctor_Id, spesialis } = useLocalSearchParams();
 
   // Fetch doctor data
-  useEffect(() => {
-    const fetchDoctorData = async () => {
-      try {
-        const token = await SecureStore.getItemAsync("userToken");
-        if (!token) {
-          await SecureStore.deleteItemAsync("userToken");
-          await SecureStore.deleteItemAsync("userId");
-          router.replace("/screens/signin");
-          return;
-        }
-
-        const response = await axios.get(
-          `${BASE_URL}/dokter/getbyid/${doctor_Id}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        const doctor = response.data;
-        if (doctor) {
-          setDoctorId(doctor._id);
-        }
-      } catch (error: any) {
-        console.log(
-          "Error fetching doctor data:",
-          error.response ? error.response.data : error.message
-        );
+  // Definisikan fungsi fetch di luar useEffect agar bisa diakses onRefresh
+  const fetchDoctorData = async () => {
+    try {
+      const token = await SecureStore.getItemAsync("userToken");
+      if (!token) {
+        await SecureStore.deleteItemAsync("userToken");
+        await SecureStore.deleteItemAsync("userId");
+        router.replace("/screens/signin");
+        return;
       }
-    };
 
+      const response = await axios.get(
+        `${BASE_URL}/dokter/getbyid/${doctor_Id}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const doctor = response.data;
+      if (doctor) {
+        setDoctorId(doctor._id);
+      }
+    } catch (error: any) {
+      console.log(
+        "Error fetching doctor data:",
+        error.response ? error.response.data : error.message
+      );
+    }
+  };
+
+  const fetchSchedule = async () => {
+    if (!doctorId) return;
+
+    try {
+      const token = await SecureStore.getItemAsync("userToken");
+      if (!token) {
+        console.log("Token tidak ditemukan");
+        return;
+      }
+
+      const response = await axios.get(
+        `${BASE_URL}/dokter/getbyid/${doctorId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const jadwal = response.data.jadwal;
+      const selectedDateOnly = new Date(selectedDate)
+        .toISOString()
+        .split("T")[0];
+
+      const matchingJadwal = jadwal.find((item: any) => {
+        const jadwalDateOnly = new Date(item.tanggal)
+          .toISOString()
+          .split("T")[0];
+        return jadwalDateOnly === selectedDateOnly;
+      });
+
+      if (matchingJadwal) {
+        setAvailableTimes(matchingJadwal.jam);
+      } else {
+        setAvailableTimes([]);
+      }
+    } catch (error: any) {
+      if (error.response) {
+        console.log("API Error:", error.response.data);
+        console.log("Status code:", error.response.status);
+      } else {
+        console.log("Error message:", error.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // useEffect untuk fetch doctor data
+  useEffect(() => {
     fetchDoctorData();
-  }, [doctor_Id, doctorName]);
+  }, [doctor_Id]);
 
-  // Fetch schedule when date or doctor changes
+  // useEffect untuk fetch schedule ketika date atau doctor berubah
   useEffect(() => {
     if (doctorId) {
-      const fetchSchedule = async () => {
-        try {
-          const token = await SecureStore.getItemAsync("userToken");
-          if (!token) {
-            console.log("Token tidak ditemukan");
-            return;
-          }
-
-          const response = await axios.get(
-            `${BASE_URL}/dokter/getbyid/${doctorId}`,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-
-          const jadwal = response.data.jadwal;
-          const selectedDateOnly = new Date(selectedDate)
-            .toISOString()
-            .split("T")[0];
-
-          const matchingJadwal = jadwal.find((item: any) => {
-            const jadwalDateOnly = new Date(item.tanggal)
-              .toISOString()
-              .split("T")[0];
-            return jadwalDateOnly === selectedDateOnly;
-          });
-
-          if (matchingJadwal) {
-            setAvailableTimes(matchingJadwal.jam);
-          } else {
-            setAvailableTimes([]);
-          }
-        } catch (error: any) {
-          if (error.response) {
-            console.log("API Error:", error.response.data);
-            console.log("Status code:", error.response.status);
-          } else {
-            console.log("Error message:", error.message);
-          }
-        } finally {
-          setLoading(false);
-        }
-      };
-
       fetchSchedule();
     }
   }, [selectedDate, doctorId]);
+
+  // onRefresh callback - HANYA SATU
+  const onRefresh = useCallback(async (): Promise<void> => {
+    setRefreshing(true);
+    setLoading(true);
+
+    await fetchDoctorData();
+    if (doctorId) {
+      await fetchSchedule();
+    }
+
+    setRefreshing(false);
+  }, [doctorId, doctor_Id, selectedDate]);
 
   const handleDateChange = (date: Date) => {
     setSelectedDate(date);
@@ -709,6 +751,8 @@ export const useScheduleViewModel = () => {
     selectedTime,
     loading,
     doctorName,
+    onRefresh,
+    refreshing,
 
     // Actions
     handleDateChange,

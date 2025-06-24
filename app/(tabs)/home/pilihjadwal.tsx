@@ -7,6 +7,7 @@ import {
   StatusBar,
   ActivityIndicator,
   Image,
+  RefreshControl,
 } from "react-native";
 import DatePickerComponent from "../../../components/picker/datepicker";
 import Background from "../../../components/background";
@@ -25,6 +26,8 @@ const ScheduleScreen = () => {
     handleTimeSelect,
     handleSelectSchedule,
     handleGoBack,
+    onRefresh,
+    refreshing,
   } = useScheduleViewModel();
 
   const renderTimeSlot = (item: any, index: number) => (
@@ -145,7 +148,18 @@ const ScheduleScreen = () => {
       <ScrollView
         className="px-6 py-4 mt-[-30px]"
         contentContainerStyle={{ paddingBottom: 100 }}
-      >
+        showsVerticalScrollIndicator={false}
+                                        refreshControl={
+                                          <RefreshControl
+                                            refreshing={refreshing}
+                                            onRefresh={onRefresh}
+                                            colors={["#025F96"]}
+                                            tintColor="#025F96"
+                                            title="Memuat ulang..."
+                                            titleColor="#025F96"
+                                          />
+                                        }>
+      
         {renderLegend()}
         
         <View className="flex-1 flex-col p-2">

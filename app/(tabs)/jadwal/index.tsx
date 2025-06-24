@@ -55,7 +55,7 @@ const DoctorImage = ({ jadwal }: { jadwal: JadwalItem }) => {
 
     return (
       <Image
-        source={{ uri: imageUrl }}
+        source={{ uri: imageUrl ?? " "}}
         className="h-[70px] w-[70px] rounded-full border border-gray-300"
         resizeMode="cover"
         onError={(error) => {

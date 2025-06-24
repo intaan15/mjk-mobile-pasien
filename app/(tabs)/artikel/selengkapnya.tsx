@@ -6,22 +6,33 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
-  useWindowDimensions
+  useWindowDimensions,
+  RefreshControl,
 } from "react-native";
 import React from "react";
-import { useLocalSearchParams,  } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import Background from "../../../components/background";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { images } from "../../../constants/images";
 import RenderHTML from "react-native-render-html";
-import { ArtikelDetailViewModel } from "../../../components/viewmodels/useArtikel";
+import { useArtikelDetail } from "../../../components/viewmodels/useArtikel";
 
 export default function Selengkapnya() {
   const { id } = useLocalSearchParams();
   const { width } = useWindowDimensions();
-  
-  const viewModel = new ArtikelDetailViewModel(id as string);
-  const { artikel, loading, error, navigateBack, navigateToArtikel } = viewModel.useArtikelDetail();
+
+  // Menggunakan custom hook langsung
+  const {
+    artikel,
+    loading,
+    error,
+    refreshing,
+    onRefresh,
+    navigateBack,
+    navigateToArtikel,
+    formatDate,
+    getImageUrl,
+  } = useArtikelDetail(id as string);
 
   if (loading) {
     return (
@@ -42,14 +53,14 @@ export default function Selengkapnya() {
   return (
     <Background>
       <View className="flex">
-        <HeaderView 
+        <HeaderView artikel={artikel} onBackPress={navigateToArtikel} />
+        <ContentView
           artikel={artikel}
-          onBackPress={navigateToArtikel}
-        />
-        <ContentView 
-          artikel={artikel}
-          viewModel={viewModel}
+          formatDate={formatDate}
+          getImageUrl={getImageUrl}
           contentWidth={width - 40}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
         />
       </View>
     </Background>
@@ -79,10 +90,10 @@ const ErrorView = ({ onBackPress }: { onBackPress: () => void }) => (
   </View>
 );
 
-const HeaderView = ({ 
-  artikel, 
-  onBackPress 
-}: { 
+const HeaderView = ({
+  artikel,
+  onBackPress,
+}: {
   artikel: any;
   onBackPress: () => void;
 }) => (
@@ -99,38 +110,49 @@ const HeaderView = ({
         {artikel.nama_artikel}
       </Text>
     </View>
-    <Image
-      className="h-10 w-12"
-      source={images.logo}
-      resizeMode="contain"
-    />
+    <Image className="h-10 w-12" source={images.logo} resizeMode="contain" />
   </View>
 );
 
-const ContentView = ({ 
-  artikel, 
-  viewModel, 
-  contentWidth 
-}: { 
+const ContentView = ({
+  artikel,
+  formatDate,
+  getImageUrl,
+  contentWidth,
+  refreshing,
+  onRefresh,
+}: {
   artikel: any;
-  viewModel: ArtikelDetailViewModel;
+  formatDate: (dateString: string) => string;
+  getImageUrl: (imagePath: string | null | undefined) => string | null;
   contentWidth: number;
+  refreshing: boolean;
+  onRefresh: () => void;
 }) => (
   <ScrollView
     contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 50 }}
-    showsVerticalScrollIndicator={false}
+    refreshControl={
+      <RefreshControl
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        colors={["#025F96"]}
+        tintColor="#025F96"
+        title="Memuat ulang..."
+        titleColor="#025F96"
+      />
+    }
   >
     <View className="bg-white rounded-2xl shadow-md mt-4 mb-32">
       <View className="p-3">
         <Image
           className="w-full h-48 rounded-xl mb-4"
           source={{
-            uri: viewModel.getImageUrl(artikel.gambar_artikel),
+            uri: getImageUrl(artikel.gambar_artikel) ?? "Artikel tidak tersedia",
           }}
           resizeMode="cover"
         />
         <Text className="text-skyDark text-right text-sm font-medium pb-1">
-          {viewModel.formatDate(artikel.createdAt)}
+          {formatDate(artikel.createdAt)}
         </Text>
         <Text className="text-skyDark text-center font-bold text-xl pb-4">
           {artikel.nama_artikel}

@@ -811,7 +811,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
       return (
         <View>
           <Text className="text-center text-lg font-bold text-skyDark">
-            Akun anda bodong
+            Akun anda tidak tervalidasi
           </Text>
 
           <View className="w-full h-[2px] bg-skyDark mt-5 mb-3" />

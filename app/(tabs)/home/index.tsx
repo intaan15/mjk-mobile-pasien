@@ -8,6 +8,7 @@ import {
   Easing,
   Dimensions,
   StyleSheet,
+  RefreshControl,
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import Background from "../../../components/background";
@@ -129,7 +130,9 @@ export default function HomeView() {
     getDayName,
     navigateToDoctor,
     navigateToArticle,
-    getImageUrl
+    getImageUrl,
+    refreshing,
+    onRefresh,
   } = useHomeViewModel();
 
   return (
@@ -155,7 +158,18 @@ export default function HomeView() {
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 80 }} 
+        showsVerticalScrollIndicator={false}
+                    refreshControl={
+                      <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={["#025F96"]}
+                        tintColor="#025F96"
+                        title="Memuat ulang..."
+                        titleColor="#025F96"
+                      />
+                    }>
           <View className="flex-1">
             <View className="items-center pt-9">
               <Text className="text-xl text-skyDark font-extrabold pb-6">
@@ -297,7 +311,7 @@ export default function HomeView() {
                         <Image
                           className="rounded-2xl w-full h-24 p-1"
                           source={{
-                            uri: getImageUrl(item.gambar_artikel),
+                            uri: getImageUrl(item.gambar_artikel) ?? "",
                           }}
                           resizeMode="cover"
                         />
