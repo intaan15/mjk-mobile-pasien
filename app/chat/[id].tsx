@@ -674,10 +674,22 @@ export default function ChatScreen() {
                   value={message}
                   onChangeText={setMessage}
                   placeholder="Tulis pesan..."
-                  multiline
-                  textAlignVertical="center"
+                  placeholderTextColor="#9CA3AF"
+                  multiline={true}
+                  numberOfLines={Platform.OS === "ios" ? undefined : 1}
+                  textAlignVertical={Platform.OS === "android" ? "top" : "top"}
                   maxHeight={100}
                   scrollEnabled={true}
+                  style={{
+                    fontSize: 14,
+                    lineHeight: 20,
+                    color: "#1F2937",
+                    paddingTop: Platform.OS === "ios" ? 8 : 10,
+                    paddingBottom: Platform.OS === "ios" ? 8 : 10,
+                    paddingHorizontal: 12,
+                    minHeight: 40,
+                    maxHeight: 100,
+                  }}
                 />
               </View>
               <TouchableOpacity
