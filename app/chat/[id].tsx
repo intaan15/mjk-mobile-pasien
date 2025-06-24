@@ -437,10 +437,7 @@ export default function ChatScreen() {
       setShowRatingModal(false);
       setRatingValue(0); // ✅ Reset rating
     } catch (error: any) {
-      console.log(
-        "Gagal kirim rating:",
-        error.response?.data || error.message
-      );
+      console.log("Gagal kirim rating:", error.response?.data || error.message);
       alert(error.response?.data?.message || "Gagal menyimpan rating");
     }
   };
@@ -469,10 +466,11 @@ export default function ChatScreen() {
             <Image
               source={{
                 uri: item.image.startsWith("data:")
-                  ? item.image
+                  ? item.image // Base64 image dengan header
                   : item.image.startsWith("http")
-                  ? item.image
-                  : `${BASE_URL2}${item.image}`, // Path relatif
+                  ? item.image // URL lengkap
+                  : // : `http://192.168.2.210:3330${item.image}`, // Path relatif
+                    `${BASE_URL2}${item.image}`, // Path relatif
               }}
               className="w-24 h-32 mt-1 rounded-md"
               resizeMode="cover"
@@ -671,6 +669,37 @@ export default function ChatScreen() {
                 />
               </View>
             )}
+          </View>
+        </Modal>
+
+        <Modal visible={showRatingModal} transparent animationType="slide">
+          <View className="flex-1 justify-center items-center bg-black/50">
+            <View className="bg-Warm rounded-2xl p-5 w-4/5">
+              <Text className="text-lg text-skyDark font-bold mb-2.5">
+                Beri Rating Konsultasi
+              </Text>
+              <View className="flex-row justify-center my-2.5">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <TouchableOpacity
+                    key={star}
+                    onPress={() => setRatingValue(star)}
+                  >
+                    <MaterialIcons
+                      name={star <= ratingValue ? "star" : "star-border"}
+                      size={32}
+                      color={star <= ratingValue ? "#facc15" : "#9ca3af"}
+                      style={{ marginHorizontal: 5 }}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <TouchableOpacity
+                className="bg-skyDark p-2.5 rounded-[10px] items-center mt-2.5"
+                onPress={handleSubmitRating}
+              >
+                <Text style={{ color: "#fff", fontWeight: "bold" }}>Kirim</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </Modal>
       </View>
