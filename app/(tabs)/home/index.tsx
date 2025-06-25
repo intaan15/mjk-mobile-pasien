@@ -9,6 +9,7 @@ import {
   Dimensions,
   StyleSheet,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import Background from "../../../components/background";
@@ -133,6 +134,7 @@ export default function HomeView() {
     getImageUrl,
     refreshing,
     onRefresh,
+    getDisplayRating,
   } = useHomeViewModel();
 
   return (
@@ -158,18 +160,20 @@ export default function HomeView() {
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingBottom: 80 }} 
-        showsVerticalScrollIndicator={false}
-                    refreshControl={
-                      <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        colors={["#025F96"]}
-                        tintColor="#025F96"
-                        title="Memuat ulang..."
-                        titleColor="#025F96"
-                      />
-                    }>
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 80 }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#025F96"]}
+              tintColor="#025F96"
+              title="Memuat ulang..."
+              titleColor="#025F96"
+            />
+          }
+        >
           <View className="flex-1">
             <View className="items-center pt-9">
               <Text className="text-xl text-skyDark font-extrabold pb-6">
@@ -240,7 +244,7 @@ export default function HomeView() {
                         <View className="flex-row pt-1 items-center">
                           <FontAwesome name="star" size={20} color="#025F96" />
                           <Text className="font-bold text-base text-skyDark pl-1">
-                            {jadwal.dokter_id?.rating_dokter}
+                            {getDisplayRating(jadwal.dokter_id)}
                           </Text>
                         </View>
                       </View>

@@ -22,6 +22,7 @@ export interface Jadwal {
   _id: string;
   masyarakat_id: { _id: string };
   dokter_id: {
+    _id: string;
     nama_dokter: string;
     foto_profil_dokter: string;
     rating_dokter: number;
@@ -60,6 +61,9 @@ export const useHomeViewModel = () => {
   const [jadwalList, setJadwalList] = useState<Jadwal[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [doctorRatings, setDoctorRatings] = useState<{ [key: string]: number }>({});
+  const [ratingsLoading, setRatingsLoading] = useState(false);
+  const [fetchedDoctorIds, setFetchedDoctorIds] = useState<Set<string>>(new Set());
   const slideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const artikelPool = useRef<Article[]>([]);
@@ -78,6 +82,18 @@ export const useHomeViewModel = () => {
     const date = new Date(dateString);
     return days[date.getDay()];
   };
+
+  const calculateAverageRating = (ratings: Rating[]): number => {
+    if (ratings.length === 0) return 0;
+    const sum = ratings.reduce((acc, rating) => acc + rating.rating, 0);
+    return Math.round((sum / ratings.length) * 10) / 10;
+  };
+
+  const getDisplayRating = useCallback((doctor: any): number => {
+    if (!doctor || !doctor._id) return 0;
+    const calculatedRating = doctorRatings[doctor._id];
+    return calculatedRating !== undefined ? calculatedRating : (doctor.rating_dokter || 0);
+  }, [doctorRatings]);
 
   const fetchUserData = async () => {
     try {
@@ -110,8 +126,6 @@ export const useHomeViewModel = () => {
     }
   };
 
-  
-
   const fetchArtikels = async () => {
     try {
       const token = await SecureStore.getItemAsync("userToken");
@@ -139,6 +153,7 @@ export const useHomeViewModel = () => {
       console.log("Error fetching artikels:", error);
     }
   };
+
   const getImageUrl = (imagePath: string | null | undefined): string | null => {
     if (!imagePath) return null;
 
@@ -152,6 +167,7 @@ export const useHomeViewModel = () => {
       : imagePath;
     return `${baseUrlWithoutApi}/${cleanPath}`;
   };
+
   const fetchJadwal = async () => {
     try {
       const userId = await SecureStore.getItemAsync("userId");
@@ -176,6 +192,73 @@ export const useHomeViewModel = () => {
       setLoading(false);
     }
   };
+
+  const fetchDoctorRatings = useCallback(async () => {
+    if (jadwalList.length === 0) return;
+
+    const unfetchedDoctors = jadwalList
+      .filter((jadwal) => jadwal.dokter_id && !fetchedDoctorIds.has(jadwal.dokter_id._id))
+      .map((jadwal) => jadwal.dokter_id);
+
+    if (unfetchedDoctors.length === 0) return;
+
+    setRatingsLoading(true);
+    try {
+      const token = await SecureStore.getItemAsync("userToken");
+      if (!token) {
+        console.log("Token tidak ditemukan");
+        return;
+      }
+
+      const ratingsPromises = unfetchedDoctors.map(async (dokter) => {
+        try {
+          const response = await axios.get(
+            `${BASE_URL}/rating/dokter/${dokter._id}`,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (response.data.success && response.data.data) {
+            const averageRating = calculateAverageRating(response.data.data);
+            return { doctorId: dokter._id, rating: averageRating };
+          }
+          return { doctorId: dokter._id, rating: dokter.rating_dokter || 0 };
+        } catch (error: any) {
+          console.log(
+            `Gagal mengambil rating untuk dokter ${dokter._id}:`,
+            error.message
+          );
+          return { doctorId: dokter._id, rating: dokter.rating_dokter || 0 };
+        }
+      });
+
+      const ratingsResults = await Promise.all(ratingsPromises);
+      const ratingsMap: { [key: string]: number } = { ...doctorRatings };
+
+      ratingsResults.forEach(({ doctorId, rating }) => {
+        ratingsMap[doctorId] = rating;
+      });
+
+      setDoctorRatings(ratingsMap);
+      setFetchedDoctorIds(
+        (prev) => new Set([...prev, ...unfetchedDoctors.map((d) => d._id)])
+      );
+    } catch (error: any) {
+      console.log("Gagal mengambil rating dokter:", error.message);
+    } finally {
+      setRatingsLoading(false);
+    }
+  }, [jadwalList, fetchedDoctorIds, doctorRatings]);
+
+  useEffect(() => {
+    if (jadwalList.length > 0) {
+      fetchDoctorRatings();
+    }
+  }, [jadwalList, fetchDoctorRatings]);
 
   const changeArticles = () => {
     Animated.parallel([
@@ -314,6 +397,9 @@ export const useHomeViewModel = () => {
     getImageUrl,
     onRefresh,
     refreshing,
+    getDisplayRating,
+    doctorRatings,
+    ratingsLoading,
   };
 };
 
@@ -424,7 +510,6 @@ export const useDoctorListViewModel = () => {
   const getDisplayRating = useCallback(
     (doctor: Doctor): number => {
       const apiRating = doctorRatings[doctor._id];
-      // console.log(`Mendapatkan rating tampilan untuk ${doctor._id}: API=${apiRating}, Original=${doctor.rating_dokter}`);
       return apiRating !== undefined ? apiRating : doctor.rating_dokter || 0;
     },
     [doctorRatings]
