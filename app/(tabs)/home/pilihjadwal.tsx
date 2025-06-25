@@ -95,11 +95,7 @@ const ScheduleScreen = () => {
           Jadwal Dokter
         </Text>
       </View>
-      <Image
-        className="h-10 w-12"
-        source={images.logo}
-        resizeMode="contain"
-      />
+      <Image className="h-10 w-12" source={images.logo} resizeMode="contain" />
     </View>
   );
 
@@ -142,26 +138,26 @@ const ScheduleScreen = () => {
   return (
     <Background>
       <StatusBar translucent backgroundColor="transparent" />
-      
+
       {renderHeader()}
 
       <ScrollView
         className="px-6 py-4 mt-[-30px]"
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
-                                        refreshControl={
-                                          <RefreshControl
-                                            refreshing={refreshing}
-                                            onRefresh={onRefresh}
-                                            colors={["#025F96"]}
-                                            tintColor="#025F96"
-                                            title="Memuat ulang..."
-                                            titleColor="#025F96"
-                                          />
-                                        }>
-      
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#025F96"]}
+            tintColor="#025F96"
+            title="Memuat ulang..."
+            titleColor="#025F96"
+          />
+        }
+      >
         {renderLegend()}
-        
+
         <View className="flex-1 flex-col p-2">
           <DatePickerComponent
             label="Pilih Tanggal"
@@ -170,7 +166,7 @@ const ScheduleScreen = () => {
           />
 
           {renderTimeSlotsSection()}
-          
+
           {renderSelectButton()}
         </View>
       </ScrollView>
