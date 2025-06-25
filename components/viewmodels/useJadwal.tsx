@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
+import { AppState } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import { BASE_URL } from "@env";
@@ -27,7 +28,7 @@ export interface JadwalItem {
     _id: string;
     nama_dokter: string;
     foto_profil_dokter?: string;
-    rating_dokter?: number;
+    rating_dokter?: number | null;
   };
   tgl_konsul: string;
   jam_konsul: string;
@@ -53,6 +54,11 @@ export const useJadwalViewModel = () => {
   );
   const [refreshing, setRefreshing] = useState(false);
 
+  // Auto refresh states
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const appStateRef = useRef(AppState.currentState);
+
   const getDayName = (dateString: string): string => {
     const days = [
       "Minggu",
@@ -67,8 +73,12 @@ export const useJadwalViewModel = () => {
     return days[date.getDay()];
   };
 
-  const fetchJadwal = async (): Promise<void> => {
+  const fetchJadwal = async (silent: boolean = false): Promise<void> => {
     try {
+      if (!silent) {
+        setLoading(true);
+      }
+
       const userId = await SecureStore.getItemAsync("userId");
       const token = await SecureStore.getItemAsync("userToken");
 
@@ -101,17 +111,89 @@ export const useJadwalViewModel = () => {
           j.tgl_konsul &&
           j.jam_konsul &&
           j.status_konsul &&
-          ["menunggu", "berlangsung", "diterima", "selesai", "ditolak"].includes(
-            j.status_konsul
-          )
+          [
+            "menunggu",
+            "berlangsung",
+            "diterima",
+            "selesai",
+            "ditolak",
+          ].includes(j.status_konsul)
         );
       });
 
-      setJadwalList(filtered);
+      // Check if data has changed
+      const hasDataChanged =
+        JSON.stringify(filtered) !== JSON.stringify(jadwalList);
+
+      if (hasDataChanged) {
+        setJadwalList(filtered);
+      }
     } catch (err: any) {
       console.log("Gagal fetch jadwal:", err.message);
+    } finally {
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
+
+  // Auto refresh function
+  const startAutoRefresh = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    if (autoRefreshEnabled) {
+      intervalRef.current = setInterval(() => {
+        // Only auto refresh if app is in foreground
+        if (appStateRef.current === "active") {
+          fetchJadwal(true); // Silent refresh
+        }
+      }, 10000); // Check every 10 seconds, adjust as needed
+    }
+  }, [autoRefreshEnabled, jadwalList]);
+
+  const stopAutoRefresh = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
+  // Handle app state changes
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: string) => {
+      if (
+        appStateRef.current.match(/inactive|background/) &&
+        nextAppState === "active"
+      ) {
+        // App has come to the foreground, do a refresh
+        fetchJadwal(true);
+      }
+      appStateRef.current = nextAppState;
+    };
+
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange
+    );
+
+    return () => {
+      subscription?.remove();
+    };
+  }, []);
+
+  // Start/stop auto refresh based on focus
+  useFocusEffect(
+    useCallback(() => {
+      startAutoRefresh();
+
+      return () => {
+        stopAutoRefresh();
+      };
+    }, [startAutoRefresh, stopAutoRefresh])
+  );
+
   // Calculate average rating
   const calculateAverageRating = (ratings: Rating[]): number => {
     if (ratings.length === 0) return 0;
@@ -201,6 +283,7 @@ export const useJadwalViewModel = () => {
   }, []);
 
   const handleBackPress = (): void => {
+    stopAutoRefresh(); // Stop auto refresh when leaving the screen
     router.back();
   };
 
@@ -256,12 +339,14 @@ export const useJadwalViewModel = () => {
     return `${baseUrlWithoutApi}/${cleanPath}`;
   };
 
-  // const getProfileImageUri = (fotoProfile: string): string => {
-  //   return
-  //   // return `https://mjk-backend-production.up.railway.app/uploads/${fotoProfile}`;
-  // };
+  const formatRating = (rating: number): string => {
+    const clampedRating = Math.min(rating, 5);
+    if (clampedRating % 1 === 0) {
+      return clampedRating.toString();
+    }
+    return clampedRating.toFixed(1);
+  };
 
-  // Initialize data when component focus
   useFocusEffect(
     useCallback(() => {
       const loadJadwal = async () => {
@@ -274,16 +359,25 @@ export const useJadwalViewModel = () => {
     }, [])
   );
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopAutoRefresh();
+    };
+  }, [stopAutoRefresh]);
+
   return {
     // State
     jadwalList,
     loading,
     refreshing,
     ratingsLoading,
+    autoRefreshEnabled,
 
     // Actions
     onRefresh,
     handleBackPress,
+    setAutoRefreshEnabled,
 
     // Helpers
     getDayName,
@@ -293,7 +387,7 @@ export const useJadwalViewModel = () => {
     fetchDoctorRatings,
     getStatusTextColor,
     formatDate,
-    // getProfileImageUri,
     getImageUrl,
+    formatRating,
   };
 };

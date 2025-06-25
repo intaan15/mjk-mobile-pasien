@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Switch,
+  Alert,
 } from "react-native";
 import React, { useState } from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -55,7 +57,7 @@ const DoctorImage = ({ jadwal }: { jadwal: JadwalItem }) => {
 
     return (
       <Image
-        source={{ uri: imageUrl ?? " "}}
+        source={{ uri: imageUrl ?? " " }}
         className="h-[70px] w-[70px] rounded-full border border-gray-300"
         resizeMode="cover"
         onError={(error) => {
@@ -90,6 +92,7 @@ const JadwalCard = ({
     formatDate,
     getDisplayRating,
     ratingsLoading,
+    formatRating,
   } = useJadwalViewModel();
 
   return (
@@ -120,7 +123,7 @@ const JadwalCard = ({
               />
             ) : (
               <Text className="font-bold text-base text-skyDark pl-1">
-                {getDisplayRating(jadwal.dokter_id).toFixed(1)}
+                {formatRating(getDisplayRating(jadwal.dokter_id))}
               </Text>
             )}
           </View>
@@ -195,8 +198,27 @@ const Header = ({ onBackPress }: { onBackPress: () => void }) => (
 
 export default function Jadwal() {
   const insets = useSafeAreaInsets();
-  const { jadwalList, loading, refreshing, onRefresh, handleBackPress } =
-    useJadwalViewModel();
+  const {
+    jadwalList,
+    loading,
+    refreshing,
+    onRefresh,
+    handleBackPress,
+    autoRefreshEnabled,
+    setAutoRefreshEnabled,
+  } = useJadwalViewModel();
+
+  const handleAutoRefreshToggle = (value: boolean) => {
+    setAutoRefreshEnabled(value);
+
+    if (value) {
+      Alert.alert(
+        "Auto Refresh Aktif",
+        "Jadwal akan otomatis diperbarui setiap 10 detik untuk menampilkan perubahan status terbaru.",
+        [{ text: "OK" }]
+      );
+    }
+  };
 
   return (
     <Background>
@@ -206,38 +228,40 @@ export default function Jadwal() {
         {loading ? (
           <LoadingState />
         ) : (
-          <ScrollView
-            contentContainerStyle={{
-              alignItems: "center",
-              paddingTop: 20,
-              paddingBottom: insets.bottom + 120,
-            }}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                colors={["#025F96"]}
-                tintColor="#025F96"
-                title="Memuat ulang..."
-                titleColor="#025F96"
-              />
-            }
-          >
-            <View className="gap-5 pb-6 w-11/12">
-              {jadwalList.length === 0 ? (
-                <EmptyState />
-              ) : (
-                jadwalList.map((jadwal, index) => (
-                  <JadwalCard
-                    key={jadwal._id || index}
-                    jadwal={jadwal}
-                    index={index}
-                  />
-                ))
-              )}
-            </View>
-          </ScrollView>
+          <>
+            <ScrollView
+              contentContainerStyle={{
+                alignItems: "center",
+                paddingTop: 10,
+                paddingBottom: insets.bottom + 120,
+              }}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  colors={["#025F96"]}
+                  tintColor="#025F96"
+                  title="Memuat ulang..."
+                  titleColor="#025F96"
+                />
+              }
+            >
+              <View className="gap-5 pb-6 w-11/12">
+                {jadwalList.length === 0 ? (
+                  <EmptyState />
+                ) : (
+                  jadwalList.map((jadwal, index) => (
+                    <JadwalCard
+                      key={jadwal._id || index}
+                      jadwal={jadwal}
+                      index={index}
+                    />
+                  ))
+                )}
+              </View>
+            </ScrollView>
+          </>
         )}
       </View>
     </Background>
