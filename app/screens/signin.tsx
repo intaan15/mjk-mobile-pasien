@@ -144,7 +144,7 @@ export default function SignIn() {
                   className="absolute right-3 top-[9px]"
                 >
                   <Ionicons
-                    name={showPassword ? "eye-off" : "eye"}
+                    name={showPassword ? "eye" : "eye-off"}
                     size={24}
                     color="#999"
                   />

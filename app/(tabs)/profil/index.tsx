@@ -264,7 +264,7 @@ function ProfileApp() {
                   onPress={() => setShowPasswordLama(!showPasswordLama)}
                 >
                   <Ionicons
-                    name={showPasswordLama ? "eye-off" : "eye"}
+                    name={showPasswordLama ? "eye" : "eye-off"}
                     size={24}
                     color="#999"
                   />
@@ -290,7 +290,7 @@ function ProfileApp() {
                   onPress={() => setShowPasswordBaru(!showPasswordBaru)}
                 >
                   <Ionicons
-                    name={showPasswordBaru ? "eye-off" : "eye"}
+                    name={showPasswordBaru ? "eye" : "eye-off"}
                     size={24}
                     color="#999"
                   />
@@ -322,7 +322,7 @@ function ProfileApp() {
                   }
                 >
                   <Ionicons
-                    name={showKonfirmasiPassword ? "eye-off" : "eye"}
+                    name={showKonfirmasiPassword ? "eye" : "eye-off"}
                     size={24}
                     color="#999"
                   />

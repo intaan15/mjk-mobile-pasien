@@ -614,7 +614,7 @@ const Register = () => {
                     className="absolute right-4 top-1/2 -translate-y-1/2"
                   >
                     <Ionicons
-                      name={showPassword ? "eye-off" : "eye"}
+                      name={showPassword ? "eye" : "eye-off"}
                       size={24}
                       color="#999"
                     />
