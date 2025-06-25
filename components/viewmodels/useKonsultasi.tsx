@@ -2,12 +2,18 @@ import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
-import { BASE_URL } from "@env";
+import { BASE_URL, BASE_URL2 } from "@env";
 import { useFocusEffect } from "@react-navigation/native";
+import { io } from "socket.io-client";
 
 interface User {
   nama_dokter: string;
 }
+
+// Create socket instance outside component to avoid reconnections
+const socket = io(`${BASE_URL2}`, {
+  transports: ["websocket"],
+});
 
 export const useChatListViewModel = () => {
   // States
@@ -94,6 +100,64 @@ export const useChatListViewModel = () => {
     }
   };
 
+  // Auto refresh chat list when new message arrives
+  const refreshChatListOnNewMessage = useCallback(async () => {
+    const storedId = await SecureStore.getItemAsync("userId");
+    const token = await SecureStore.getItemAsync("userToken");
+    const cleanedId = storedId?.replace(/"/g, "");
+    
+    if (cleanedId && token) {
+      console.log("[DEBUG] 🔄 Auto-refreshing chat list due to new message");
+      await fetchChatList(cleanedId, token);
+    }
+  }, []);
+
+  // Socket event listeners
+  useEffect(() => {
+    if (!masyarakatId) return;
+
+    // Join room for this user
+    socket.emit("joinRoom", masyarakatId);
+
+    // Listen for new chat messages
+    const handleNewMessage = (message: any) => {
+      console.log("[DEBUG] 📨 New message received in chat list:", message);
+      
+      // Check if the message is for this user (either as sender or receiver)
+      if (message.senderId === masyarakatId || message.receiverId === masyarakatId) {
+        console.log("[DEBUG] 🔄 Message is relevant to current user, refreshing chat list");
+        refreshChatListOnNewMessage();
+      }
+    };
+
+    // Listen for chat list updates (if your backend emits this)
+    const handleChatListUpdate = () => {
+      console.log("[DEBUG] 📋 Chat list update received");
+      refreshChatListOnNewMessage();
+    };
+
+    // Add socket listeners
+    socket.on("chat message", handleNewMessage);
+    socket.on("chatListUpdate", handleChatListUpdate);
+
+    // Socket connection events
+    socket.on("connect", () => {
+      console.log("[DEBUG] 🔌 Socket connected in chat list");
+    });
+
+    socket.on("connect_error", (err) => {
+      console.log("[DEBUG] ❌ Socket connection error in chat list:", err);
+    });
+
+    // Cleanup function
+    return () => {
+      socket.off("chat message", handleNewMessage);
+      socket.off("chatListUpdate", handleChatListUpdate);
+      socket.off("connect");
+      socket.off("connect_error");
+    };
+  }, [masyarakatId, refreshChatListOnNewMessage]);
+
   // Refresh handler
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -140,12 +204,23 @@ export const useChatListViewModel = () => {
     router.back();
   };
 
-  // Focus effect
   useFocusEffect(
     useCallback(() => {
       fetchUserData();
     }, [])
   );
+
+  // Additional effect to refresh when returning from chat screen
+  useEffect(() => {
+    const unsubscribe = router.addListener?.('focus', () => {
+      // Refresh chat list when returning to this screen
+      if (masyarakatId) {
+        refreshChatListOnNewMessage();
+      }
+    });
+
+    return unsubscribe;
+  }, [masyarakatId, refreshChatListOnNewMessage, router]);
 
   return {
     // States
