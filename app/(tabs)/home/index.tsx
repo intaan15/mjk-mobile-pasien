@@ -250,11 +250,9 @@ export default function HomeView() {
                       </View>
                     </View>
                     <View className="flex-row justify-between px-4">
-                      <View className="flex-col pt-1">
+                      <View className="flex-col pt-1 w-3/5">
                         <Text className="font-bold text-sm text-skyDark">
-                          {getDayName(jadwal.tgl_konsul)},
-                        </Text>
-                        <Text className="font-bold text-sm text-skyDark">
+                          {getDayName(jadwal.tgl_konsul)},{" "}
                           {new Date(jadwal.tgl_konsul).toLocaleDateString(
                             "id-ID",
                             {
@@ -266,6 +264,13 @@ export default function HomeView() {
                         </Text>
                         <Text className="font-bold text-sm text-skyDark">
                           Pukul {jadwal.jam_konsul}
+                        </Text>
+                        <Text
+                          className="truncate font-bold text-sm text-skyDark"
+                          numberOfLines={1}
+                          ellipsizeMode="tail"
+                        >
+                          {jadwal.keluhan_pasien}
                         </Text>
                       </View>
                       <View className="justify-center w-1/3 flex-col">

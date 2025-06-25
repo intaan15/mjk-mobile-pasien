@@ -29,6 +29,7 @@ export interface Jadwal {
   };
   tgl_konsul: string;
   jam_konsul: string;
+  keluhan_pasien: string;
   status_konsul: string;
 }
 
