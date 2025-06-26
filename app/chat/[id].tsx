@@ -46,6 +46,7 @@ export default function ChatScreen() {
   const [selectedJadwal, setSelectedJadwal] = useState<string | null>(null);
   const [selectedDokter, setSelectedDokter] = useState<string | null>(null);
   const rawParams = useLocalSearchParams();
+  const [statusKonsul, setStatusKonsul] = useState("");
   const [hasRated, setHasRated] = useState({});
 
   const getJakartaTime = () => {
@@ -375,6 +376,7 @@ export default function ChatScreen() {
       ? rawParams.dokter_id[0]
       : rawParams.dokter_id;
 
+    setStatusKonsul(status || "");
     const checkRating = async () => {
       try {
         const token = await SecureStore.getItemAsync("userToken");
@@ -649,48 +651,61 @@ export default function ChatScreen() {
           </View>
 
           {/* Input Chat */}
-          <View className="px-4 bg-skyDark py-4" style={{ minHeight: 70 }}>
-            <View className="flex-row items-center">
-              <TouchableOpacity onPress={() => sendImage(false)}>
-                <Ionicons name="image-outline" size={28} color="#C3E9FF" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => sendImage(true)}
-                className="ml-2"
-              >
-                <Ionicons name="camera-outline" size={28} color="#C3E9FF" />
-              </TouchableOpacity>
-              <View className="flex-1 ml-2 mr-2">
-                <TextInput
-                  className="border border-skyLight bg-skyLight rounded-3xl p-2 min-h-[40px]"
-                  value={message}
-                  onChangeText={setMessage}
-                  placeholder="Tulis pesan..."
-                  placeholderTextColor="#9CA3AF"
-                  multiline={true}
-                  numberOfLines={Platform.OS === "ios" ? undefined : 1}
-                  textAlignVertical={Platform.OS === "android" ? "top" : "top"}
-                  maxHeight={100}
-                  scrollEnabled={true}
-                  style={{
-                    fontSize: 14,
-                    lineHeight: 20,
-                    color: "#1F2937",
-                    paddingTop: Platform.OS === "ios" ? 8 : 10,
-                    paddingBottom: Platform.OS === "ios" ? 8 : 10,
-                    paddingHorizontal: 12,
-                    minHeight: 40,
-                    maxHeight: 100,
-                  }}
-                />
+          <View className="px-4 bg-skyDark py-4 items-center" style={{ minHeight: 70 }}>
+            {statusKonsul === "selesai" ? (
+              <View className="flex-row items-center justify-center w-11/12">
+                <View className="flex-1 h-[2px] bg-white mr-4" />
+
+                <Text className="text-white text-center font-medium text-base">
+                  Konsultasi telah selesai
+                </Text>
+                <View className="flex-1 h-[2px] bg-white ml-4" />
               </View>
-              <TouchableOpacity
-                onPress={sendMessage}
-                className="bg-skyLight p-3 rounded-full mr-1"
-              >
-                <Ionicons name="send" size={20} color="#025F96" />
-              </TouchableOpacity>
-            </View>
+            ) : (
+              <View className="flex-row items-center">
+                <TouchableOpacity onPress={() => sendImage(false)}>
+                  <Ionicons name="image-outline" size={28} color="#C3E9FF" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => sendImage(true)}
+                  className="ml-2"
+                >
+                  <Ionicons name="camera-outline" size={28} color="#C3E9FF" />
+                </TouchableOpacity>
+                <View className="flex-1 ml-2 mr-2">
+                  <TextInput
+                    className="border border-skyLight bg-skyLight rounded-3xl p-2 min-h-[40px]"
+                    value={message}
+                    onChangeText={setMessage}
+                    placeholder="Tulis pesan..."
+                    placeholderTextColor="#9CA3AF"
+                    multiline={true}
+                    numberOfLines={Platform.OS === "ios" ? undefined : 1}
+                    textAlignVertical={
+                      Platform.OS === "android" ? "top" : "top"
+                    }
+                    maxHeight={100}
+                    scrollEnabled={true}
+                    style={{
+                      fontSize: 14,
+                      lineHeight: 20,
+                      color: "#1F2937",
+                      paddingTop: Platform.OS === "ios" ? 8 : 10,
+                      paddingBottom: Platform.OS === "ios" ? 8 : 10,
+                      paddingHorizontal: 12,
+                      minHeight: 40,
+                      maxHeight: 100,
+                    }}
+                  />
+                </View>
+                <TouchableOpacity
+                  onPress={sendMessage}
+                  className="bg-skyLight p-3 rounded-full mr-1"
+                >
+                  <Ionicons name="send" size={20} color="#025F96" />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </KeyboardAvoidingView>
 
